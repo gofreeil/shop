@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>עגלת קניות | נו-שופ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><span class="logo-icon">נו</span><span class="logo-text">שופ</span></a>
+    <nav class="main-nav">
+      <a href="index.html">בית</a>
+      <a href="products.html">חנות</a>
+      <a href="categories.html">קטגוריות</a>
+      <a href="about.html">אודות</a>
+      <a href="contact.html">צור קשר</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="cart.html" class="icon-btn cart-btn"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / עגלת קניות</div>
+    <h1>העגלה שלי</h1>
+  </div>
+</section>
+
+<section class="container">
+  <div id="cartContainer"></div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 נו-שופ. כל הזכויות שמורות.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+function renderCart() {
+  const container = document.getElementById('cartContainer');
+  if (!cart.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-shopping-bag"></i>
+        <h2>העגלה שלך ריקה</h2>
+        <p>נראה שעדיין לא הוספת מוצרים לעגלה</p>
+        <a href="products.html" class="btn btn-primary"><i class="fas fa-shopping-bag"></i> לקניות</a>
+      </div>
+    `;
+    return;
+  }
+
+  const items = cart.map(item => {
+    const p = products.find(x => x.id === item.id);
+    const cat = categories.find(c => c.id === p.category);
+    return `
+      <div class="cart-item">
+        <div class="cart-item-image" style="background:${cat.color}22">${p.emoji}</div>
+        <div>
+          <div class="cart-item-name">${p.name}</div>
+          <div class="cart-item-cat">${cat.name}</div>
+          <div class="cart-item-price">₪${p.price}</div>
+        </div>
+        <div class="qty-control">
+          <button onclick="updateQty(${p.id}, ${item.qty - 1})">−</button>
+          <input type="text" value="${item.qty}" readonly>
+          <button onclick="updateQty(${p.id}, ${item.qty + 1})">+</button>
+        </div>
+        <button class="icon-btn" onclick="removeFromCart(${p.id})" title="הסר"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+      </div>
+    `;
+  }).join('');
+
+  const subtotal = cart.reduce((s, i) => s + products.find(p => p.id === i.id).price * i.qty, 0);
+  const shipping = subtotal >= 199 ? 0 : 29;
+  const total = subtotal + shipping;
+
+  container.innerHTML = `
+    <div class="cart-layout">
+      <div class="cart-items">${items}</div>
+      <div class="cart-summary">
+        <h3>סיכום הזמנה</h3>
+        <div class="summary-row"><span>סכום ביניים</span><span>₪${subtotal}</span></div>
+        <div class="summary-row"><span>משלוח</span><span>${shipping === 0 ? '<span style="color:var(--accent-2)">חינם</span>' : '₪' + shipping}</span></div>
+        <div class="coupon-input">
+          <input type="text" placeholder="קוד קופון">
+          <button class="btn btn-ghost" onclick="toast('קוד לא תקף', 'fa-exclamation-circle')">החל</button>
+        </div>
+        <div class="summary-row total"><span>סה"כ</span><span class="price">₪${total}</span></div>
+        <a href="checkout.html" class="btn btn-primary btn-block" style="margin-top:16px"><i class="fas fa-lock"></i> מעבר לתשלום</a>
+        <a href="products.html" class="btn btn-ghost btn-block" style="margin-top:8px">המשך קניות</a>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--text-muted)">
+          <div style="margin-bottom:8px"><i class="fas fa-shield-halved" style="color:var(--primary)"></i> תשלום מאובטח SSL</div>
+          <div><i class="fas fa-rotate-left" style="color:var(--primary)"></i> החזרה תוך 30 יום</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+renderCart();
+</script>
+</body>
+</html>

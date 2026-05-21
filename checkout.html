@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>תשלום | נו-שופ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><span class="logo-icon">נו</span><span class="logo-text">שופ</span></a>
+    <div style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:14px">
+      <i class="fas fa-shield-halved" style="color:var(--accent-2)"></i> תשלום מאובטח SSL
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <h1>תשלום והשלמת הזמנה</h1>
+  </div>
+</section>
+
+<section class="container" style="padding-bottom:80px">
+  <div class="cart-layout">
+    <div>
+      <form class="form-grid" onsubmit="handleCheckout(event)" style="background:var(--bg-card);padding:32px;border-radius:20px;border:1px solid var(--border)">
+        <h2 style="font-size:20px;margin-bottom:8px">פרטי משלוח</h2>
+        <div class="form-row">
+          <div class="form-field"><label>שם פרטי</label><input type="text" required></div>
+          <div class="form-field"><label>שם משפחה</label><input type="text" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>אימייל</label><input type="email" required></div>
+          <div class="form-field"><label>טלפון</label><input type="tel" required></div>
+        </div>
+        <div class="form-field"><label>כתובת</label><input type="text" placeholder="רחוב ומספר בית" required></div>
+        <div class="form-row">
+          <div class="form-field"><label>עיר</label><input type="text" required></div>
+          <div class="form-field"><label>מיקוד</label><input type="text"></div>
+        </div>
+
+        <h2 style="font-size:20px;margin:24px 0 8px">פרטי תשלום</h2>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <label class="filter-option" style="padding:14px;border:2px solid var(--primary);border-radius:12px;justify-content:center"><input type="radio" name="pay" checked> <i class="fas fa-credit-card"></i> כרטיס</label>
+          <label class="filter-option" style="padding:14px;border:1px solid var(--border);border-radius:12px;justify-content:center"><input type="radio" name="pay"> <i class="fab fa-paypal"></i> PayPal</label>
+          <label class="filter-option" style="padding:14px;border:1px solid var(--border);border-radius:12px;justify-content:center"><input type="radio" name="pay"> <i class="fas fa-money-bill-wave"></i> מזומן</label>
+        </div>
+        <div class="form-field"><label>מספר כרטיס</label><input type="text" placeholder="1234 5678 9012 3456"></div>
+        <div class="form-row">
+          <div class="form-field"><label>תוקף</label><input type="text" placeholder="MM/YY"></div>
+          <div class="form-field"><label>CVV</label><input type="text" placeholder="123"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top:16px">
+          <i class="fas fa-lock"></i> בצע הזמנה מאובטחת
+        </button>
+      </form>
+    </div>
+    <div class="cart-summary">
+      <h3>סיכום</h3>
+      <div id="orderItems"></div>
+      <div id="orderTotal"></div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+const sub = cart.reduce((s,i) => s + products.find(p => p.id === i.id).price * i.qty, 0);
+const ship = sub >= 199 ? 0 : 29;
+const tot = sub + ship;
+
+document.getElementById('orderItems').innerHTML = cart.map(i => {
+  const p = products.find(x => x.id === i.id);
+  return `<div class="summary-row"><span>${p.name} × ${i.qty}</span><span>₪${p.price * i.qty}</span></div>`;
+}).join('') || '<p style="color:var(--text-muted);text-align:center;padding:20px">העגלה ריקה</p>';
+
+document.getElementById('orderTotal').innerHTML = `
+  <div class="summary-row"><span>סכום ביניים</span><span>₪${sub}</span></div>
+  <div class="summary-row"><span>משלוח</span><span>${ship === 0 ? 'חינם' : '₪' + ship}</span></div>
+  <div class="summary-row total"><span>סה"כ</span><span class="price">₪${tot}</span></div>
+`;
+
+function handleCheckout(e) {
+  e.preventDefault();
+  cart = [];
+  saveCart();
+  toast('ההזמנה התקבלה! תקבל אישור באימייל', 'fa-check-circle');
+  setTimeout(() => window.location.href = 'index.html', 2000);
+}
+</script>
+</body>
+</html>

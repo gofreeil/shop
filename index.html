@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>נו-שופ | חנות חכמה לחיים טובים יותר</title>
+<meta name="description" content="חנות מקוונת לבריאות טבעית, חקלאות ביתית, טכנולוגיה מתקדמת ועוד">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="container topbar-inner">
+    <span><i class="fas fa-truck"></i> משלוח חינם בהזמנות מעל 199₪</span>
+    <span class="topbar-links">
+      <a href="#"><i class="fas fa-phone"></i> 1-800-נו-שופ</a>
+      <a href="#"><i class="fas fa-headset"></i> תמיכה 24/7</a>
+    </span>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header" id="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">נו</span>
+      <span class="logo-text">שופ</span>
+    </a>
+
+    <nav class="main-nav">
+      <a href="index.html" class="active">בית</a>
+      <a href="products.html">חנות</a>
+      <a href="categories.html">קטגוריות</a>
+      <a href="about.html">אודות</a>
+      <a href="contact.html">צור קשר</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="searchToggle" aria-label="חיפוש"><i class="fas fa-search"></i></button>
+      <button class="icon-btn" id="themeToggle" aria-label="מצב כהה"><i class="fas fa-moon"></i></button>
+      <a href="#" class="icon-btn" id="wishlistBtn" aria-label="מועדפים">
+        <i class="fas fa-heart"></i>
+        <span class="badge" id="wishlistCount">0</span>
+      </a>
+      <a href="cart.html" class="icon-btn cart-btn" aria-label="עגלה">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="badge" id="cartCount">0</span>
+      </a>
+      <button class="icon-btn mobile-only" id="mobileMenuToggle"><i class="fas fa-bars"></i></button>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar" id="searchBar">
+    <div class="container">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="חפש מוצרים, קטגוריות, מותגים...">
+        <button class="search-close" id="searchClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="search-suggestions" id="searchSuggestions"></div>
+    </div>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <span class="hero-badge"><i class="fas fa-sparkles"></i> חדש בנו-שופ</span>
+      <h1 class="hero-title">חיים טובים יותר <span class="gradient-text">מתחילים כאן</span></h1>
+      <p class="hero-subtitle">מוצרים נבחרים בקפידה בתחומי הבריאות הטבעית, החקלאות הביתית, הטכנולוגיה המתקדמת ועוד — הכל במקום אחד.</p>
+      <div class="hero-actions">
+        <a href="products.html" class="btn btn-primary btn-lg">
+          <i class="fas fa-shopping-bag"></i> התחל לקנות
+        </a>
+        <a href="categories.html" class="btn btn-ghost btn-lg">
+          גלה קטגוריות <i class="fas fa-arrow-left"></i>
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><strong>10K+</strong><span>לקוחות מרוצים</span></div>
+        <div class="stat"><strong>500+</strong><span>מוצרים נבחרים</span></div>
+        <div class="stat"><strong>4.9★</strong><span>דירוג ממוצע</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card hero-card-1">
+        <i class="fas fa-leaf"></i>
+        <span>בריאות טבעית</span>
+      </div>
+      <div class="hero-card hero-card-2">
+        <i class="fas fa-seedling"></i>
+        <span>חקלאות ביתית</span>
+      </div>
+      <div class="hero-card hero-card-3">
+        <i class="fas fa-microchip"></i>
+        <span>טכנולוגיה</span>
+      </div>
+      <div class="hero-card hero-card-4">
+        <i class="fas fa-home"></i>
+        <span>בית וגן</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Strip -->
+<section class="features-strip">
+  <div class="container features-grid">
+    <div class="feature-item"><i class="fas fa-truck-fast"></i><div><strong>משלוח מהיר</strong><span>תוך 2-3 ימי עסקים</span></div></div>
+    <div class="feature-item"><i class="fas fa-shield-halved"></i><div><strong>תשלום מאובטח</strong><span>הצפנה SSL</span></div></div>
+    <div class="feature-item"><i class="fas fa-rotate-left"></i><div><strong>החזרות חינם</strong><span>תוך 30 יום</span></div></div>
+    <div class="feature-item"><i class="fas fa-medal"></i><div><strong>איכות מובטחת</strong><span>אחריות מלאה</span></div></div>
+  </div>
+</section>
+
+<!-- Categories -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">קטגוריות פופולריות</span>
+        <h2 class="section-title">קנה לפי קטגוריה</h2>
+      </div>
+      <a href="categories.html" class="link-arrow">כל הקטגוריות <i class="fas fa-arrow-left"></i></a>
+    </div>
+    <div class="categories-grid" id="categoriesGrid"></div>
+  </div>
+</section>
+
+<!-- Featured Products -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">נבחרים בקפידה</span>
+        <h2 class="section-title">מוצרים מובילים</h2>
+      </div>
+      <a href="products.html" class="link-arrow">כל המוצרים <i class="fas fa-arrow-left"></i></a>
+    </div>
+    <div class="products-grid" id="featuredGrid"></div>
+  </div>
+</section>
+
+<!-- Banner -->
+<section class="section">
+  <div class="container">
+    <div class="promo-banner">
+      <div class="promo-content">
+        <span class="promo-tag">מבצע השבוע</span>
+        <h2>20% הנחה על כל מוצרי הבריאות הטבעית</h2>
+        <p>עד יום ראשון בלבד. השתמש בקוד <code>NATURE20</code> בקופה.</p>
+        <a href="products.html?category=health" class="btn btn-light">לרכישה <i class="fas fa-arrow-left"></i></a>
+      </div>
+      <div class="promo-visual">
+        <i class="fas fa-leaf promo-icon"></i>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- New Arrivals -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">חדש על המדף</span>
+        <h2 class="section-title">הגעות אחרונות</h2>
+      </div>
+    </div>
+    <div class="products-grid" id="newGrid"></div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header text-center">
+      <div>
+        <span class="section-eyebrow">לקוחות מספרים</span>
+        <h2 class="section-title">למה אוהבים אותנו</h2>
+      </div>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"שירות מצוין, משלוח מהיר ומוצרים איכותיים. אני קונה כאן כבר שנה!"</p>
+        <div class="testimonial-author">
+          <div class="avatar">ש</div>
+          <div><strong>שרה כהן</strong><span>תל אביב</span></div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"מוצאת כאן דברים שלא מצאתי בשום מקום אחר. ממליצה בחום!"</p>
+        <div class="testimonial-author">
+          <div class="avatar">ר</div>
+          <div><strong>רחל לוי</strong><span>ירושלים</span></div>
+        </div>
+      </div>
+      <div class="testimonial">
+        <div class="stars">★★★★★</div>
+        <p>"האתר נוח, החיפוש מעולה והמחירים הוגנים. כל הכבוד!"</p>
+        <div class="testimonial-author">
+          <div class="avatar">י</div>
+          <div><strong>יוסי אברהם</strong><span>חיפה</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Newsletter -->
+<section class="newsletter">
+  <div class="container newsletter-inner">
+    <div>
+      <h2>הצטרף למועדון נו-שופ</h2>
+      <p>קבל 10% הנחה על ההזמנה הראשונה + עדכונים על מבצעים והשקות</p>
+    </div>
+    <form class="newsletter-form" onsubmit="handleNewsletter(event)">
+      <input type="email" placeholder="האימייל שלך" required>
+      <button type="submit" class="btn btn-primary">הצטרף <i class="fas fa-paper-plane"></i></button>
+    </form>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <a href="index.html" class="logo footer-logo">
+          <span class="logo-icon">נו</span>
+          <span class="logo-text">שופ</span>
+        </a>
+        <p>החנות החכמה שלך לחיים טובים יותר. מוצרים נבחרים בקפידה לבריאות, לבית ולעתיד.</p>
+        <div class="social-links">
+          <a href="#"><i class="fab fa-facebook"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-whatsapp"></i></a>
+          <a href="#"><i class="fab fa-youtube"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>חנות</h4>
+        <a href="products.html">כל המוצרים</a>
+        <a href="products.html?category=health">בריאות טבעית</a>
+        <a href="products.html?category=agriculture">חקלאות ביתית</a>
+        <a href="products.html?category=tech">טכנולוגיה</a>
+        <a href="products.html?category=home">בית וגן</a>
+      </div>
+      <div class="footer-col">
+        <h4>שירות לקוחות</h4>
+        <a href="contact.html">צור קשר</a>
+        <a href="#">שאלות נפוצות</a>
+        <a href="#">משלוחים</a>
+        <a href="#">החזרות</a>
+        <a href="#">מעקב הזמנה</a>
+      </div>
+      <div class="footer-col">
+        <h4>החברה</h4>
+        <a href="about.html">אודותינו</a>
+        <a href="#">בלוג</a>
+        <a href="#">קריירה</a>
+        <a href="#">תנאי שימוש</a>
+        <a href="#">פרטיות</a>
+      </div>
+      <div class="footer-col">
+        <h4>פרויקטים של נו</h4>
+        <a href="#">חופש (Freedom)</a>
+        <a href="#">קבוצות רכישה</a>
+        <a href="#">קהילה</a>
+        <a href="#">חכמי העדה</a>
+        <a href="#">גמ"ח לאומי</a>
+        <a href="#">דירוג ציבורי</a>
+        <a href="#">הזכות לחיות</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 נו-שופ. כל הזכויות שמורות.</p>
+      <div class="payment-methods">
+        <i class="fab fa-cc-visa"></i>
+        <i class="fab fa-cc-mastercard"></i>
+        <i class="fab fa-cc-paypal"></i>
+        <i class="fab fa-bitcoin"></i>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Quick View Modal -->
+<div class="modal" id="quickViewModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" id="quickViewContent"></div>
+</div>
+
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+  renderCategories();
+  renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 8));
+  renderProducts('newGrid', [...products].sort((a,b) => b.id - a.id).slice(0, 4));
+</script>
+
+</body>
+</html>

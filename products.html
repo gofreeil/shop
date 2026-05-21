@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חנות | נו-שופ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container topbar-inner">
+    <span><i class="fas fa-truck"></i> משלוח חינם בהזמנות מעל 199₪</span>
+    <span class="topbar-links"><a href="#"><i class="fas fa-phone"></i> 1-800-נו-שופ</a></span>
+  </div>
+</div>
+
+<header class="header" id="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><span class="logo-icon">נו</span><span class="logo-text">שופ</span></a>
+    <nav class="main-nav">
+      <a href="index.html">בית</a>
+      <a href="products.html" class="active">חנות</a>
+      <a href="categories.html">קטגוריות</a>
+      <a href="about.html">אודות</a>
+      <a href="contact.html">צור קשר</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="searchToggle"><i class="fas fa-search"></i></button>
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="#" class="icon-btn"><i class="fas fa-heart"></i><span class="badge" id="wishlistCount">0</span></a>
+      <a href="cart.html" class="icon-btn cart-btn"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+  <div class="search-bar" id="searchBar">
+    <div class="container">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="חפש מוצרים...">
+        <button class="search-close" id="searchClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="search-suggestions" id="searchSuggestions"></div>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / <span id="breadcrumbCat">כל המוצרים</span></div>
+    <h1 id="pageTitle">כל המוצרים</h1>
+  </div>
+</section>
+
+<section class="container">
+  <div class="shop-layout">
+    <aside class="filters">
+      <div class="filter-group">
+        <h4>קטגוריה</h4>
+        <div id="categoryFilters"></div>
+      </div>
+      <div class="filter-group">
+        <h4>טווח מחירים</h4>
+        <div class="range-wrap">
+          <input type="range" id="priceRange" min="0" max="3000" value="3000" step="50">
+          <div class="range-values"><span>₪0</span><span id="priceMax">₪3000</span></div>
+        </div>
+      </div>
+      <div class="filter-group">
+        <h4>דירוג</h4>
+        <label class="filter-option"><input type="radio" name="rating" value="0" checked> כל הדירוגים</label>
+        <label class="filter-option"><input type="radio" name="rating" value="4.5"> 4.5★ ומעלה</label>
+        <label class="filter-option"><input type="radio" name="rating" value="4"> 4★ ומעלה</label>
+      </div>
+      <div class="filter-group">
+        <h4>סטטוס</h4>
+        <label class="filter-option"><input type="checkbox" id="filterSale"> במבצע</label>
+        <label class="filter-option"><input type="checkbox" id="filterNew"> חדש</label>
+      </div>
+      <button class="btn btn-ghost btn-block" onclick="resetFilters()" style="margin-top:16px">
+        <i class="fas fa-rotate-left"></i> איפוס סינון
+      </button>
+    </aside>
+
+    <div>
+      <div class="shop-toolbar">
+        <div class="result-count"><span id="resultCount">0</span> מוצרים</div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <select id="sortSelect">
+            <option value="featured">מומלצים</option>
+            <option value="price-asc">מחיר: נמוך לגבוה</option>
+            <option value="price-desc">מחיר: גבוה לנמוך</option>
+            <option value="rating">דירוג גבוה</option>
+            <option value="newest">חדשים ביותר</option>
+          </select>
+        </div>
+      </div>
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 נו-שופ. כל הזכויות שמורות.</p>
+      <div class="payment-methods">
+        <i class="fab fa-cc-visa"></i><i class="fab fa-cc-mastercard"></i><i class="fab fa-cc-paypal"></i>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="quickViewModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" id="quickViewContent"></div>
+</div>
+
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+// Render filters
+document.getElementById('categoryFilters').innerHTML = `
+  <label class="filter-option"><input type="radio" name="cat" value="" checked> כל הקטגוריות</label>
+  ${categories.map(c => `<label class="filter-option"><input type="radio" name="cat" value="${c.id}"> ${c.name}</label>`).join('')}
+`;
+
+const urlParams = new URLSearchParams(window.location.search);
+const initCat = urlParams.get('category');
+if (initCat) {
+  const r = document.querySelector(`input[name="cat"][value="${initCat}"]`);
+  if (r) r.checked = true;
+}
+
+function applyFilters() {
+  const cat = document.querySelector('input[name="cat"]:checked').value;
+  const rating = parseFloat(document.querySelector('input[name="rating"]:checked').value);
+  const maxPrice = parseFloat(document.getElementById('priceRange').value);
+  const onSale = document.getElementById('filterSale').checked;
+  const onlyNew = document.getElementById('filterNew').checked;
+  const sort = document.getElementById('sortSelect').value;
+
+  let list = products.filter(p => {
+    if (cat && p.category !== cat) return false;
+    if (p.rating < rating) return false;
+    if (p.price > maxPrice) return false;
+    if (onSale && !p.oldPrice) return false;
+    if (onlyNew && p.badge !== 'new') return false;
+    return true;
+  });
+
+  if (sort === 'price-asc') list.sort((a,b) => a.price - b.price);
+  else if (sort === 'price-desc') list.sort((a,b) => b.price - a.price);
+  else if (sort === 'rating') list.sort((a,b) => b.rating - a.rating);
+  else if (sort === 'newest') list.sort((a,b) => b.id - a.id);
+  else list.sort((a,b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+
+  document.getElementById('resultCount').textContent = list.length;
+  renderProducts('productsGrid', list);
+
+  if (cat) {
+    const c = categories.find(x => x.id === cat);
+    document.getElementById('pageTitle').textContent = c.name;
+    document.getElementById('breadcrumbCat').textContent = c.name;
+  } else {
+    document.getElementById('pageTitle').textContent = 'כל המוצרים';
+    document.getElementById('breadcrumbCat').textContent = 'כל המוצרים';
+  }
+}
+
+function resetFilters() {
+  document.querySelector('input[name="cat"][value=""]').checked = true;
+  document.querySelector('input[name="rating"][value="0"]').checked = true;
+  document.getElementById('priceRange').value = 3000;
+  document.getElementById('priceMax').textContent = '₪3000';
+  document.getElementById('filterSale').checked = false;
+  document.getElementById('filterNew').checked = false;
+  document.getElementById('sortSelect').value = 'featured';
+  applyFilters();
+}
+
+document.getElementById('priceRange').addEventListener('input', e => {
+  document.getElementById('priceMax').textContent = '₪' + e.target.value;
+  applyFilters();
+});
+document.querySelectorAll('.filters input, #sortSelect').forEach(el => el.addEventListener('change', applyFilters));
+applyFilters();
+</script>
+</body>
+</html>
