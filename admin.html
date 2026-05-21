@@ -277,8 +277,6 @@ function showAdmin() {
   document.getElementById('adminApp').style.display = 'grid';
   init();
 }
-if (localStorage.getItem('noshop_admin')) showAdmin();
-
 // === Theme ===
 const savedTheme = localStorage.getItem('noshop_theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
@@ -483,6 +481,9 @@ function init() {
     updateThemeIcon(next);
   });
 }
+
+// Auto-login check (must run after all declarations)
+if (localStorage.getItem('noshop_admin')) showAdmin();
 </script>
 </body>
 </html>
