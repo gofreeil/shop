@@ -2,38 +2,28 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --primary-light: #818cf8;
-  --accent: #f59e0b;
+  --primary: #818cf8;
+  --primary-dark: #6366f1;
+  --primary-light: #a5b4fc;
+  --accent: #fbbf24;
   --accent-2: #10b981;
-  --bg: #ffffff;
-  --bg-alt: #f8fafc;
-  --bg-card: #ffffff;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
-  --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
-  --radius: 12px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-[data-theme="dark"] {
   --bg: #0a0e1a;
   --bg-alt: #111827;
   --bg-card: #1a1f2e;
   --text: #f1f5f9;
   --text-muted: #94a3b8;
   --border: #2d3548;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
   --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
   --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
   --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+#themeToggle { display: none !important; }
 
 html { scroll-behavior: smooth; }
 body {
@@ -67,13 +57,12 @@ input, textarea { font-family: inherit; font-size: inherit; }
 /* === Header === */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(255,255,255,0.85);
+  background: rgba(10,14,26,0.85);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border);
   transition: var(--transition);
 }
-[data-theme="dark"] .header { background: rgba(10,14,26,0.85); }
 
 .header-inner {
   display: flex; align-items: center; justify-content: space-between;
@@ -173,9 +162,8 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .hero {
   position: relative; overflow: hidden;
   padding: 80px 0 100px;
-  background: linear-gradient(135deg, #fafbff 0%, #f0f4ff 100%);
+  background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%);
 }
-[data-theme="dark"] .hero { background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%); }
 
 .hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .blob {

@@ -3,23 +3,10 @@ const STORAGE = { CART: 'noshop_cart', WISHLIST: 'noshop_wishlist', THEME: 'nosh
 let cart = JSON.parse(localStorage.getItem(STORAGE.CART) || '[]');
 let wishlist = JSON.parse(localStorage.getItem(STORAGE.WISHLIST) || '[]');
 
-// === Theme ===
-function initTheme() {
-  const saved = localStorage.getItem(STORAGE.THEME) || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
-  updateThemeIcon(saved);
-}
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') || 'light';
-  const next = current === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem(STORAGE.THEME, next);
-  updateThemeIcon(next);
-}
-function updateThemeIcon(theme) {
-  const btn = document.getElementById('themeToggle');
-  if (btn) btn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-}
+// === Theme (dark only) ===
+function initTheme() {}
+function toggleTheme() {}
+function updateThemeIcon() {}
 
 // === Toast ===
 function toast(msg, icon = 'fa-check-circle') {
