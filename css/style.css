@@ -42,6 +42,44 @@ input, textarea { font-family: inherit; font-size: inherit; }
 
 .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
 
+/* === Construction Banner === */
+.construction-banner {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: white;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  text-align: center;
+  position: relative;
+}
+.construction-banner i { margin-left: 6px; }
+.construction-close {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 26px; height: 26px; border-radius: 6px;
+  color: white; opacity: 0.85;
+  display: flex; align-items: center; justify-content: center;
+}
+.construction-close:hover { background: rgba(0,0,0,0.15); opacity: 1; }
+@media (max-width: 720px) {
+  .construction-banner { font-size: 11px; padding: 6px 30px 6px 30px; }
+}
+
+/* === Auth Modal === */
+.auth-tabs {
+  display: flex; gap: 4px;
+  background: var(--bg-alt); padding: 4px;
+  border-radius: 12px; margin-bottom: 20px;
+}
+.auth-tab {
+  flex: 1; padding: 10px;
+  border-radius: 8px; font-weight: 600; font-size: 14px;
+  color: var(--text-muted); transition: var(--transition);
+}
+.auth-tab.active { background: var(--bg-card); color: var(--text); box-shadow: var(--shadow-sm); }
+.auth-form { display: none; }
+.auth-form.active { display: block; }
+
 /* === Top Bar === */
 .topbar {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);

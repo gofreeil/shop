@@ -1,7 +1,8 @@
 // === State ===
-const STORAGE = { CART: 'noshop_cart', WISHLIST: 'noshop_wishlist', THEME: 'noshop_theme' };
+const STORAGE = { CART: 'noshop_cart', WISHLIST: 'noshop_wishlist', THEME: 'noshop_theme', USER: 'noshop_user' };
 let cart = JSON.parse(localStorage.getItem(STORAGE.CART) || '[]');
 let wishlist = JSON.parse(localStorage.getItem(STORAGE.WISHLIST) || '[]');
+let currentUser = JSON.parse(localStorage.getItem(STORAGE.USER) || 'null');
 
 // === Theme (dark only) ===
 function initTheme() {}
@@ -246,6 +247,223 @@ function initSearch() {
   });
 }
 
+// === Construction Banner ===
+function injectConstructionBanner() {
+  if (document.getElementById('constructionBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'constructionBanner';
+  banner.className = 'construction-banner';
+  banner.innerHTML = `
+    <span><i class="fas fa-triangle-exclamation"></i> אתר זה בבנייה — חלק מהפיצ'רים עדיין לא פעילים. תודה על הסבלנות!</span>
+    <button class="construction-close" onclick="this.parentElement.remove()" aria-label="סגור"><i class="fas fa-times"></i></button>
+  `;
+  document.body.insertBefore(banner, document.body.firstChild);
+}
+
+// === Auth ===
+function injectAccountUI() {
+  const actions = document.querySelector('.header-actions');
+  if (!actions || document.getElementById('accountBtn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'accountBtn';
+  btn.className = 'icon-btn';
+  btn.setAttribute('aria-label', 'חשבון');
+  btn.onclick = () => currentUser ? openAccountMenu() : openAuth('login');
+  updateAccountBtn(btn);
+  actions.insertBefore(btn, actions.firstChild);
+}
+function updateAccountBtn(btn) {
+  btn = btn || document.getElementById('accountBtn');
+  if (!btn) return;
+  btn.innerHTML = currentUser
+    ? `<span style="background:var(--primary);color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">${currentUser.name.charAt(0)}</span>`
+    : '<i class="fas fa-user"></i>';
+}
+
+function openAuth(tab = 'login') {
+  const modal = ensureAuthModal();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  switchAuthTab(tab);
+}
+function closeAuth() {
+  document.getElementById('authModal')?.classList.remove('active');
+  document.body.style.overflow = '';
+}
+function switchAuthTab(tab) {
+  document.querySelectorAll('#authModal .auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('#authModal .auth-form').forEach(f => f.classList.toggle('active', f.dataset.tab === tab));
+}
+function ensureAuthModal() {
+  let modal = document.getElementById('authModal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'authModal';
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeAuth()"></div>
+    <div class="modal-content" style="max-width:480px">
+      <button class="modal-close" onclick="closeAuth()"><i class="fas fa-times"></i></button>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">התחברות</button>
+        <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">הרשמה</button>
+      </div>
+
+      <form class="auth-form active" data-tab="login" onsubmit="handleLogin(event)">
+        <h2 style="font-size:22px;margin-bottom:6px">ברוך הבא</h2>
+        <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px">התחבר לחשבון שלך</p>
+        <div class="form-grid">
+          <div class="form-field"><label>אימייל</label><input type="email" name="email" required></div>
+          <div class="form-field"><label>סיסמה</label><input type="password" name="password" required></div>
+          <button type="submit" class="btn btn-primary btn-block">התחבר</button>
+        </div>
+      </form>
+
+      <form class="auth-form" data-tab="register" onsubmit="handleRegister(event)">
+        <h2 style="font-size:22px;margin-bottom:6px">פתיחת חשבון</h2>
+        <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">צור חשבון כדי לשמור מועדפים ולקנות מהר יותר</p>
+        <div class="form-grid">
+          <div class="form-field"><label>שם מלא</label><input type="text" name="name" required></div>
+          <div class="form-field"><label>אימייל</label><input type="email" name="email" required></div>
+          <div class="form-field"><label>סיסמה</label><input type="password" name="password" required minlength="4"></div>
+          <div style="margin-top:10px;padding:12px 14px;background:var(--bg-alt);border-radius:10px;font-size:13px;color:var(--text-muted);border:1px solid var(--border)">
+            <strong style="display:block;color:var(--text);margin-bottom:4px"><i class="fas fa-credit-card"></i> פרטי תשלום (אופציונלי)</strong>
+            ⚠️ דמו בלבד — אל תזין פרטי כרטיס אמיתיים.
+          </div>
+          <div class="form-field"><label>מספר כרטיס אשראי</label><input type="text" name="card" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19"></div>
+          <div class="form-row">
+            <div class="form-field"><label>תוקף</label><input type="text" name="expiry" placeholder="MM/YY" maxlength="5"></div>
+            <div class="form-field"><label>CVV</label><input type="text" name="cvv" inputmode="numeric" placeholder="123" maxlength="4"></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">פתח חשבון</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+function handleLogin(e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target));
+  const saved = JSON.parse(localStorage.getItem('noshop_users') || '{}');
+  const user = saved[data.email];
+  if (!user || user.password !== data.password) {
+    toast('אימייל או סיסמה שגויים', 'fa-circle-exclamation');
+    return;
+  }
+  currentUser = { name: user.name, email: user.email };
+  localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
+  updateAccountBtn();
+  closeAuth();
+  toast(`שלום ${user.name}!`, 'fa-hand-wave');
+}
+function handleRegister(e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target));
+  const saved = JSON.parse(localStorage.getItem('noshop_users') || '{}');
+  if (saved[data.email]) {
+    toast('כבר קיים חשבון עם המייל הזה', 'fa-circle-exclamation');
+    return;
+  }
+  const cardLast4 = data.card ? data.card.replace(/\s/g, '').slice(-4) : '';
+  saved[data.email] = {
+    name: data.name, email: data.email, password: data.password,
+    cardLast4, expiry: data.expiry || '', cvv: data.cvv || ''
+  };
+  localStorage.setItem('noshop_users', JSON.stringify(saved));
+  currentUser = { name: data.name, email: data.email };
+  localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
+  updateAccountBtn();
+  closeAuth();
+  toast(`ברוך הבא ${data.name}!`, 'fa-circle-check');
+}
+function openAccountMenu() {
+  const modal = ensureAccountMenuModal();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeAccountMenu() {
+  document.getElementById('accountMenu')?.classList.remove('active');
+  document.body.style.overflow = '';
+}
+function ensureAccountMenuModal() {
+  let modal = document.getElementById('accountMenu');
+  if (modal) { renderAccountMenu(); return modal; }
+  modal = document.createElement('div');
+  modal.id = 'accountMenu';
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeAccountMenu()"></div>
+    <div class="modal-content" style="max-width:420px" id="accountMenuContent"></div>
+  `;
+  document.body.appendChild(modal);
+  renderAccountMenu();
+  return modal;
+}
+function renderAccountMenu() {
+  const content = document.getElementById('accountMenuContent');
+  if (!content || !currentUser) return;
+  content.innerHTML = `
+    <button class="modal-close" onclick="closeAccountMenu()"><i class="fas fa-times"></i></button>
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin:0 auto 12px">${currentUser.name.charAt(0)}</div>
+      <h2 style="font-size:20px;margin-bottom:4px">${currentUser.name}</h2>
+      <p style="color:var(--text-muted);font-size:13px">${currentUser.email}</p>
+    </div>
+    <div style="display:grid;gap:6px">
+      <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>
+      <a href="cart.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shopping-bag"></i> העגלה שלי</a>
+      <button class="btn btn-ghost btn-block" onclick="logoutUser()" style="justify-content:flex-start;color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
+    </div>
+  `;
+}
+function logoutUser() {
+  currentUser = null;
+  localStorage.removeItem(STORAGE.USER);
+  updateAccountBtn();
+  closeAccountMenu();
+  toast('התנתקת בהצלחה', 'fa-circle-check');
+}
+
+// === Wishlist Viewer ===
+function openWishlist() {
+  const modal = ensureWishlistModal();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  renderWishlistModal();
+}
+function closeWishlist() {
+  document.getElementById('wishlistModal')?.classList.remove('active');
+  document.body.style.overflow = '';
+}
+function ensureWishlistModal() {
+  let modal = document.getElementById('wishlistModal');
+  if (modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'wishlistModal';
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeWishlist()"></div>
+    <div class="modal-content" style="max-width:760px" id="wishlistContent"></div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+function renderWishlistModal() {
+  const content = document.getElementById('wishlistContent');
+  if (!content) return;
+  const items = wishlist.map(id => products.find(p => p.id === id)).filter(Boolean);
+  content.innerHTML = `
+    <button class="modal-close" onclick="closeWishlist()"><i class="fas fa-times"></i></button>
+    <h2 style="font-size:22px;margin-bottom:16px"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי</h2>
+    ${items.length === 0
+      ? `<div class="empty-state"><i class="far fa-heart"></i><h2>אין מועדפים עדיין</h2><p>לחץ על ❤️ על מוצר כדי להוסיף אותו לכאן</p></div>`
+      : `<div class="products-grid" style="grid-template-columns:repeat(3,1fr)">${items.map(productCard).join('')}</div>`
+    }
+  `;
+}
+
 // === Newsletter ===
 function handleNewsletter(e) {
   e.preventDefault();
@@ -257,9 +475,19 @@ function handleNewsletter(e) {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initSearch();
+  injectConstructionBanner();
+  injectAccountUI();
   updateCartCount();
   updateWishlistCount();
+  const wishBtn = document.getElementById('wishlistBtn');
+  if (wishBtn) {
+    wishBtn.removeAttribute('href');
+    wishBtn.style.cursor = 'pointer';
+    wishBtn.addEventListener('click', e => { e.preventDefault(); openWishlist(); });
+  }
   document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
   document.querySelector('#quickViewModal .modal-overlay')?.addEventListener('click', closeQuickView);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeQuickView(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeQuickView(); closeAuth(); closeWishlist(); closeAccountMenu(); }
+  });
 });
