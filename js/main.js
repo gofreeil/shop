@@ -170,6 +170,35 @@ function openQuickView(productId) {
         </div>
       </div>
     </div>
+    <div class="quick-view-reviews">
+      <h3>מה לקוחות אומרים</h3>
+      <div class="testimonials-grid">
+        <div class="testimonial">
+          <div class="stars">★★★★★</div>
+          <p>"שירות מצוין, משלוח מהיר ומוצרים איכותיים. אני קונה כאן כבר שנה!"</p>
+          <div class="testimonial-author">
+            <div class="avatar">ש</div>
+            <div><strong>שרה כהן</strong><span>תל אביב</span></div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="stars">★★★★★</div>
+          <p>"מוצאת כאן דברים שלא מצאתי בשום מקום אחר. ממליצה בחום!"</p>
+          <div class="testimonial-author">
+            <div class="avatar">ר</div>
+            <div><strong>רחל לוי</strong><span>ירושלים</span></div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="stars">★★★★★</div>
+          <p>"האתר נוח, החיפוש מעולה והמחירים הוגנים. כל הכבוד!"</p>
+          <div class="testimonial-author">
+            <div class="avatar">י</div>
+            <div><strong>יוסי אברהם</strong><span>חיפה</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';

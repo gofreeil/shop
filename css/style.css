@@ -551,6 +551,12 @@ input, textarea { font-family: inherit; font-size: inherit; }
   font-size: 140px;
 }
 .quick-view-info h2 { font-size: 28px; margin-bottom: 8px; }
+.quick-view-reviews { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+.quick-view-reviews h3 { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
+.quick-view-reviews .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 720px) {
+  .quick-view-reviews .testimonials-grid { grid-template-columns: 1fr; }
+}
 
 /* === Product Listing Page === */
 .page-header {
