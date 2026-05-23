@@ -4,8 +4,6 @@ const categories = [
   { id: 'tech', name: 'טכנולוגיה מתקדמת', icon: 'fa-microchip', color: '#6366f1', desc: 'גאדג׳טים חכמים, אלקטרוניקה' },
   { id: 'home', name: 'בית וגן', icon: 'fa-home', color: '#f59e0b', desc: 'כלי בית, עיצוב, אביזרים' },
   { id: 'kitchen', name: 'מטבח בריא', icon: 'fa-utensils', color: '#ef4444', desc: 'כלי מטבח, סופרפודים, אביזרים' },
-  { id: 'sport', name: 'ספורט וכושר', icon: 'fa-dumbbell', color: '#06b6d4', desc: 'ציוד ספורט, כושר, בריאות' },
-  { id: 'baby', name: 'תינוקות וילדים', icon: 'fa-baby', color: '#ec4899', desc: 'מוצרים לתינוקות וילדים' },
   { id: 'beauty', name: 'יופי וטיפוח', icon: 'fa-spa', color: '#a855f7', desc: 'קוסמטיקה טבעית, טיפוח' }
 ];
 
@@ -45,16 +43,6 @@ const products = [
   { id: 24, name: 'סט סכינים יפניים', category: 'kitchen', price: 599, rating: 4.9, reviews: 234, icon: 'fa-utensils', emoji: '🔪', featured: true },
   { id: 25, name: 'מסחטת מיצים איטית', category: 'kitchen', price: 1299, rating: 4.8, reviews: 178, icon: 'fa-glass-water', emoji: '🍹', badge: 'hot' },
   { id: 26, name: 'אבקת מאצ׳ה יפנית פרימיום', category: 'kitchen', price: 119, rating: 4.7, reviews: 156, icon: 'fa-mug-hot', emoji: '🍵' },
-
-  // Sport
-  { id: 27, name: 'מזרן יוגה אקולוגי', category: 'sport', price: 249, rating: 4.8, reviews: 234, icon: 'fa-person-praying', emoji: '🧘', featured: true },
-  { id: 28, name: 'משקולות מתכווננות 24kg', category: 'sport', price: 899, oldPrice: 1099, rating: 4.9, reviews: 178, icon: 'fa-dumbbell', emoji: '🏋️', badge: 'sale' },
-  { id: 29, name: 'אופני כושר חכמים', category: 'sport', price: 2999, rating: 4.7, reviews: 89, icon: 'fa-bicycle', emoji: '🚴', badge: 'new' },
-  { id: 30, name: 'רצועות התנגדות פרו', category: 'sport', price: 129, rating: 4.6, reviews: 312, icon: 'fa-link', emoji: '💪' },
-
-  // Baby
-  { id: 31, name: 'מוניטור תינוק חכם', category: 'baby', price: 699, rating: 4.9, reviews: 167, icon: 'fa-baby', emoji: '👶', featured: true },
-  { id: 32, name: 'מטהר בקבוקים UV', category: 'baby', price: 299, rating: 4.8, reviews: 134, icon: 'fa-baby-carriage', emoji: '🍼' },
 
   // Beauty
   { id: 33, name: 'סרום ויטמין C טהור', category: 'beauty', price: 189, oldPrice: 249, rating: 4.8, reviews: 456, icon: 'fa-droplet', emoji: '✨', featured: true, badge: 'sale' },

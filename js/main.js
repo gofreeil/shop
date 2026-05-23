@@ -115,7 +115,7 @@ function renderProducts(containerId, list) {
 function renderCategories() {
   const el = document.getElementById('categoriesGrid');
   if (!el) return;
-  el.innerHTML = categories.slice(0, 4).map(c => {
+  el.innerHTML = categories.map(c => {
     const count = products.filter(p => p.category === c.id).length;
     return `
       <a href="products.html?category=${c.id}" class="category-card">
