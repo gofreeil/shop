@@ -281,7 +281,7 @@
 <script src="js/main.js"></script>
 <script>
   renderCategories();
-  renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 8));
+  renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 4));
   renderProducts('newGrid', [...products].sort((a,b) => b.id - a.id).slice(0, 4));
 </script>
 
