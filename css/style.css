@@ -342,10 +342,10 @@ input, textarea { font-family: inherit; font-size: inherit; }
   border-color: transparent;
 }
 .product-image {
-  position: relative; aspect-ratio: 1; overflow: hidden;
+  position: relative; aspect-ratio: 2 / 1; overflow: hidden;
   background: var(--bg-alt);
   display: flex; align-items: center; justify-content: center;
-  font-size: 72px;
+  font-size: 48px;
 }
 .product-image::before {
   content: ''; position: absolute; inset: 0;
