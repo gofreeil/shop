@@ -108,6 +108,8 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 
 .logo { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 24px; }
+.logo img { height: 56px; width: auto; display: block; }
+.footer-logo img { height: 72px; }
 .logo-icon {
   background: linear-gradient(135deg, var(--primary), var(--primary-light));
   color: white; padding: 6px 12px; border-radius: 10px;
