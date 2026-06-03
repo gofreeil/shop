@@ -1,7 +1,7 @@
 {
   "name": "no-shop",
   "version": "1.0.0",
-  "description": "נו-שופ — חנות חכמה לחיים טובים יותר",
+  "description": "נו-שופ - חנות חכמה לחיים טובים יותר",
   "scripts": {
     "dev": "npx http-server . -p 5193 -c-1",
     "start": "npx http-server . -p 5193"

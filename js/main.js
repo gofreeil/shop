@@ -254,7 +254,7 @@ function injectConstructionBanner() {
   banner.id = 'constructionBanner';
   banner.className = 'construction-banner';
   banner.innerHTML = `
-    <span><i class="fas fa-triangle-exclamation"></i> אתר זה בבנייה — חלק מהפיצ'רים עדיין לא פעילים. תודה על הסבלנות!</span>
+    <span><i class="fas fa-triangle-exclamation"></i> אתר זה בבנייה - חלק מהפיצ'רים עדיין לא פעילים. תודה על הסבלנות!</span>
     <button class="construction-close" onclick="this.parentElement.remove()" aria-label="סגור"><i class="fas fa-times"></i></button>
   `;
   document.body.insertBefore(banner, document.body.firstChild);
@@ -328,7 +328,7 @@ function ensureAuthModal() {
           <div class="form-field"><label>סיסמה</label><input type="password" name="password" required minlength="4"></div>
           <div style="margin-top:10px;padding:12px 14px;background:var(--bg-alt);border-radius:10px;font-size:13px;color:var(--text-muted);border:1px solid var(--border)">
             <strong style="display:block;color:var(--text);margin-bottom:4px"><i class="fas fa-credit-card"></i> פרטי תשלום (אופציונלי)</strong>
-            ⚠️ דמו בלבד — אל תזין פרטי כרטיס אמיתיים.
+            ⚠️ דמו בלבד - אל תזין פרטי כרטיס אמיתיים.
           </div>
           <div class="form-field"><label>מספר כרטיס אשראי</label><input type="text" name="card" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="19"></div>
           <div class="form-row">
