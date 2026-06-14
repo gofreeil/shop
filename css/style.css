@@ -2,21 +2,21 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --primary: #818cf8;
-  --primary-dark: #6366f1;
-  --primary-light: #a5b4fc;
+  --primary: #06b6d4;
+  --primary-dark: #0891b2;
+  --primary-light: #67e8f9;
   --accent: #fbbf24;
-  --accent-2: #10b981;
-  --bg: #0a0e1a;
-  --bg-alt: #111827;
-  --bg-card: #1a1f2e;
-  --text: #f1f5f9;
-  --text-muted: #94a3b8;
-  --border: #2d3548;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
-  --shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
-  --shadow-md: 0 10px 15px -3px rgba(0,0,0,0.4);
-  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.5);
+  --accent-2: #14b8a6;
+  --bg: #ecfeff;
+  --bg-alt: #cffafe;
+  --bg-card: #ffffff;
+  --text: #0c4a6e;
+  --text-muted: #0e7490;
+  --border: #a5f3fc;
+  --shadow-sm: 0 1px 2px rgba(8,145,178,0.08);
+  --shadow: 0 4px 6px -1px rgba(8,145,178,0.12);
+  --shadow-md: 0 10px 15px -3px rgba(8,145,178,0.15);
+  --shadow-lg: 0 20px 25px -5px rgba(8,145,178,0.2);
   --radius: 12px;
   --radius-lg: 20px;
   --radius-xl: 28px;
@@ -95,7 +95,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 /* === Header === */
 .header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(10,14,26,0.85);
+  background: rgba(236,254,255,0.85);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--border);
@@ -123,7 +123,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
   transition: var(--transition);
 }
 .main-nav a:hover { color: var(--text); background: var(--bg-alt); }
-.main-nav a.active { color: var(--primary); background: rgba(99,102,241,0.1); }
+.main-nav a.active { color: var(--primary); background: rgba(6,182,212,0.1); }
 
 .header-actions { display: flex; gap: 4px; align-items: center; }
 .icon-btn {
@@ -202,7 +202,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .hero {
   position: relative; overflow: hidden;
   padding: 48px 0 56px;
-  background: linear-gradient(135deg, #0a0e1a 0%, #111827 100%);
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 50%, #a5f3fc 100%);
 }
 
 .hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
@@ -210,9 +210,9 @@ input, textarea { font-family: inherit; font-size: inherit; }
   position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5;
   animation: float 20s ease-in-out infinite;
 }
-.blob-1 { width: 500px; height: 500px; background: var(--primary); top: -100px; right: -100px; }
-.blob-2 { width: 400px; height: 400px; background: var(--accent-2); bottom: -100px; left: 10%; animation-delay: -5s; }
-.blob-3 { width: 350px; height: 350px; background: var(--accent); top: 40%; left: -100px; animation-delay: -10s; }
+.blob-1 { width: 500px; height: 500px; background: #22d3ee; top: -100px; right: -100px; }
+.blob-2 { width: 400px; height: 400px; background: #0ea5e9; bottom: -100px; left: 10%; animation-delay: -5s; }
+.blob-3 { width: 350px; height: 350px; background: #5eead4; top: 40%; left: -100px; animation-delay: -10s; }
 
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
@@ -227,7 +227,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 
 .hero-badge {
   display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(99,102,241,0.1); color: var(--primary);
+  background: rgba(6,182,212,0.1); color: var(--primary);
   padding: 6px 12px; border-radius: 100px; font-size: 13px; font-weight: 600;
   margin-bottom: 14px;
 }
@@ -261,9 +261,9 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .btn-lg { padding: 13px 24px; font-size: 16px; }
 .btn-primary {
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  color: white; box-shadow: 0 8px 20px -6px rgba(99,102,241,0.5);
+  color: white; box-shadow: 0 8px 20px -6px rgba(6,182,212,0.5);
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(99,102,241,0.6); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px -6px rgba(6,182,212,0.6); }
 .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .btn-ghost:hover { background: var(--bg-alt); border-color: var(--text); }
 .btn-light { background: white; color: var(--primary); }
@@ -557,7 +557,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .modal.active { display: flex; }
 .modal-overlay {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  background: rgba(8,145,178,0.4); backdrop-filter: blur(4px);
 }
 .modal-content {
   position: relative;
