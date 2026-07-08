@@ -309,6 +309,18 @@ function ensureAuthModal() {
         <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">הרשמה</button>
       </div>
 
+      <button type="button" onclick="loginWithCommunity()" class="btn btn-block" style="margin-bottom:14px;background:linear-gradient(135deg,#f59e0b,#db2777);color:#fff;font-weight:700">
+        🕊️ התחבר דרך "יוצאים לחירות"
+      </button>
+      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px">
+        רשום כבר בקהילה או באתר אחר של יוצאים לחירות? נזהה אותך אוטומטית.
+      </p>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:12px;color:var(--text-muted)">או</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
       <form class="auth-form active" data-tab="login" onsubmit="handleLogin(event)">
         <h2 style="font-size:22px;margin-bottom:6px">ברוך הבא</h2>
         <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px">התחבר לחשבון שלך</p>
@@ -343,40 +355,67 @@ function ensureAuthModal() {
   document.body.appendChild(modal);
   return modal;
 }
-function handleLogin(e) {
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(e.target));
-  const saved = JSON.parse(localStorage.getItem('noshop_users') || '{}');
-  const user = saved[data.email];
-  if (!user || user.password !== data.password) {
-    toast('אימייל או סיסמה שגויים', 'fa-circle-exclamation');
-    return;
-  }
-  currentUser = { name: user.name, email: user.email };
-  localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
-  updateAccountBtn();
-  closeAuth();
-  toast(`שלום ${user.name}!`, 'fa-hand-wave');
+// התחברות דרך יוצאים לחירות (SSO): הקהילה שותלת את העוגייה המשותפת gofreeil-auth,
+// חוזרת לחנות, ואז /api/me מזהה את המשתמש.
+function loginWithCommunity() {
+  const callback = `${window.location.origin}/`;
+  window.location.href = `https://community.gofreeil.com/sso?callback=${encodeURIComponent(callback)}`;
 }
-function handleRegister(e) {
+
+async function handleLogin(e) {
   e.preventDefault();
   const data = Object.fromEntries(new FormData(e.target));
-  const saved = JSON.parse(localStorage.getItem('noshop_users') || '{}');
-  if (saved[data.email]) {
-    toast('כבר קיים חשבון עם המייל הזה', 'fa-circle-exclamation');
-    return;
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: data.email, password: data.password })
+    });
+    if (!res.ok) { toast('אימייל או סיסמה שגויים', 'fa-circle-exclamation'); return; }
+    const { user } = await res.json();
+    currentUser = { name: user.name, email: user.email };
+    localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
+    updateAccountBtn();
+    closeAuth();
+    toast(`שלום ${user.name}!`, 'fa-hand-wave');
+  } catch {
+    toast('שגיאת התחברות, נסה שוב', 'fa-circle-exclamation');
   }
-  const cardLast4 = data.card ? data.card.replace(/\s/g, '').slice(-4) : '';
-  saved[data.email] = {
-    name: data.name, email: data.email, password: data.password,
-    cardLast4, expiry: data.expiry || '', cvv: data.cvv || ''
-  };
-  localStorage.setItem('noshop_users', JSON.stringify(saved));
-  currentUser = { name: data.name, email: data.email };
-  localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
-  updateAccountBtn();
-  closeAuth();
-  toast(`ברוך הבא ${data.name}!`, 'fa-circle-check');
+}
+async function handleRegister(e) {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(e.target));
+  try {
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: data.name, email: data.email, password: data.password })
+    });
+    if (!res.ok) { toast('כבר קיים חשבון עם המייל הזה', 'fa-circle-exclamation'); return; }
+    const { user } = await res.json();
+    currentUser = { name: user.name, email: user.email };
+    localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
+    updateAccountBtn();
+    closeAuth();
+    toast(`ברוך הבא ${user.name}!`, 'fa-circle-check');
+  } catch {
+    toast('שגיאת הרשמה, נסה שוב', 'fa-circle-exclamation');
+  }
+}
+// מזהה משתמש מחובר לפי העוגייה המשותפת (בטעינת הדף / חזרה מ-SSO)
+async function hydrateUser() {
+  try {
+    const res = await fetch('/api/me');
+    const { user } = await res.json();
+    if (user) {
+      currentUser = { name: user.name, email: user.email };
+      localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
+    } else if (currentUser) {
+      currentUser = null;
+      localStorage.removeItem(STORAGE.USER);
+    }
+    updateAccountBtn();
+  } catch { /* ignore - offline */ }
 }
 function openAccountMenu() {
   const modal = ensureAccountMenuModal();
@@ -418,7 +457,8 @@ function renderAccountMenu() {
     </div>
   `;
 }
-function logoutUser() {
+async function logoutUser() {
+  try { await fetch('/api/logout', { method: 'POST' }); } catch { /* ignore */ }
   currentUser = null;
   localStorage.removeItem(STORAGE.USER);
   updateAccountBtn();
@@ -477,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSearch();
   injectConstructionBanner();
   injectAccountUI();
+  hydrateUser();
   updateCartCount();
   updateWishlistCount();
   const wishBtn = document.getElementById('wishlistBtn');
