@@ -309,6 +309,11 @@ function ensureAuthModal() {
         <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">הרשמה</button>
       </div>
 
+      <!-- הודעה ברורה למשתמש חדש: בפעם הראשונה יש להירשם תחילה -->
+      <p style="text-align:center;font-size:13px;font-weight:700;line-height:1.6;color:#fcd34d;margin-bottom:16px">
+        👋 פעם ראשונה כאן? יש להירשם תחילה — ואז ניתן להישאר מחובר במכשיר זה.
+      </p>
+
       <button type="button" onclick="loginWithCommunity()" class="btn btn-block" style="margin-bottom:14px;background:linear-gradient(135deg,#f59e0b,#db2777);color:#fff;font-weight:700">
         🕊️ התחבר דרך "יוצאים לחירות"
       </button>
