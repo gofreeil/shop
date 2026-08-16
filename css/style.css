@@ -826,3 +826,12 @@ input, textarea { font-family: inherit; font-size: inherit; }
   .newsletter p { font-size: 13px; }
   .footer { padding: 24px 0 12px; }
 }
+
+/* גרדיאנט כפתור ההתחברות: שקיעה - ענבר→אדום→ורוד→סגול→אינדיגו, קצב שינוי אחיד בלי קו חיתוך */
+.login-grad {
+  background-image: linear-gradient(to right,
+      #f59e0b, #ef4444 30%, #db2777 55%, #a855f7 80%, #6366f1 100%);
+  background-image: linear-gradient(to right in oklch,
+      #f59e0b, #ef4444 30%, #db2777 55%, #a855f7 80%, #6366f1 100%);
+}
+.login-grad:hover { filter: brightness(1.1); }

@@ -314,7 +314,7 @@ function ensureAuthModal() {
         👋 פעם ראשונה כאן? יש להירשם תחילה — ואז ניתן להישאר מחובר במכשיר זה.
       </p>
 
-      <button type="button" onclick="loginWithCommunity()" class="btn btn-block" style="margin-bottom:14px;background:linear-gradient(135deg,#f59e0b,#db2777);color:#fff;font-weight:700">
+      <button type="button" onclick="loginWithCommunity()" class="btn btn-block login-grad" style="margin-bottom:14px;color:#fff;font-weight:700">
         🕊️ התחבר דרך "יוצאים לחירות"
       </button>
       <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px">
