@@ -271,7 +271,10 @@ function injectConstructionBanner() {
     <span><i class="fas fa-triangle-exclamation"></i> אתר זה בבנייה - חלק מהפיצ'רים עדיין לא פעילים. תודה על הסבלנות!</span>
     <button class="construction-close" onclick="this.parentElement.remove()" aria-label="סגור"><i class="fas fa-times"></i></button>
   `;
-  document.body.insertBefore(banner, document.body.firstChild);
+  // מתחת להדר (ולא מעליו) - ההדר נשאר ראשון ודביק, הבאנר נגלל עם הדף
+  const header = document.querySelector('.header');
+  if (header) header.insertAdjacentElement('afterend', banner);
+  else document.body.insertBefore(banner, document.body.firstChild);
 }
 
 // === Auth ===
