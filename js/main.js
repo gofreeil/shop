@@ -140,11 +140,21 @@ function openQuickView(productId) {
   const cat = categories.find(c => c.id === p.category) || categories[0];
   const modal = document.getElementById('quickViewModal');
   const content = document.getElementById('quickViewContent');
+  const imgs = productImages(p);
+  qvGallery = { id: p.id, imgs, index: 0 };
   content.innerHTML = `
     <button class="modal-close" onclick="closeQuickView()"><i class="fas fa-times"></i></button>
     <div class="quick-view">
-      <div class="quick-view-image" style="background: linear-gradient(135deg, ${cat.color}22, ${cat.color}11)">
-        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : `<span>${p.emoji || '📦'}</span>`}
+      <div class="quick-view-media">
+        <div class="quick-view-image${imgs.length ? ' has-photo' : ''}" id="qvMain" style="background: linear-gradient(135deg, ${cat.color}22, ${cat.color}11)" ${imgs.length ? `onclick="openLightbox(${p.id}, qvGallery.index)" title="לחצו להגדלה"` : ''}>
+          ${imgs.length ? `<img id="qvMainImg" src="${imgs[0]}" alt="${p.name}">` : `<span>${p.emoji || '📦'}</span>`}
+          ${imgs.length ? '<span class="qv-zoom-hint"><i class="fas fa-magnifying-glass-plus"></i></span>' : ''}
+          ${imgs.length > 1 ? `
+          <button type="button" class="qv-nav qv-prev" onclick="event.stopPropagation();qvStep(-1)" aria-label="תמונה קודמת"><i class="fas fa-chevron-right"></i></button>
+          <button type="button" class="qv-nav qv-next" onclick="event.stopPropagation();qvStep(1)" aria-label="תמונה הבאה"><i class="fas fa-chevron-left"></i></button>
+          <span class="qv-counter" id="qvCounter">1 / ${imgs.length}</span>` : ''}
+        </div>
+        ${imgs.length > 1 ? `<div class="qv-thumbs" id="qvThumbs">${imgs.map((src, i) => `<button type="button" class="${i === 0 ? 'active' : ''}" onclick="qvShow(${i})" aria-label="תמונה ${i + 1}"><img src="${src}" alt=""></button>`).join('')}</div>` : ''}
       </div>
       <div class="quick-view-info">
         <span class="product-category" style="color:${cat.color}">${cat.name}</span>
@@ -178,6 +188,7 @@ function openQuickView(productId) {
             <i class="${wishlist.includes(p.id) ? 'fas' : 'far'} fa-heart"></i>
           </button>
         </div>
+        ${shareBarHtml(p)}
         <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);display:grid;gap:8px;font-size:14px;color:var(--text-muted)">
           <div><i class="fas fa-truck" style="color:var(--primary);width:24px"></i> משלוח חינם מעל 199₪</div>
           <div><i class="fas fa-rotate-left" style="color:var(--primary);width:24px"></i> החזרה תוך 30 יום</div>
@@ -219,8 +230,204 @@ function openQuickView(productId) {
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
   content.scrollTop = 0;
+  attachSwipe(document.getElementById('qvMain'), d => qvStep(d));
   renderRecommendations(p);
 }
+
+// === גלריית המוצר בחלון המהיר ===
+// מוצר מוכר נושא images (עד 6, הראשונה ראשית); מוצר עם image בלבד = גלריה של אחת.
+let qvGallery = { id: 0, imgs: [], index: 0 };
+function productImages(p) {
+  const list = Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : []);
+  return list.filter(Boolean);
+}
+function qvShow(i) {
+  const g = qvGallery;
+  if (!g.imgs.length) return;
+  g.index = (i + g.imgs.length) % g.imgs.length;
+  const img = document.getElementById('qvMainImg');
+  if (img) img.src = g.imgs[g.index];
+  const counter = document.getElementById('qvCounter');
+  if (counter) counter.textContent = `${g.index + 1} / ${g.imgs.length}`;
+  document.querySelectorAll('#qvThumbs button').forEach((b, k) => b.classList.toggle('active', k === g.index));
+}
+function qvStep(d) { qvShow(qvGallery.index + d); }
+// החלקה אופקית (מגע) - מעבר בין תמונות. RTL: החלקה שמאלה = הבאה.
+function attachSwipe(el, onSwipe) {
+  if (!el) return;
+  let x0 = null, y0 = null;
+  el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    x0 = null;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) onSwipe(dx < 0 ? 1 : -1);
+  }, { passive: true });
+}
+
+// === שיתוף מוצר ===
+// הקישור המשותף הוא /p/<id> - דף שמגיש לרובוטים של וואטסאפ/פייסבוק/טלגרם/X את
+// השם, התיאור והתמונה הראשית (Open Graph), ומעביר גולש אמיתי לחלון המוצר.
+function productShareUrl(id) { return `${location.origin}/p/${id}`; }
+function productShareText(p) { return `${p.name} - ₪${p.price}${p.seller ? ` · ${p.seller}` : ''} | חנות החירות`; }
+function shareBarHtml(p) {
+  const url = productShareUrl(p.id);
+  const text = productShareText(p);
+  const u = encodeURIComponent(url), t = encodeURIComponent(text);
+  return `
+    <div class="share-bar">
+      <span class="share-label"><i class="fas fa-share-nodes"></i> שיתוף</span>
+      ${navigator.share ? `<button type="button" onclick="shareProduct(${p.id})" title="שיתוף..."><i class="fas fa-arrow-up-from-bracket"></i></button>` : ''}
+      <a href="https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}" target="_blank" rel="noopener" class="wa" title="וואטסאפ"><i class="fab fa-whatsapp"></i></a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener" class="fb" title="פייסבוק"><i class="fab fa-facebook-f"></i></a>
+      <a href="https://t.me/share/url?url=${u}&text=${t}" target="_blank" rel="noopener" class="tg" title="טלגרם"><i class="fab fa-telegram"></i></a>
+      <a href="https://twitter.com/intent/tweet?url=${u}&text=${t}" target="_blank" rel="noopener" class="x" title="X"><i class="fab fa-x-twitter"></i></a>
+      <a href="mailto:?subject=${t}&body=${encodeURIComponent(text + '\n' + url)}" title="אימייל"><i class="fas fa-envelope"></i></a>
+      <button type="button" onclick="copyProductLink(${p.id})" title="העתקת קישור"><i class="fas fa-link"></i></button>
+    </div>`;
+}
+async function copyProductLink(id) {
+  const url = productShareUrl(id);
+  try { await navigator.clipboard.writeText(url); toast('הקישור הועתק', 'fa-link'); }
+  catch { prompt('העתיקו את הקישור:', url); }
+}
+// שיתוף מקורי (מובייל): כותרת + טקסט + קישור, ואם המכשיר תומך - גם קובץ התמונה
+// הראשית, כך שבוואטסאפ למשל נשלחת התמונה עצמה ולא רק תצוגה מקדימה.
+async function shareProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const data = { title: p.name, text: productShareText(p), url: productShareUrl(id) };
+  try {
+    const cover = productImages(p)[0];
+    if (cover && navigator.canShare) {
+      const blob = await (await fetch(cover)).blob();
+      const file = new File([blob], `product-${id}.${blob.type.includes('png') ? 'png' : 'jpg'}`, { type: blob.type });
+      if (navigator.canShare({ files: [file] })) { data.files = [file]; data.text += '\n' + data.url; }
+    }
+  } catch { /* בלי קובץ */ }
+  try { await navigator.share(data); }
+  catch (ex) { if (ex?.name !== 'AbortError') copyProductLink(id); }
+}
+
+// === לייטבוקס: תצוגה מלאה עם זום (גלגלת / צביטה / הקשה כפולה), גרירה והחלקה ===
+const lb = { imgs: [], index: 0, scale: 1, x: 0, y: 0, pointers: new Map(), pinch: null, drag: null, base: { w: 0, h: 0 } };
+function ensureLightbox() {
+  let el = document.getElementById('lightbox');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'lightbox';
+  el.className = 'lightbox';
+  el.innerHTML = `
+    <button type="button" class="lb-close" onclick="closeLightbox()" aria-label="סגירה"><i class="fas fa-times"></i></button>
+    <span class="lb-counter" id="lbCounter"></span>
+    <button type="button" class="lb-nav lb-prev" onclick="lbStep(-1)" aria-label="קודמת"><i class="fas fa-chevron-right"></i></button>
+    <button type="button" class="lb-nav lb-next" onclick="lbStep(1)" aria-label="הבאה"><i class="fas fa-chevron-left"></i></button>
+    <div class="lb-stage" id="lbStage"><img id="lbImg" alt="" draggable="false"></div>
+    <div class="lb-tools">
+      <button type="button" onclick="lbZoomBy(1/1.5)" aria-label="הקטנה"><i class="fas fa-minus"></i></button>
+      <span id="lbZoomLabel">100%</span>
+      <button type="button" onclick="lbZoomBy(1.5)" aria-label="הגדלה"><i class="fas fa-plus"></i></button>
+      <button type="button" onclick="lbReset()" aria-label="איפוס"><i class="fas fa-compress"></i></button>
+    </div>`;
+  document.body.appendChild(el);
+  const stage = el.querySelector('#lbStage');
+  const img = el.querySelector('#lbImg');
+  img.addEventListener('load', () => { lb.base = { w: img.clientWidth, h: img.clientHeight }; lbApply(); });
+  stage.addEventListener('click', e => { if (e.target === stage) closeLightbox(); });
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    lbZoomAt(lb.scale * (e.deltaY < 0 ? 1.2 : 1 / 1.2), e.clientX, e.clientY);
+  }, { passive: false });
+  let lastTap = 0;
+  stage.addEventListener('pointerdown', e => {
+    stage.setPointerCapture(e.pointerId);
+    lb.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (lb.pointers.size === 2) {
+      const [a, b] = [...lb.pointers.values()];
+      lb.pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale: lb.scale };
+      lb.drag = null;
+    } else {
+      lb.drag = { x: e.clientX, y: e.clientY, tx: lb.x, ty: lb.y, moved: false, t: Date.now() };
+    }
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!lb.pointers.has(e.pointerId)) return;
+    lb.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (lb.pinch && lb.pointers.size === 2) {
+      const [a, b] = [...lb.pointers.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      lbZoomAt(lb.pinch.scale * (dist / lb.pinch.dist), (a.x + b.x) / 2, (a.y + b.y) / 2, true);
+    } else if (lb.drag) {
+      const dx = e.clientX - lb.drag.x, dy = e.clientY - lb.drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 6) lb.drag.moved = true;
+      if (lb.scale > 1) { lb.x = lb.drag.tx + dx; lb.y = lb.drag.ty + dy; lbApply(); }
+    }
+  });
+  const up = e => {
+    lb.pointers.delete(e.pointerId);
+    if (lb.pointers.size < 2) lb.pinch = null;
+    if (lb.drag && lb.pointers.size === 0) {
+      const dx = e.clientX - lb.drag.x, dy = e.clientY - lb.drag.y;
+      if (lb.scale === 1 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) lbStep(dx < 0 ? 1 : -1);
+      else if (!lb.drag.moved && e.target === img) {
+        const now = Date.now();
+        if (now - lastTap < 320) { lastTap = 0; lb.scale > 1 ? lbReset() : lbZoomAt(2.5, e.clientX, e.clientY); }
+        else lastTap = now;
+      }
+      lb.drag = null;
+    }
+  };
+  stage.addEventListener('pointerup', up);
+  stage.addEventListener('pointercancel', up);
+  return el;
+}
+function openLightbox(productId, index = 0) {
+  const p = products.find(x => x.id === productId);
+  const imgs = p ? productImages(p) : [];
+  if (!imgs.length) return;
+  const el = ensureLightbox();
+  lb.imgs = imgs;
+  el.classList.toggle('single', imgs.length < 2);
+  el.classList.add('active');
+  lbShow(index);
+}
+function lbShow(i) {
+  lb.index = (i + lb.imgs.length) % lb.imgs.length;
+  lb.scale = 1; lb.x = 0; lb.y = 0;
+  const img = document.getElementById('lbImg');
+  img.src = lb.imgs[lb.index];
+  document.getElementById('lbCounter').textContent = `${lb.index + 1} / ${lb.imgs.length}`;
+  lbApply();
+}
+function lbStep(d) { if (lb.imgs.length > 1) lbShow(lb.index + d); }
+function lbReset() { lb.scale = 1; lb.x = 0; lb.y = 0; lbApply(); }
+function lbZoomBy(f) { lbZoomAt(lb.scale * f, innerWidth / 2, innerHeight / 2); }
+// זום סביב נקודה על המסך: הנקודה שמתחת לאצבע/סמן נשארת במקום
+function lbZoomAt(scale, cx, cy, silent = false) {
+  const s1 = lb.scale, s2 = Math.min(6, Math.max(1, scale));
+  const px = cx - innerWidth / 2, py = cy - innerHeight / 2;
+  lb.x = px - (px - lb.x) * (s2 / s1);
+  lb.y = py - (py - lb.y) * (s2 / s1);
+  lb.scale = s2;
+  lbApply(silent);
+}
+function lbApply(silent = false) {
+  const img = document.getElementById('lbImg');
+  if (!img) return;
+  const maxX = Math.max(0, (lb.base.w * lb.scale - innerWidth) / 2 + 24);
+  const maxY = Math.max(0, (lb.base.h * lb.scale - innerHeight) / 2 + 24);
+  lb.x = Math.min(maxX, Math.max(-maxX, lb.x));
+  lb.y = Math.min(maxY, Math.max(-maxY, lb.y));
+  img.style.transition = silent ? 'none' : '';
+  img.style.transform = `translate(${lb.x}px, ${lb.y}px) scale(${lb.scale})`;
+  img.style.cursor = lb.scale > 1 ? 'grab' : 'zoom-in';
+  const label = document.getElementById('lbZoomLabel');
+  if (label) label.textContent = `${Math.round(lb.scale * 100)}%`;
+}
+function closeLightbox() {
+  document.getElementById('lightbox')?.classList.remove('active');
+}
+function lightboxOpen() { return document.getElementById('lightbox')?.classList.contains('active'); }
 
 // === המלצות בחלון המוצר ===
 // 1. "עוד מהחנות של X" - מוצרים נוספים של אותו מוכר (למוצר קבוע: מאותה קטגוריה).
@@ -734,6 +941,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
   document.querySelector('#quickViewModal .modal-overlay')?.addEventListener('click', closeQuickView);
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeQuickView(); closeAuth(); closeWishlist(); closeAccountMenu(); }
+    if (e.key === 'Escape') {
+      if (lightboxOpen()) return closeLightbox();
+      closeQuickView(); closeAuth(); closeWishlist(); closeAccountMenu();
+    }
+    // חיצים: דפדוף בגלריה (בלייטבוקס או בחלון המוצר). RTL: חץ שמאלה = הבאה
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const d = e.key === 'ArrowLeft' ? 1 : -1;
+      if (lightboxOpen()) lbStep(d);
+      else if (document.getElementById('quickViewModal')?.classList.contains('active') && qvGallery.imgs.length > 1) qvStep(d);
+    }
   });
+  // קישור עמוק למוצר (מקישורי שיתוף /p/<id>): ?product=<id> פותח את חלון המוצר.
+  // מוצרי מוכרים מגיעים מהשרת אחרי הטעינה - מנסים שוב כשהם נטענים.
+  const deepId = Number(new URLSearchParams(location.search).get('product'));
+  if (deepId && document.getElementById('quickViewModal')) {
+    const tryOpen = () => { if (products.some(p => p.id === deepId)) { openQuickView(deepId); return true; } return false; };
+    if (!tryOpen()) document.addEventListener('productsUpdated', tryOpen, { once: true });
+  }
 });

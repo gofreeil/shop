@@ -67,7 +67,7 @@
         <span class="step-num">1</span>
         <i class="fas fa-upload step-icon"></i>
         <h3>פותחים חנות ומעלים מוצר</h3>
-        <p>שם החנות, לוגו וטלפון מוצגים על כל מוצר ובדף החנות שלכם. לכל מוצר: תמונה, מחיר, קטגוריה ותיאור.</p>
+        <p>שם החנות, לוגו וטלפון מוצגים על כל מוצר ובדף החנות שלכם. לכל מוצר: עד 6 תמונות, מחיר, קטגוריה ותיאור.</p>
       </div>
       <div class="step-card">
         <span class="step-num">2</span>
@@ -132,16 +132,14 @@
           <div class="form-field"><label>תיאור המוצר *</label><textarea name="description" rows="5" maxlength="2000" required placeholder="מה המוצר, למי הוא מתאים, מה כלול, מידות/משקל, הוראות שימוש. בלי הבטחות רפואיות או טענות שאינכם יכולים לגבות."></textarea></div>
 
           <div class="form-field">
-            <label>תמונת המוצר (מומלץ)</label>
+            <label>תמונות המוצר (עד 6 · הראשונה היא התמונה הראשית)</label>
+            <div class="img-grid" id="imgGrid"></div>
             <label class="image-drop" id="imageDrop">
-              <input type="file" id="imageInput" accept="image/*" onchange="handleImage(this.files[0])">
-              <i class="fas fa-image" style="font-size:28px;margin-bottom:6px;display:block"></i>
-              לחצו לבחירת תמונה או גררו לכאן · JPG/PNG/WebP · מוקטנת אוטומטית
+              <input type="file" id="imageInput" accept="image/*" multiple onchange="addImages(this.files); this.value=''">
+              <i class="fas fa-images" style="font-size:28px;margin-bottom:6px;display:block"></i>
+              <span id="imageDropText">לחצו לבחירת תמונות או גררו לכאן · JPG/PNG/WebP · עד 6 תמונות</span>
             </label>
-            <div class="image-preview" id="imagePreview" hidden>
-              <img id="imagePreviewImg" alt="תצוגה מקדימה">
-              <button type="button" onclick="clearImage()" title="הסר תמונה"><i class="fas fa-times"></i></button>
-            </div>
+            <p class="hint" style="margin-top:8px;margin-bottom:0"><i class="fas fa-wand-magic-sparkles" style="color:var(--primary)"></i> אחרי ההעלאה אפשר לזום, למרכז ולסובב כל תמונה, לגרור כדי לשנות סדר, ולבחור איזו תהיה הראשית. התמונה הראשית מופיעה בכרטיס המוצר ובשיתוף ברשתות החברתיות.</p>
           </div>
 
           <h2><i class="fas fa-id-card" style="color:var(--primary)"></i> פרטי המוכר</h2>
@@ -233,6 +231,34 @@
     </div>
   </div>
 </footer>
+<!-- עורך תמונה: זום / מרכוז / סיבוב בתוך מסגרת 4:3 (כמו כרטיס המוצר) -->
+<div class="modal crop-modal" id="cropModal">
+  <div class="modal-overlay" onclick="closeCrop()"></div>
+  <div class="modal-content">
+    <button type="button" class="modal-close" onclick="closeCrop()"><i class="fas fa-times"></i></button>
+    <h3><i class="fas fa-crop-simple"></i> מיקום התמונה</h3>
+    <p class="hint">גררו כדי למרכז, גלגלת / צביטה או הסליידר כדי לזום. מה שבתוך המסגרת - זה מה שהלקוח יראה.</p>
+    <div class="crop-stage" id="cropStage"><canvas id="cropCanvas" width="1200" height="900"></canvas></div>
+    <div class="crop-toolbar">
+      <div class="zoom">
+        <i class="fas fa-magnifying-glass-minus"></i>
+        <input type="range" id="cropZoom" min="0" max="100" value="0" oninput="cropZoomSlider(this.value)">
+        <i class="fas fa-magnifying-glass-plus"></i>
+      </div>
+      <div class="tools">
+        <button type="button" onclick="cropRotate()" title="סיבוב 90°"><i class="fas fa-rotate-right"></i> סיבוב</button>
+        <button type="button" onclick="cropFit('cover')" title="מילוי המסגרת"><i class="fas fa-expand"></i> מילוי</button>
+        <button type="button" onclick="cropFit('fit')" title="התמונה כולה בתוך המסגרת"><i class="fas fa-compress"></i> הכל</button>
+        <button type="button" onclick="cropCenter()" title="מרכוז"><i class="fas fa-crosshairs"></i> מרכוז</button>
+      </div>
+    </div>
+    <div class="crop-actions">
+      <button type="button" class="btn btn-ghost" onclick="closeCrop()">ביטול</button>
+      <button type="button" class="btn btn-primary" onclick="saveCrop()"><i class="fas fa-check"></i> שמירה</button>
+    </div>
+  </div>
+</div>
+
 
 <div class="toast" id="toast"></div>
 <script src="data/products.js"></script>
@@ -306,14 +332,242 @@ function resizeImage(file, maxSide, { square = false, png = false, maxBytes = 60
   });
 }
 
-let imageData = '';
-async function handleImage(file) {
-  try {
-    imageData = await resizeImage(file, 900);
-    document.getElementById('imagePreviewImg').src = imageData;
-    document.getElementById('imagePreview').hidden = false;
-    document.getElementById('imageDrop').style.display = 'none';
-  } catch (ex) { toast(ex.message, 'fa-circle-exclamation'); }
+// ---- גלריית תמונות המוצר: עד 6, הראשונה ראשית, כל אחת עוברת עורך זום/מרכוז ----
+// כל פריט: src = המקור (מוקטן ל-1600px, בסיס לעריכה חוזרת), out = התוצאה
+// 1200x900 JPEG (מה שנשלח), view = מצב העורך (scale/x/y/rot) לשחזור בעריכה.
+const MAX_IMAGES = 6, CROP_W = 1200, CROP_H = 900, IMAGE_MAX_BYTES = 450_000;
+let gallery = [];
+function loadImageEl(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('קובץ תמונה לא תקין'));
+    img.src = src;
+  });
+}
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(new Error('לא ניתן לקרוא את הקובץ'));
+    r.readAsDataURL(file);
+  });
+}
+// מקור לעריכה: מוקטן ל-1600px (מספיק לזום פי 4 בתוך מסגרת 1200) כדי שלא נחזיק
+// תמונות מצלמה של 12MP בזיכרון
+async function toEditSource(file) {
+  if (!file || !file.type.startsWith('image/')) throw new Error('לא תמונה');
+  const img = await loadImageEl(await readFileAsDataUrl(file));
+  const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+  if (scale === 1 && file.size < 1_500_000) return img.src;
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.92);
+}
+// מצייר תמונה לתוך קנבס 1200x900 לפי מצב תצוגה: scale = פיקסל קנבס לפיקסל תמונה,
+// x/y = הסטת מרכז התמונה ממרכז המסגרת, rot = רבעי סיבוב
+function drawView(canvas, img, v) {
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width / 2 + v.x, canvas.height / 2 + v.y);
+  ctx.rotate(v.rot * Math.PI / 2);
+  ctx.scale(v.scale, v.scale);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, -img.width / 2, -img.height / 2);
+  ctx.restore();
+}
+function rotatedSize(img, rot) { return rot % 2 ? { w: img.height, h: img.width } : { w: img.width, h: img.height }; }
+function fitScales(img, rot) {
+  const { w, h } = rotatedSize(img, rot);
+  return { fit: Math.min(CROP_W / w, CROP_H / h), cover: Math.max(CROP_W / w, CROP_H / h) };
+}
+function clampView(img, v) {
+  const { w, h } = rotatedSize(img, v.rot);
+  const maxX = Math.max(0, (w * v.scale - CROP_W) / 2), maxY = Math.max(0, (h * v.scale - CROP_H) / 2);
+  v.x = Math.min(maxX, Math.max(-maxX, v.x));
+  v.y = Math.min(maxY, Math.max(-maxY, v.y));
+  return v;
+}
+function canvasToJpeg(canvas) {
+  let q = 0.86, out = canvas.toDataURL('image/jpeg', q);
+  while (out.length > IMAGE_MAX_BYTES && q > 0.5) { q -= 0.08; out = canvas.toDataURL('image/jpeg', q); }
+  return out;
+}
+async function renderItem(item) {
+  const img = await loadImageEl(item.src);
+  const c = document.createElement('canvas');
+  c.width = CROP_W; c.height = CROP_H;
+  drawView(c, img, clampView(img, item.view));
+  item.out = canvasToJpeg(c);
+}
+async function addImages(files) {
+  const list = [...(files || [])].filter(f => f && f.type.startsWith('image/'));
+  if (!list.length) return;
+  const room = MAX_IMAGES - gallery.length;
+  if (room <= 0) return toast(`אפשר עד ${MAX_IMAGES} תמונות למוצר`, 'fa-circle-exclamation');
+  if (list.length > room) toast(`נוספו ${room} תמונות - המקסימום הוא ${MAX_IMAGES}`, 'fa-circle-info');
+  const added = [];
+  for (const file of list.slice(0, room)) {
+    try {
+      const src = await toEditSource(file);
+      const img = await loadImageEl(src);
+      const item = { src, out: '', view: { scale: fitScales(img, 0).cover, x: 0, y: 0, rot: 0 } };
+      await renderItem(item);
+      gallery.push(item);
+      added.push(item);
+    } catch (ex) { toast(ex.message, 'fa-circle-exclamation'); }
+  }
+  renderGallery();
+  // תמונה אחת - פותחים מיד את העורך; כמה יחד - נחתכו במרכז, ואפשר לערוך כל אחת
+  if (added.length === 1) openCropEditor(gallery.indexOf(added[0]));
+  else if (added.length > 1) toast('לחצו על תמונה כדי לזום ולמרכז', 'fa-wand-magic-sparkles');
+}
+function renderGallery() {
+  const grid = document.getElementById('imgGrid');
+  grid.innerHTML = gallery.map((it, i) => `
+    <div class="img-item${i === 0 ? ' cover' : ''}" draggable="true" data-i="${i}" onclick="openCropEditor(${i})" title="לחצו לזום ומרכוז">
+      <img src="${it.out}" alt="">
+      ${i === 0 ? '<span class="cover-badge"><i class="fas fa-star"></i> ראשית</span>' : ''}
+      <span class="img-edit-hint"><i class="fas fa-crop-simple"></i></span>
+      <div class="img-actions" onclick="event.stopPropagation()">
+        ${i !== 0 ? `<button type="button" onclick="setCover(${i})" title="הפוך לתמונה הראשית"><i class="fas fa-star"></i></button>` : ''}
+        <button type="button" onclick="moveImage(${i}, -1)" title="הזז ימינה" ${i === 0 ? 'disabled' : ''}><i class="fas fa-arrow-right"></i></button>
+        <button type="button" onclick="moveImage(${i}, 1)" title="הזז שמאלה" ${i === gallery.length - 1 ? 'disabled' : ''}><i class="fas fa-arrow-left"></i></button>
+        <button type="button" onclick="openCropEditor(${i})" title="זום / מרכוז / סיבוב"><i class="fas fa-crop-simple"></i></button>
+        <button type="button" class="danger" onclick="removeImage(${i})" title="הסרה"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`).join('');
+  const full = gallery.length >= MAX_IMAGES;
+  document.getElementById('imageDrop').style.display = full ? 'none' : '';
+  document.getElementById('imageDropText').textContent = gallery.length
+    ? `הוסיפו עוד תמונות (${gallery.length}/${MAX_IMAGES})`
+    : 'לחצו לבחירת תמונות או גררו לכאן · JPG/PNG/WebP · עד 6 תמונות';
+  // גרירה לשינוי סדר (עכבר); במגע יש את החיצים
+  let from = null;
+  grid.querySelectorAll('.img-item').forEach(el => {
+    el.addEventListener('dragstart', e => { from = Number(el.dataset.i); el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    el.addEventListener('dragend', () => { from = null; grid.querySelectorAll('.img-item').forEach(x => x.classList.remove('dragging', 'drag-over')); });
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); e.stopPropagation();
+      const to = Number(el.dataset.i);
+      if (from == null || from === to) return;
+      const [it] = gallery.splice(from, 1);
+      gallery.splice(to, 0, it);
+      renderGallery();
+    });
+  });
+}
+function setCover(i) { const [it] = gallery.splice(i, 1); gallery.unshift(it); renderGallery(); toast('התמונה הראשית עודכנה', 'fa-star'); }
+function moveImage(i, d) {
+  const j = i + d;
+  if (j < 0 || j >= gallery.length) return;
+  [gallery[i], gallery[j]] = [gallery[j], gallery[i]];
+  renderGallery();
+}
+function removeImage(i) { gallery.splice(i, 1); renderGallery(); }
+
+// ---- עורך: זום (סליידר / גלגלת / צביטה), גרירה למרכוז, סיבוב ----
+const crop = { index: -1, img: null, view: null, drag: null, pointers: new Map(), pinch: null };
+const cropCanvas = document.getElementById('cropCanvas');
+const cropStage = document.getElementById('cropStage');
+function cropDraw() {
+  clampView(crop.img, crop.view);
+  drawView(cropCanvas, crop.img, crop.view);
+  const { fit, cover } = fitScales(crop.img, crop.view.rot);
+  const min = fit, max = cover * 4;
+  const slider = document.getElementById('cropZoom');
+  slider.value = Math.round(100 * Math.log(crop.view.scale / min) / Math.log(max / min));
+}
+function cropScaleRange() { const { fit, cover } = fitScales(crop.img, crop.view.rot); return { min: fit, max: cover * 4 }; }
+// זום סביב נקודה בקנבס (יחסית למרכז): הנקודה שמתחת לסמן/אצבע נשארת במקום
+function cropZoomAt(scale, px = 0, py = 0) {
+  const { min, max } = cropScaleRange();
+  const s1 = crop.view.scale, s2 = Math.min(max, Math.max(min, scale));
+  crop.view.x = px - (px - crop.view.x) * (s2 / s1);
+  crop.view.y = py - (py - crop.view.y) * (s2 / s1);
+  crop.view.scale = s2;
+  cropDraw();
+}
+function cropZoomSlider(v) {
+  const { min, max } = cropScaleRange();
+  cropZoomAt(min * Math.pow(max / min, Number(v) / 100));
+}
+function cropRotate() { crop.view.rot = (crop.view.rot + 1) % 4; cropFit('cover'); }
+function cropFit(mode) { crop.view.scale = fitScales(crop.img, crop.view.rot)[mode]; crop.view.x = 0; crop.view.y = 0; cropDraw(); }
+function cropCenter() { crop.view.x = 0; crop.view.y = 0; cropDraw(); }
+// מיקום מצביע -> קואורדינטות קנבס יחסית למרכז
+function cropPoint(e) {
+  const r = cropCanvas.getBoundingClientRect();
+  const k = CROP_W / r.width;
+  return { x: (e.clientX - r.left) * k - CROP_W / 2, y: (e.clientY - r.top) * k - CROP_H / 2 };
+}
+cropStage.addEventListener('pointerdown', e => {
+  cropStage.setPointerCapture(e.pointerId);
+  crop.pointers.set(e.pointerId, cropPoint(e));
+  cropStage.classList.add('moving');
+  if (crop.pointers.size === 2) {
+    const [a, b] = [...crop.pointers.values()];
+    crop.pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), scale: crop.view.scale };
+    crop.drag = null;
+  } else {
+    const p = cropPoint(e);
+    crop.drag = { x: p.x, y: p.y, vx: crop.view.x, vy: crop.view.y };
+  }
+});
+cropStage.addEventListener('pointermove', e => {
+  if (!crop.pointers.has(e.pointerId) || !crop.img) return;
+  crop.pointers.set(e.pointerId, cropPoint(e));
+  if (crop.pinch && crop.pointers.size === 2) {
+    const [a, b] = [...crop.pointers.values()];
+    cropZoomAt(crop.pinch.scale * (Math.hypot(a.x - b.x, a.y - b.y) / crop.pinch.dist), (a.x + b.x) / 2, (a.y + b.y) / 2);
+  } else if (crop.drag) {
+    const p = cropPoint(e);
+    crop.view.x = crop.drag.vx + (p.x - crop.drag.x);
+    crop.view.y = crop.drag.vy + (p.y - crop.drag.y);
+    cropDraw();
+  }
+});
+['pointerup', 'pointercancel'].forEach(ev => cropStage.addEventListener(ev, e => {
+  crop.pointers.delete(e.pointerId);
+  if (crop.pointers.size < 2) crop.pinch = null;
+  if (!crop.pointers.size) { crop.drag = null; cropStage.classList.remove('moving'); }
+}));
+cropStage.addEventListener('wheel', e => {
+  e.preventDefault();
+  const p = cropPoint(e);
+  cropZoomAt(crop.view.scale * (e.deltaY < 0 ? 1.1 : 1 / 1.1), p.x, p.y);
+}, { passive: false });
+async function openCropEditor(i) {
+  const item = gallery[i];
+  if (!item) return;
+  crop.index = i;
+  crop.img = await loadImageEl(item.src);
+  crop.view = { ...item.view };
+  document.getElementById('cropModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  cropDraw();
+}
+function closeCrop() {
+  document.getElementById('cropModal').classList.remove('active');
+  document.body.style.overflow = '';
+  crop.index = -1; crop.img = null;
+}
+function saveCrop() {
+  const item = gallery[crop.index];
+  if (item && crop.img) {
+    item.view = { ...crop.view };
+    item.out = canvasToJpeg(cropCanvas);
+    renderGallery();
+    toast('התמונה עודכנה', 'fa-circle-check');
+  }
+  closeCrop();
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('cropModal').classList.contains('active')) closeCrop(); });
 }
 
 // ---- לוגו החנות ----
@@ -359,15 +613,14 @@ function applyStoreDetails(d, { overwrite = false } = {}) {
 try { applyStoreDetails(JSON.parse(localStorage.getItem(STORE_DRAFT_KEY) || 'null')); } catch { /* ignore */ }
 STORE_FIELDS.forEach(k => document.getElementById('sellForm')[k].addEventListener('input', saveStoreDraft));
 function clearImage() {
-  imageData = '';
+  gallery = [];
   document.getElementById('imageInput').value = '';
-  document.getElementById('imagePreview').hidden = true;
-  document.getElementById('imageDrop').style.display = '';
+  renderGallery();
 }
 const drop = document.getElementById('imageDrop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
-drop.addEventListener('drop', e => handleImage(e.dataTransfer.files[0]));
+drop.addEventListener('drop', e => addImages(e.dataTransfer.files));
 
 // ---- זהות: מילוי אוטומטי ו"המוצרים שלי" ----
 function applyUser() {
@@ -405,7 +658,7 @@ async function loadMine() {
       const [label, icon] = STATUS_HE[it.status] || STATUS_HE.pending;
       const cat = categories.find(c => c.id === it.category);
       return `<div class="mine-item">
-        <div class="thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : esc(it.emoji || '📦')}</div>
+        <div class="thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : esc(it.emoji || '📦')}${Array.isArray(it.images) && it.images.length > 1 ? `<span class="thumb-count"><i class="fas fa-images"></i> ${it.images.length}</span>` : ''}</div>
         <div>
           <strong>${esc(it.name)}</strong>
           <div style="font-size:13px;color:var(--text-muted)">${it.store_name ? `<i class="fas fa-store"></i> ${esc(it.store_name)} · ` : ''}${cat ? esc(cat.name) : ''} · ₪${Number(it.price)} · הוגש ${new Date(it.submitted_at || it.createdAt).toLocaleDateString('he-IL')}</div>
@@ -436,7 +689,8 @@ async function submitProduct(e) {
   const data = {
     name: f.name, category: f.category, emoji: f.emoji, price: f.price, old_price: f.old_price || null,
     quantity: f.quantity || null, delivery_days: f.delivery_days || null, link: f.link, description: f.description,
-    image: imageData,
+    image: gallery[0]?.out || '',
+    images: gallery.map(it => it.out),
     store_name: f.store_name, store_phone: f.store_phone, store_whatsapp: f.store_whatsapp, store_city: f.store_city,
     store_website: f.store_website, store_description: f.store_description, store_logo: logoData,
     seller_name: f.seller_name, seller_id_number: f.seller_id_number,

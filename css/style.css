@@ -424,7 +424,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
   border-color: transparent;
 }
 .product-image {
-  position: relative; aspect-ratio: 2 / 1; overflow: hidden;
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden;
   background: var(--bg-alt);
   display: flex; align-items: center; justify-content: center;
   font-size: 48px;
@@ -627,7 +627,8 @@ input, textarea { font-family: inherit; font-size: inherit; }
   display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
 }
 .quick-view-image {
-  aspect-ratio: 1; background: var(--bg-alt);
+  position: relative;
+  aspect-ratio: 4 / 3; background: var(--bg-alt);
   border-radius: var(--radius-lg);
   display: flex; align-items: center; justify-content: center;
   font-size: 140px;
@@ -1007,7 +1008,9 @@ a.product-seller:hover { color: var(--primary); }
   padding: 14px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border);
 }
 .mine-item .thumb { width: 72px; height: 72px; border-radius: 12px; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; font-size: 32px; overflow: hidden; }
+.mine-item .thumb { position: relative; }
 .mine-item .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mine-item .thumb-count { position: absolute; bottom: 4px; left: 4px; padding: 1px 6px; border-radius: 100px; background: rgba(12,74,110,0.75); color: #fff; font-size: 10px; font-weight: 700; }
 .mine-item .reason { font-size: 13px; color: #b91c1c; margin-top: 4px; }
 .sell-success { text-align: center; padding: 48px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
 .sell-success i { font-size: 64px; color: var(--accent-2); margin-bottom: 16px; }
@@ -1055,3 +1058,144 @@ a.product-seller:hover { color: var(--primary); }
   .mine-item .thumb { width: 56px; height: 56px; }
   .mine-item > :last-child { grid-column: 1 / -1; }
 }
+
+/* === גלריית המוצר בחלון המהיר: תמונה ראשית, חיצים, מונה ותמונות ממוזערות === */
+.quick-view-media { display: grid; gap: 10px; align-content: start; }
+.quick-view-image.has-photo { cursor: zoom-in; }
+.quick-view-image img { transition: opacity 0.2s; }
+.qv-zoom-hint {
+  position: absolute; bottom: 10px; left: 10px; width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,0.85); color: var(--text); display: flex; align-items: center; justify-content: center;
+  font-size: 14px; box-shadow: var(--shadow); opacity: 0; transition: var(--transition); pointer-events: none;
+}
+.quick-view-image:hover .qv-zoom-hint { opacity: 1; }
+.qv-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,0.9); color: var(--text); box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center; font-size: 15px; transition: var(--transition); z-index: 2;
+}
+.qv-nav:hover { background: #fff; transform: translateY(-50%) scale(1.08); }
+.qv-prev { right: 10px; }
+.qv-next { left: 10px; }
+.qv-counter {
+  position: absolute; bottom: 10px; right: 10px; padding: 3px 10px; border-radius: 100px;
+  background: rgba(12,74,110,0.75); color: #fff; font-size: 12px; font-weight: 700; direction: ltr;
+}
+.qv-thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.qv-thumbs button {
+  flex: 0 0 64px; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; background: var(--bg-alt);
+  border: 2px solid transparent; opacity: 0.7; transition: var(--transition);
+}
+.qv-thumbs button img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.qv-thumbs button:hover { opacity: 1; }
+.qv-thumbs button.active { border-color: var(--primary); opacity: 1; }
+@media (max-width: 720px) { .qv-zoom-hint { opacity: 1; } .qv-thumbs button { flex-basis: 56px; width: 56px; height: 56px; } }
+
+/* === שיתוף מוצר === */
+.share-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.share-label { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-inline-end: 4px; }
+.share-bar a, .share-bar button {
+  width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-alt); color: var(--text); font-size: 16px; transition: var(--transition); border: 1px solid var(--border);
+}
+.share-bar a:hover, .share-bar button:hover { color: #fff; background: var(--primary); border-color: var(--primary); transform: translateY(-2px); }
+.share-bar .wa:hover { background: #25d366; border-color: #25d366; }
+.share-bar .fb:hover { background: #1877f2; border-color: #1877f2; }
+.share-bar .tg:hover { background: #229ed9; border-color: #229ed9; }
+.share-bar .x:hover { background: #000; border-color: #000; }
+
+/* === לייטבוקס: תצוגה מלאה עם זום וגרירה === */
+.lightbox {
+  position: fixed; inset: 0; z-index: 2000; display: none; background: rgba(6,20,32,0.94);
+  touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.lightbox.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.lb-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.lb-stage img {
+  max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); object-fit: contain;
+  transition: transform 0.15s ease-out; will-change: transform; border-radius: 6px; -webkit-user-drag: none;
+}
+.lb-close, .lb-nav, .lb-tools button {
+  position: absolute; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.12);
+  color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: var(--transition); z-index: 3;
+  backdrop-filter: blur(6px);
+}
+.lb-close:hover, .lb-nav:hover, .lb-tools button:hover { background: rgba(255,255,255,0.28); }
+.lb-close { top: 16px; left: 16px; }
+.lb-nav { top: 50%; transform: translateY(-50%); }
+.lb-prev { right: 16px; }
+.lb-next { left: 16px; }
+.lightbox.single .lb-nav, .lightbox.single .lb-counter { display: none; }
+.lb-counter { position: absolute; top: 24px; right: 20px; color: #fff; font-weight: 700; font-size: 14px; direction: ltr; z-index: 3; opacity: 0.9; }
+.lb-tools {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 3;
+  display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 100px; background: rgba(255,255,255,0.1); backdrop-filter: blur(6px);
+}
+.lb-tools button { position: static; width: 36px; height: 36px; font-size: 14px; }
+.lb-tools span { color: #fff; font-size: 13px; font-weight: 700; min-width: 48px; text-align: center; direction: ltr; }
+@media (max-width: 720px) { .lb-nav { width: 40px; height: 40px; } .lb-prev { right: 8px; } .lb-next { left: 8px; } }
+
+/* === מכרו דרכנו: גלריית תמונות להעלאה (עד 6) === */
+.img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+.img-grid:empty { display: none; }
+.img-item {
+  position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: var(--bg-alt);
+  border: 2px solid var(--border); cursor: grab; transition: var(--transition);
+}
+.img-item.cover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(6,182,212,0.2); }
+.img-item.dragging { opacity: 0.4; }
+.img-item.drag-over { border-color: var(--accent); }
+.img-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+.img-item .cover-badge {
+  position: absolute; top: 6px; right: 6px; padding: 2px 8px; border-radius: 100px; font-size: 11px; font-weight: 800;
+  background: var(--primary); color: #fff; display: flex; align-items: center; gap: 4px;
+}
+.img-item .img-actions {
+  position: absolute; inset-inline: 0; bottom: 0; display: flex; justify-content: center; gap: 4px; padding: 6px;
+  background: linear-gradient(to top, rgba(12,74,110,0.75), transparent); opacity: 0; transition: var(--transition);
+}
+.img-item:hover .img-actions, .img-item:focus-within .img-actions { opacity: 1; }
+.img-item .img-actions button {
+  width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.92); color: var(--text);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; transition: var(--transition);
+}
+.img-item .img-actions button:hover { background: var(--primary); color: #fff; }
+.img-item .img-actions button.danger:hover { background: #ef4444; }
+.img-item .img-edit-hint {
+  position: absolute; top: 6px; left: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.9);
+  color: var(--text); display: flex; align-items: center; justify-content: center; font-size: 11px;
+}
+@media (max-width: 720px) {
+  .img-grid { grid-template-columns: repeat(2, 1fr); }
+  .img-item .img-actions { opacity: 1; }
+}
+
+/* === עורך תמונה: זום, מרכוז, סיבוב (החיתוך בפרופורציה 4:3 של כרטיס המוצר) === */
+.crop-modal .modal-content { max-width: 720px; padding: 22px; }
+.crop-modal h3 { font-size: 18px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.crop-modal h3 i { color: var(--primary); }
+.crop-modal .hint { margin-bottom: 12px; }
+.crop-stage {
+  position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: #fff;
+  border: 1px solid var(--border); touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none;
+}
+.crop-stage:active { cursor: grabbing; }
+.crop-stage canvas { width: 100%; height: 100%; display: block; }
+.crop-stage::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(to right, rgba(12,74,110,0.18) 1px, transparent 1px), linear-gradient(to bottom, rgba(12,74,110,0.18) 1px, transparent 1px);
+  background-size: 33.34% 33.34%; opacity: 0; transition: opacity 0.2s;
+}
+.crop-stage.moving::after { opacity: 1; }
+.crop-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.crop-toolbar .zoom { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
+.crop-toolbar .zoom i { color: var(--text-muted); font-size: 13px; }
+.crop-toolbar input[type=range] { flex: 1; accent-color: var(--primary); }
+.crop-toolbar .tools { display: flex; gap: 6px; }
+.crop-toolbar .tools button {
+  height: 36px; padding: 0 12px; border-radius: 10px; background: var(--bg-alt); color: var(--text); font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); transition: var(--transition);
+}
+.crop-toolbar .tools button:hover { border-color: var(--primary); color: var(--primary); }
+.crop-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }

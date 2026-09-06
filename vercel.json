@@ -1,6 +1,13 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/img/:d/:i", "destination": "/api/product-image?d=:d&i=:i" },
+    { "source": "/p/:id", "destination": "/api/product-page?id=:id" }
+  ],
+  "functions": {
+    "api/product-page.js": { "includeFiles": "data/products.js" }
+  },
   "headers": [
     {
       "source": "/(.*)",

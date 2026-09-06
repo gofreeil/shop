@@ -37,14 +37,26 @@ function storeSlug(name) {
 	return String(name || '').trim().toLowerCase().replace(/["'`]/g, '').replace(/[\s/]+/g, '-');
 }
 
+// התמונות נשמרות ב-Strapi כ-data URL, אבל לרשימה הציבורית מחזירים כתובות
+// (/img/<documentId>/<n>, מוגש ע"י api/product-image.js עם קאש CDN) - אחרת רשימת
+// מוצרים עם גלריות הייתה שוקלת עשרות מגה, וקישורי שיתוף (og:image) חייבים URL.
+function imageUrl(row, i) {
+	return `/img/${encodeURIComponent(row.documentId)}/${i}`;
+}
+function galleryUrls(row) {
+	const list = Array.isArray(row.images) && row.images.length ? row.images : (row.image ? [row.image] : []);
+	return list.map((img, i) => (DATA_IMAGE.test(img || '') ? imageUrl(row, i) : '')).filter(Boolean);
+}
+
 // רשומת Strapi (approved) -> מוצר בפורמט של data/products.js, כולל פרטי החנות
 // של המוכר (הקניון השיתופי: שם, לוגו, טלפון, וואטסאפ, עיר, אתר, תיאור - ציבוריים)
 function toShopProduct(row) {
 	const storeName = esc(row.store_name || row.seller_display || '');
+	const images = galleryUrls(row);
 	return {
 		store: storeName,
 		storeSlug: storeSlug(row.store_name || row.seller_display || ''),
-		storeLogo: DATA_IMAGE.test(row.store_logo || '') ? row.store_logo : '',
+		storeLogo: DATA_IMAGE.test(row.store_logo || '') ? imageUrl(row, 'logo') : '',
 		storePhone: esc(row.store_phone || ''),
 		storeWhatsapp: esc(row.store_whatsapp || row.store_phone || ''),
 		storeCity: esc(row.store_city || ''),
@@ -59,7 +71,8 @@ function toShopProduct(row) {
 		rating: 5,
 		reviews: 0,
 		emoji: esc(row.emoji || '📦'),
-		image: DATA_IMAGE.test(row.image || '') ? row.image : '',
+		image: images[0] || '',
+		images,
 		desc: esc(row.description || ''),
 		link: SAFE_LINK.test(row.link || '') ? esc(row.link) : '',
 		quantity: row.quantity,

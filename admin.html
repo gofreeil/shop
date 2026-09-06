@@ -70,6 +70,10 @@
   .seller-card.rejected { opacity: 0.8; }
   .seller-thumb { width: 120px; height: 120px; border-radius: 12px; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; font-size: 48px; overflow: hidden; }
   .seller-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  /* גלריית המוצר: לחיצה על תמונה ממוזערת מחליפה את הגדולה */
+  .seller-thumbs { display: flex; flex-wrap: wrap; gap: 4px; width: 120px; margin-top: 6px; }
+  .seller-thumbs img { width: 27px; height: 27px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
+  .seller-thumbs img.active { border-color: var(--primary); }
   .seller-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
   .seller-title strong { font-size: 18px; }
   .seller-meta { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }
@@ -671,8 +675,12 @@ function renderSellerSubs() {
     const cat = categories.find(c => c.id === s.category);
     const fee = Number(s.price) * (Number(s.commission_percent) || COMMISSION) / 100;
     const safeLink = /^https?:\/\//.test(s.link || '') ? escHtml(s.link) : '';
+    const imgs = (Array.isArray(s.images) && s.images.length ? s.images : [s.image]).filter(x => /^data:image\//.test(x || ''));
     return `<div class="seller-card ${s.status}">
-      <div class="seller-thumb">${/^data:image\//.test(s.image || '') ? `<img src="${escHtml(s.image)}" alt="">` : escHtml(s.emoji || '📦')}</div>
+      <div>
+        <div class="seller-thumb">${imgs.length ? `<img src="${escHtml(imgs[0])}" alt="">` : escHtml(s.emoji || '📦')}</div>
+        ${imgs.length > 1 ? `<div class="seller-thumbs">${imgs.map((src, i) => `<img src="${escHtml(src)}" alt="" class="${i === 0 ? 'active' : ''}" title="תמונה ${i + 1} מתוך ${imgs.length}" onclick="const c=this.closest('.seller-card');c.querySelector('.seller-thumb img').src=this.src;c.querySelectorAll('.seller-thumbs img').forEach(x=>x.classList.toggle('active',x===this))">`).join('')}</div>` : ''}
+      </div>
       <div>
         <div class="seller-title"><strong>${escHtml(s.name)}</strong><span class="status-pill ${s.status}"><i class="fas ${icon}"></i> ${label}</span></div>
         <div class="seller-meta">
