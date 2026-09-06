@@ -310,13 +310,13 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 .hero-card {
   position: absolute; background: var(--bg-card);
-  padding: 16px; border-radius: 16px;
+  padding: 24px 28px; border-radius: 20px;
   box-shadow: var(--shadow-lg);
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  font-weight: 600; font-size: 13px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 16px;
   animation: cardFloat 6s ease-in-out infinite;
 }
-.hero-card i { font-size: 26px; }
+.hero-card i { font-size: 38px; }
 .hero-card-1 { top: 20px; right: 20px; color: var(--accent-2); animation-delay: 0s; }
 .hero-card-2 { top: 60px; left: 40px; color: var(--accent); animation-delay: -1.5s; }
 .hero-card-3 { bottom: 100px; right: 80px; color: var(--primary); animation-delay: -3s; }
@@ -623,6 +623,16 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 .quick-view-info h2 { font-size: 28px; margin-bottom: 8px; }
 .quick-view-reviews { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+/* המלצות בחלון המוצר: עוד מהחנות / רכשו גם */
+.qv-recs { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.qv-recs h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.qv-recs h3 i { color: var(--primary); }
+.qv-recs .products-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.qv-recs .product-image { font-size: 36px; }
+.qv-recs .product-image > span { font-size: 44px !important; }
+.qv-recs .product-name { font-size: 14px; }
+.qv-recs .product-price { font-size: 16px; }
+@media (max-width: 720px) { .qv-recs .products-grid { grid-template-columns: repeat(2, 1fr); } }
 .quick-view-reviews h3 { font-size: 18px; font-weight: 700; margin-bottom: 14px; }
 .quick-view-reviews .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
 @media (max-width: 720px) {

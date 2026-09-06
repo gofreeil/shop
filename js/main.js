@@ -185,6 +185,7 @@ function openQuickView(productId) {
         </div>
       </div>
     </div>
+    <div id="qvRecs" data-for="${p.id}"></div>
     <div class="quick-view-reviews">
       <h3>מה לקוחות אומרים</h3>
       <div class="testimonials-grid">
@@ -217,6 +218,46 @@ function openQuickView(productId) {
   `;
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+  content.scrollTop = 0;
+  renderRecommendations(p);
+}
+
+// === המלצות בחלון המוצר ===
+// 1. "עוד מהחנות של X" - מוצרים נוספים של אותו מוכר (למוצר קבוע: מאותה קטגוריה).
+// 2. "לקוחות שהתעניינו במוצר זה רכשו גם" - מההזמנות האמיתיות (ספירות אנונימיות של
+//    מוצרים שנרכשו יחד, דרך /api/orders?related=). כשאין עדיין נתונים - מוצרים
+//    פופולריים מקטגוריות אחרות, בכותרת מתאימה.
+const relatedCache = {};
+async function renderRecommendations(p) {
+  const el = document.getElementById('qvRecs');
+  if (!el) return;
+  const exclude = new Set([p.id]);
+  let more = p.storeSlug ? products.filter(x => x.id !== p.id && x.storeSlug === p.storeSlug) : [];
+  let moreTitle = more.length ? `עוד מהחנות של ${p.seller}` : `עוד ב${(categories.find(c => c.id === p.category) || {}).name || 'קטגוריה'}`;
+  if (!more.length) more = products.filter(x => x.id !== p.id && x.category === p.category);
+  more = more.slice(0, 4);
+  more.forEach(x => exclude.add(x.id));
+
+  let bought = [];
+  let boughtTitle = 'לקוחות שהתעניינו במוצר זה רכשו גם';
+  try {
+    if (!(p.id in relatedCache)) {
+      const r = await fetch(`/api/orders?related=${p.id}`);
+      relatedCache[p.id] = r.ok ? ((await r.json()).related?.[p.id] || []) : [];
+    }
+    bought = relatedCache[p.id].map(x => products.find(q => q.id === x.id)).filter(q => q && !exclude.has(q.id)).slice(0, 4);
+  } catch { /* offline / dev ללא API */ }
+  if (!bought.length) {
+    boughtTitle = 'לקוחות שהתעניינו במוצר זה התעניינו גם ב';
+    bought = products.filter(x => !exclude.has(x.id) && x.category !== p.category)
+      .sort((a, b) => (b.reviews || 0) - (a.reviews || 0)).slice(0, 4);
+  }
+  // בינתיים נפתח מוצר אחר? לא דורסים
+  if (el.dataset.for !== String(p.id)) return;
+  const block = (icon, title, list) => list.length
+    ? `<div class="qv-recs"><h3><i class="fas ${icon}"></i> ${title}</h3><div class="products-grid">${list.map(productCard).join('')}</div></div>`
+    : '';
+  el.innerHTML = block('fa-store', moreTitle, more) + block('fa-bag-shopping', boughtTitle, bought);
 }
 function closeQuickView() {
   document.getElementById('quickViewModal').classList.remove('active');

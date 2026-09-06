@@ -32,6 +32,13 @@ module.exports = async (req, res) => {
 		}
 
 		if (req.method === 'GET') {
+			// המלצות "רכשו גם" - ציבורי, מזהי מוצרים וספירות בלבד, ממוטמן
+			if (req.query?.related) {
+				const ids = String(req.query.related).split(',').map(s => parseInt(s, 10)).filter(n => n > 0).slice(0, 20).join(',');
+				const r = await strapiFetch(`${ENDPOINT}/related?ids=${encodeURIComponent(ids)}`, { headers: { 'Content-Type': 'application/json' } });
+				res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+				return res.status(200).json({ related: r.ok ? (r.json?.data ?? {}) : {} });
+			}
 			if (!req.query?.all) return res.status(400).json({ error: 'bad request' });
 			if (!(await isShopAdmin(req))) return res.status(403).json({ error: 'forbidden' });
 			const r = await strapiFetch(ENDPOINT + '?sort=createdAt:desc&pagination[pageSize]=200', { headers: authHeaders(req) });

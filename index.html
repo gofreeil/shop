@@ -135,22 +135,8 @@
   </div>
 </section>
 
-<!-- Stores (הקניון השיתופי) -->
-<section class="section section-alt" id="stores">
-  <div class="container">
-    <div class="section-header">
-      <div>
-        <span class="section-eyebrow">הקניון השיתופי</span>
-        <h2 class="section-title">החנויות בקניון</h2>
-      </div>
-      <a href="stores.html" class="link-arrow">כל החנויות <i class="fas fa-arrow-left"></i></a>
-    </div>
-    <div class="stores-grid" id="storesGrid"></div>
-  </div>
-</section>
-
 <!-- Featured Products -->
-<section class="section">
+<section class="section section-alt">
   <div class="container">
     <div class="section-header">
       <div>
@@ -273,10 +259,9 @@
 <script>
   function renderHome() {
     renderCategories();
-    const storeCount = renderStores('storesGrid', true, 7);
     renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 4));
     renderProducts('newGrid', [...products].sort((a,b) => b.id - a.id).slice(0, 4));
-    document.getElementById('heroStores').textContent = storeCount;
+    document.getElementById('heroStores').textContent = storesFromProducts().length;
     document.getElementById('heroProducts').textContent = products.length;
     document.getElementById('heroCategories').textContent = categories.length;
   }
