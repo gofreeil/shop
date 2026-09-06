@@ -214,6 +214,17 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .search-close:hover { background: var(--bg-card); }
 
 .search-suggestions { margin-top: 16px; max-height: 400px; overflow-y: auto; }
+/* תפריט הקישורים המהירים בתוך תיבת החיפוש (חנות / החנויות / קטגוריות) */
+.search-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+.search-quick a {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; border-radius: 100px;
+  background: var(--bg-alt); border: 1px solid var(--border);
+  font-weight: 600; font-size: 14px; transition: var(--transition);
+}
+.search-quick a:hover { background: var(--bg-card); border-color: var(--primary); color: var(--primary); }
+.search-quick a:nth-child(-n+2) { background: var(--primary); border-color: var(--primary); color: #fff; }
+.search-quick a:nth-child(-n+2):hover { background: var(--primary-dark); color: #fff; }
 .search-result {
   display: flex; gap: 12px; padding: 10px;
   border-radius: 10px; transition: var(--transition);

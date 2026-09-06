@@ -265,7 +265,47 @@ function closeQuickView() {
 }
 
 // === Search ===
+// כפתור החיפוש ותיבת החיפוש קיימים בכל הדפים (מוזרקים אם חסרים בדף). בתוך
+// תיבת החיפוש יש תפריט קישורים מהירים - "חנות" (כל המוצרים), "החנויות בקניון"
+// והקטגוריות - שהוצאו מהסרגל הראשי כדי להשאיר אותו נקי.
+function ensureSearchUI() {
+  const header = document.querySelector('.header');
+  const actions = document.querySelector('.header-actions');
+  if (!header || !actions) return;
+  if (!document.getElementById('searchToggle')) {
+    const btn = document.createElement('button');
+    btn.id = 'searchToggle';
+    btn.className = 'icon-btn';
+    btn.setAttribute('aria-label', 'חיפוש');
+    btn.innerHTML = '<i class="fas fa-search"></i>';
+    actions.insertBefore(btn, actions.firstChild);
+  }
+  if (!document.getElementById('searchBar')) {
+    const bar = document.createElement('div');
+    bar.id = 'searchBar';
+    bar.className = 'search-bar';
+    bar.innerHTML = `
+      <div class="container">
+        <div class="search-input-wrap">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="חפש מוצרים, קטגוריות, חנויות...">
+          <button class="search-close" id="searchClose"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="search-suggestions" id="searchSuggestions"></div>
+      </div>`;
+    header.appendChild(bar);
+  }
+}
+function searchQuickLinks() {
+  return `
+    <div class="search-quick">
+      <a href="products.html"><i class="fas fa-shopping-bag"></i> חנות - כל המוצרים</a>
+      <a href="stores.html"><i class="fas fa-store"></i> החנויות בקניון</a>
+      ${categories.map(c => `<a href="products.html?category=${c.id}"><i class="fas ${c.icon}" style="color:${c.color}"></i> ${c.name}</a>`).join('')}
+    </div>`;
+}
 function initSearch() {
+  ensureSearchUI();
   const toggle = document.getElementById('searchToggle');
   const bar = document.getElementById('searchBar');
   const close = document.getElementById('searchClose');
@@ -275,13 +315,16 @@ function initSearch() {
 
   toggle.addEventListener('click', () => {
     bar.classList.toggle('active');
-    if (bar.classList.contains('active')) setTimeout(() => input.focus(), 100);
+    if (bar.classList.contains('active')) {
+      if (!input.value.trim()) suggestions.innerHTML = searchQuickLinks();
+      setTimeout(() => input.focus(), 100);
+    }
   });
   close?.addEventListener('click', () => bar.classList.remove('active'));
 
   input?.addEventListener('input', e => {
     const q = e.target.value.trim().toLowerCase();
-    if (!q) { suggestions.innerHTML = ''; return; }
+    if (!q) { suggestions.innerHTML = searchQuickLinks(); return; }
     const results = products.filter(p =>
       p.name.toLowerCase().includes(q) ||
       categories.find(c => c.id === p.category && c.name.includes(q))
