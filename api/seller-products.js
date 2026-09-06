@@ -1,4 +1,4 @@
-const { STRAPI_URL, readCookie, parseBody } = require('./_shared');
+const { STRAPI_URL, readCookie, parseBody, authHeaders, isShopAdmin, strapiFetch: strapi } = require('./_shared');
 
 // מוצרים שהקהל מגיש למכירה בחנות - פרוקסי ל-content type המשותף
 // shop-seller-products ב-Strapi (community-backend/src/api/shop-seller-product).
@@ -15,13 +15,6 @@ const ENDPOINT = STRAPI_URL + '/api/shop-seller-products';
 // מזהה מספרי יציב לצד הלקוח (העגלה שומרת id מספרי). מעל 100000 כדי לא
 // להתנגש עם המוצרים הקבועים ב-data/products.js.
 const ID_BASE = 100000;
-
-function authHeaders(req) {
-	const jwt = readCookie(req.headers.cookie, 'gofreeil-auth');
-	const h = { 'Content-Type': 'application/json' };
-	if (jwt) h.Authorization = `Bearer ${jwt}`;
-	return h;
-}
 
 function clientIp(req) {
 	const xf = req.headers['x-forwarded-for'];
@@ -61,28 +54,6 @@ function toShopProduct(row) {
 		featured: false,
 		approvedAt: row.decided_at || row.createdAt,
 	};
-}
-
-// אותם כללי אמון כמו ב-controller בשרת: super_admin / shop_admin לפי app_role.
-const SHOP_ADMIN_ROLES = new Set(['super_admin', 'shop_admin']);
-async function isShopAdmin(req) {
-	const jwt = readCookie(req.headers.cookie, 'gofreeil-auth');
-	if (!jwt) return false;
-	try {
-		const r = await fetch(STRAPI_URL + '/api/users/me', { headers: { Authorization: `Bearer ${jwt}` }, signal: AbortSignal.timeout(10_000) });
-		if (!r.ok) return false;
-		const u = await r.json();
-		return SHOP_ADMIN_ROLES.has(u?.app_role) || String(u?.email || '').toLowerCase() === 'yahavanter@gmail.com';
-	} catch {
-		return false;
-	}
-}
-
-async function strapi(url, init) {
-	const r = await fetch(url, { ...init, signal: AbortSignal.timeout(15_000) });
-	let json = null;
-	try { json = await r.json(); } catch { /* גוף ריק */ }
-	return { ok: r.ok, status: r.status, json };
 }
 
 module.exports = async (req, res) => {

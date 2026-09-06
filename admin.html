@@ -42,6 +42,11 @@
   .status { padding: 4px 10px; border-radius: 100px; font-size: 12px; font-weight: 600; }
   .status.active { background: rgba(16,185,129,0.15); color: var(--accent-2); }
   .status.draft { background: rgba(245,158,11,0.15); color: var(--accent); }
+  .status.cancelled { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .order-status-select { padding: 4px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 13px; }
+  .order-details td { background: var(--bg-alt); font-size: 13px; line-height: 1.7; }
+  .order-details ul { list-style: none; margin: 6px 0; }
+  .order-details .notif { color: var(--text-muted); font-size: 12px; }
   .row-actions button { width: 32px; height: 32px; border-radius: 8px; color: var(--text-muted); transition: var(--transition); }
   .row-actions button:hover { background: var(--bg-alt); color: var(--primary); }
   .row-actions .del:hover { color: #ef4444; }
@@ -153,21 +158,21 @@
       <div class="stat-cards">
         <div class="stat-card">
           <div class="icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"><i class="fas fa-shopping-bag"></i></div>
-          <div class="value" id="statOrders">124</div>
+          <div class="value" id="statOrders">0</div>
           <div class="label">הזמנות החודש</div>
-          <div class="change">+12.5% מהחודש שעבר</div>
+          <div class="change" id="statOrdersChange">-</div>
         </div>
         <div class="stat-card">
           <div class="icon" style="background:linear-gradient(135deg,#10b981,#059669)"><i class="fas fa-shekel-sign"></i></div>
-          <div class="value">₪48,290</div>
+          <div class="value" id="statRevenue">₪0</div>
           <div class="label">הכנסות החודש</div>
-          <div class="change">+18.2% מהחודש שעבר</div>
+          <div class="change" id="statRevenueChange">-</div>
         </div>
         <div class="stat-card">
           <div class="icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"><i class="fas fa-users"></i></div>
-          <div class="value">847</div>
-          <div class="label">לקוחות פעילים</div>
-          <div class="change">+5.4% מהחודש שעבר</div>
+          <div class="value" id="statCustomers">0</div>
+          <div class="label">לקוחות</div>
+          <div class="change" id="statCustomersChange">-</div>
         </div>
         <div class="stat-card">
           <div class="icon" style="background:linear-gradient(135deg,#06b6d4,#3b82f6)"><i class="fas fa-box"></i></div>
@@ -381,20 +386,68 @@ function switchTab(tab) {
   document.getElementById('pageTitle').textContent = titles[tab];
 }
 
-// === Mock orders/customers ===
-const mockOrders = [
-  { id: '#1245', customer: 'שרה כהן', items: 3, total: 489, status: 'active', statusText: 'נשלח', date: '21/05/2026' },
-  { id: '#1244', customer: 'דוד לוי', items: 1, total: 129, status: 'draft', statusText: 'ממתין', date: '21/05/2026' },
-  { id: '#1243', customer: 'רחל אברהם', items: 5, total: 879, status: 'active', statusText: 'הושלם', date: '20/05/2026' },
-  { id: '#1242', customer: 'יוסי כהן', items: 2, total: 248, status: 'active', statusText: 'נשלח', date: '20/05/2026' },
-  { id: '#1241', customer: 'מיכל גולד', items: 4, total: 612, status: 'active', statusText: 'הושלם', date: '19/05/2026' },
-];
-const mockCustomers = [
-  { name: 'שרה כהן', email: 'sara@mail.co.il', phone: '052-1234567', orders: 12, total: 4890 },
-  { name: 'דוד לוי', email: 'david@mail.co.il', phone: '054-9876543', orders: 8, total: 3210 },
-  { name: 'רחל אברהם', email: 'rachel@mail.co.il', phone: '050-5555555', orders: 15, total: 6720 },
-  { name: 'יוסי כהן', email: 'yossi@mail.co.il', phone: '053-1112233', orders: 5, total: 1450 },
-];
+// === Orders (הזמנות אמיתיות מהצ'קאאוט, נשמרות ב-Strapi המשותף) ===
+// כל הזמנה חדשה כבר שלחה התראה למנהלים (תיבה + SMS + מייל), למוכרים וללקוח -
+// ה-afterCreate בשרת. כאן: רשימה, פרטים, שינוי סטטוס. דורש חשבון מנהל חנות.
+let orders = [];
+let ordersState = 'loading'; // loading | ok | auth | error
+const ORDER_STATUS = { new: ['חדשה', 'draft'], confirmed: ['אושרה', 'active'], shipped: ['נשלחה', 'active'], completed: ['הושלמה', 'active'], cancelled: ['בוטלה', 'cancelled'] };
+const PAY_HE = { card: 'כרטיס', paypal: 'PayPal', cash: 'מזומן' };
+function escO(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function ilsO(n) { return '₪' + (Math.round(Number(n || 0) * 100) / 100).toLocaleString('he-IL'); }
+function dateO(d) { return d ? new Date(d).toLocaleDateString('he-IL') : '-'; }
+
+async function loadOrders() {
+  ordersState = 'loading';
+  try {
+    const r = await fetch('/api/orders?all=1');
+    if (r.status === 403) { orders = []; ordersState = 'auth'; }
+    else if (!r.ok) throw new Error();
+    else { orders = (await r.json()).items || []; ordersState = 'ok'; }
+  } catch { orders = []; ordersState = 'error'; }
+  renderOrders('ordersTable');
+  renderRecentOrders();
+  renderCustomers();
+  renderOrderStats();
+}
+
+function ordersEmptyRow(cols) {
+  const msg = ordersState === 'auth' ? 'התחבר/י עם חשבון מנהל חנות (בלשונית "מוצרי מוכרים") כדי לראות הזמנות'
+    : ordersState === 'error' ? 'לא ניתן לטעון הזמנות (הפאנל עובד מול השרת רק בפריסה, לא ב-http-server מקומי)'
+    : ordersState === 'loading' ? 'טוען...' : 'עדיין אין הזמנות';
+  return `<tr><td colspan="${cols}" style="text-align:center;color:var(--text-muted);padding:24px">${msg}</td></tr>`;
+}
+
+async function setOrderStatus(documentId, status) {
+  try {
+    const r = await fetch('/api/orders', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId, status }) });
+    if (!r.ok) throw new Error();
+    const o = orders.find(x => x.documentId === documentId);
+    if (o) o.status = status;
+    renderOrders('ordersTable'); renderRecentOrders(); renderOrderStats();
+    toast('סטטוס ההזמנה עודכן');
+  } catch { toast('העדכון נכשל', 'fa-circle-exclamation'); }
+}
+function toggleOrderDetails(id) {
+  const row = document.getElementById('order-details-' + id);
+  if (row) row.hidden = !row.hidden;
+}
+
+function renderOrderStats() {
+  const now = new Date();
+  const inMonth = o => { const d = new Date(o.createdAt); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); };
+  const prevMonth = o => { const d = new Date(o.createdAt); const p = new Date(now.getFullYear(), now.getMonth() - 1, 1); return d.getFullYear() === p.getFullYear() && d.getMonth() === p.getMonth(); };
+  const live = orders.filter(o => o.status !== 'cancelled');
+  const cur = live.filter(inMonth), prev = live.filter(prevMonth);
+  const rev = list => list.reduce((s, o) => s + Number(o.total || 0), 0);
+  document.getElementById('statOrders').textContent = cur.length;
+  document.getElementById('statOrdersChange').textContent = `${prev.length} בחודש שעבר`;
+  document.getElementById('statRevenue').textContent = ilsO(rev(cur));
+  document.getElementById('statRevenueChange').textContent = `${ilsO(rev(prev))} בחודש שעבר`;
+  const customers = new Set(orders.map(o => (o.customer_email || '').toLowerCase()).filter(Boolean));
+  document.getElementById('statCustomers').textContent = customers.size;
+  document.getElementById('statCustomersChange').textContent = `${orders.length} הזמנות סה"כ`;
+}
 
 // === Render ===
 function renderProducts() {
@@ -415,35 +468,66 @@ function renderProducts() {
   document.getElementById('statProducts').textContent = allProducts.length;
 }
 
-function renderOrders(target = 'ordersTable', limit = null) {
+function renderOrders(target = 'ordersTable') {
   const tbody = document.getElementById(target);
-  const list = limit ? mockOrders.slice(0, limit) : mockOrders;
-  tbody.innerHTML = list.map(o => `<tr>
-    <td><strong>${o.id}</strong></td>
-    <td>${o.customer}</td>
-    ${target==='ordersTable' ? `<td>${o.items} פריטים</td>` : ''}
-    <td><strong>₪${o.total}</strong></td>
-    <td><span class="status ${o.status}">${o.statusText}</span></td>
-    <td>${o.date}</td>
-    ${target==='ordersTable' ? '<td class="row-actions"><button><i class="fas fa-eye"></i></button></td>' : ''}
-  </tr>`).join('');
+  if (!orders.length) { tbody.innerHTML = ordersEmptyRow(7); return; }
+  tbody.innerHTML = orders.map(o => {
+    const items = Array.isArray(o.items) ? o.items : [];
+    const count = items.reduce((s, it) => s + Number(it.qty || 0), 0);
+    const [label, cls] = ORDER_STATUS[o.status] || ORDER_STATUS.new;
+    const sellerItems = items.filter(it => it.seller_document_id);
+    const notif = o.notifications && typeof o.notifications === 'object'
+      ? Object.entries(o.notifications).filter(([k]) => k !== 'at').map(([k, v]) => `${k}: ${Array.isArray(v) && v.length ? v.join(', ') : 'לא נשלח'}`).join(' · ')
+      : 'טרם נשלחו';
+    return `<tr>
+      <td><strong>${escO(o.order_number)}</strong></td>
+      <td>${escO(o.customer_name)}<div style="font-size:12px;color:var(--text-muted)">${escO(o.customer_phone)}</div></td>
+      <td>${count} פריטים${sellerItems.length ? ` <span style="font-size:11px;color:var(--text-muted)">(${sellerItems.length} של מוכרים)</span>` : ''}</td>
+      <td><strong>${ilsO(o.total)}</strong><div style="font-size:11px;color:var(--text-muted)">${PAY_HE[o.payment_method] || escO(o.payment_method || '')}</div></td>
+      <td><select class="order-status-select" onchange="setOrderStatus('${escO(o.documentId)}', this.value)">
+        ${Object.entries(ORDER_STATUS).map(([k, [l]]) => `<option value="${k}" ${k === o.status ? 'selected' : ''}>${l}</option>`).join('')}
+      </select></td>
+      <td>${dateO(o.createdAt)}</td>
+      <td class="row-actions"><button onclick="toggleOrderDetails('${escO(o.documentId)}')" title="פרטים"><i class="fas fa-eye"></i></button></td>
+    </tr>
+    <tr class="order-details" id="order-details-${escO(o.documentId)}" hidden><td colspan="7">
+      <strong>משלוח:</strong> ${escO([o.customer_address, o.customer_city, o.customer_zip].filter(Boolean).join(', '))} · <a href="mailto:${escO(o.customer_email)}">${escO(o.customer_email)}</a>
+      ${o.note ? `<div><strong>הערת לקוח:</strong> ${escO(o.note)}</div>` : ''}
+      <ul>${items.map(it => `<li>${escO(it.emoji || '📦')} ${escO(it.name)} × ${it.qty} - ${ilsO(it.price * it.qty)}${it.seller_display ? ` <span style="color:var(--text-muted)">(מוכר: ${escO(it.seller_display)}${it.seller_email ? `, ${escO(it.seller_email)}` : ''})</span>` : ''}</li>`).join('')}</ul>
+      <div>סכום ביניים ${ilsO(o.subtotal)} · משלוח ${o.shipping ? ilsO(o.shipping) : 'חינם'} · <strong>סה"כ ${ilsO(o.total)}</strong>${sellerItems.length ? ` · עמלת החנות מפריטי מוכרים (10%): ${ilsO(sellerItems.reduce((s, it) => s + it.price * it.qty, 0) * 0.1)}` : ''}</div>
+      <div class="notif"><i class="fas fa-bell"></i> התראות: ${escO(notif)}</div>
+    </td></tr>`;
+  }).join('');
 }
 
 function renderRecentOrders() {
   const tbody = document.getElementById('recentOrders');
-  tbody.innerHTML = mockOrders.slice(0, 5).map(o => `<tr>
-    <td><strong>${o.id}</strong></td><td>${o.customer}</td>
-    <td><strong>₪${o.total}</strong></td>
-    <td><span class="status ${o.status}">${o.statusText}</span></td>
-    <td>${o.date}</td>
-  </tr>`).join('');
+  if (!orders.length) { tbody.innerHTML = ordersEmptyRow(5); return; }
+  tbody.innerHTML = orders.slice(0, 5).map(o => {
+    const [label, cls] = ORDER_STATUS[o.status] || ORDER_STATUS.new;
+    return `<tr>
+    <td><strong>${escO(o.order_number)}</strong></td><td>${escO(o.customer_name)}</td>
+    <td><strong>${ilsO(o.total)}</strong></td>
+    <td><span class="status ${cls}">${label}</span></td>
+    <td>${dateO(o.createdAt)}</td>
+  </tr>`; }).join('');
 }
 
 function renderCustomers() {
-  document.getElementById('customersTable').innerHTML = mockCustomers.map(c => `<tr>
-    <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:36px;height:36px;font-size:14px">${c.name[0]}</div><strong>${c.name}</strong></div></td>
-    <td>${c.email}</td><td>${c.phone}</td>
-    <td>${c.orders}</td><td><strong>₪${c.total}</strong></td>
+  const tbody = document.getElementById('customersTable');
+  if (!orders.length) { tbody.innerHTML = ordersEmptyRow(5); return; }
+  const byEmail = new Map();
+  for (const o of orders) {
+    const key = (o.customer_email || '').toLowerCase();
+    const c = byEmail.get(key) || { name: o.customer_name, email: o.customer_email, phone: o.customer_phone, orders: 0, total: 0 };
+    c.orders++;
+    if (o.status !== 'cancelled') c.total += Number(o.total || 0);
+    byEmail.set(key, c);
+  }
+  tbody.innerHTML = [...byEmail.values()].sort((a, b) => b.total - a.total).map(c => `<tr>
+    <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="width:36px;height:36px;font-size:14px">${escO((c.name || '?')[0])}</div><strong>${escO(c.name)}</strong></div></td>
+    <td>${escO(c.email)}</td><td>${escO(c.phone)}</td>
+    <td>${c.orders}</td><td><strong>${ilsO(c.total)}</strong></td>
   </tr>`).join('');
 }
 
@@ -666,8 +750,9 @@ async function sellerLogin(e) {
   try {
     const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
     if (!r.ok) { toast('אימייל או סיסמה שגויים', 'fa-circle-exclamation'); return; }
-    toast('מחובר - טוען הגשות');
+    toast('מחובר - טוען הגשות והזמנות');
     loadSellerSubmissions();
+    loadOrders();
   } catch {
     toast('שגיאת התחברות', 'fa-circle-exclamation');
   }
@@ -676,13 +761,10 @@ async function sellerLogin(e) {
 // === Init ===
 function init() {
   renderProducts();
-  renderOrders('ordersTable');
-  renderRecentOrders();
-  renderCustomers();
   renderCategories2();
   renderChart();
+  loadOrders();
   loadSellerSubmissions();
-  document.getElementById('statOrders').textContent = mockOrders.length * 25;
   document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(a =>
     a.addEventListener('click', () => switchTab(a.dataset.tab))
   );
