@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>הסכם המוכר | חנות החירות</title>
-<meta name="description" content="הסכם שיתוף פעולה למכירת מוצרים בחנות החירות - תנאי ההתקשרות בין החנות לבין מציעי המוצרים">
+<title>החנויות בקניון | חנות החירות</title>
+<meta name="description" content="כל החנויות בקניון השיתופי חנות החירות - חנויות של אנשים מהקהילה, לפי קטגוריות">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/logo.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="חנות החירות">
-<meta property="og:title" content="הסכם המוכר | חנות החירות">
-<meta property="og:description" content="תנאי ההתקשרות בין חנות החירות לבין מציעי המוצרים">
+<meta property="og:title" content="החנויות בקניון | חנות החירות">
+<meta property="og:description" content="כל החנויות בקניון השיתופי חנות החירות">
 <meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
-<meta property="og:url" content="https://shop.gofreeil.com/contract">
+<meta property="og:url" content="https://shop.gofreeil.com/stores">
 <meta property="og:locale" content="he_IL">
 <meta name="theme-color" content="#6366f1">
 <link rel="stylesheet" href="css/style.css">
@@ -26,13 +26,6 @@
 	gtag('js', new Date());
 	gtag('config', 'G-YTEG7S0H9N');
 </script>
-<style>
-  @media print {
-    .header, .footer, .page-header, .construction-banner, .toast, .contract-actions { display: none !important; }
-    body { background: #fff; color: #000; }
-    .contract { border: none; box-shadow: none; padding: 0; }
-  }
-</style>
 </head>
 <body>
 
@@ -42,8 +35,8 @@
     <nav class="main-nav">
       <a href="index.html">בית</a>
       <a href="products.html">חנות</a>
-      <a href="stores.html">החנויות</a>
-      <a href="sell.html" class="active">מכרו דרכנו</a>
+      <a href="stores.html" class="active">החנויות</a>
+      <a href="sell.html">מכרו דרכנו</a>
       <a href="index.html#categories">קטגוריות</a>
       <a href="about.html">אודות</a>
       <a href="contact.html">צור קשר</a>
@@ -57,18 +50,15 @@
 
 <section class="page-header">
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">בית</a> / <a href="sell.html">מכרו דרכנו</a> / הסכם המוכר</div>
-    <h1>הסכם המוכר</h1>
+    <div class="breadcrumb"><a href="index.html">בית</a> / החנויות</div>
+    <h1>החנויות בקניון</h1>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">חנויות של אנשים מהקהילה, במקום אחד. לכל חנות דף משלה עם לוגו, טלפון והמוצרים שלה. <a href="sell.html" style="color:var(--primary);text-decoration:underline">רוצים חנות משלכם?</a></p>
   </div>
 </section>
 
 <section class="section">
-  <div class="container" style="max-width:900px">
-    <div class="contract-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
-      <a href="sell.html" class="btn btn-primary"><i class="fas fa-store"></i> להגשת מוצר</a>
-      <button class="btn btn-ghost" onclick="window.print()"><i class="fas fa-print"></i> הדפסה / שמירה כ-PDF</button>
-    </div>
-    <div id="contractBody"></div>
+  <div class="container">
+    <div class="stores-grid" id="storesGrid"></div>
   </div>
 </section>
 
@@ -81,11 +71,16 @@
 </footer>
 
 <div class="toast" id="toast"></div>
+<div class="modal" id="quickViewModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" id="quickViewContent"></div>
+</div>
 <script src="data/products.js"></script>
-<script src="js/contract.js"></script>
 <script src="js/main.js"></script>
 <script>
-  document.getElementById('contractBody').innerHTML = SELLER_CONTRACT_HTML;
+  renderStores('storesGrid', true);
+  // החנויות נגזרות ממוצרי המוכרים המאושרים שנטענים מהשרת אחרי הרינדור הראשון
+  document.addEventListener('productsUpdated', () => renderStores('storesGrid', true));
 </script>
 </body>
 </html>

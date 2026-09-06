@@ -93,7 +93,7 @@ function productCard(p) {
         <span class="product-category">${cat.name}</span>
         <h3 class="product-name">${p.name}</h3>
         ${p.seller
-          ? `<div class="product-seller" title="נמכר ומסופק על ידי המוכר"><i class="fas fa-store"></i> ${p.seller}</div>`
+          ? `<a class="product-seller" href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}" title="לדף החנות">${p.storeLogo ? `<img src="${p.storeLogo}" alt="">` : '<i class="fas fa-store"></i>'} ${p.seller}</a>`
           : `<div class="product-rating">
           <span class="stars">★★★★★</span>
           <span>${p.rating} (${p.reviews})</span>
@@ -156,8 +156,13 @@ function openQuickView(productId) {
         ${p.seller
           ? `<p style="color:var(--text-muted);margin:16px 0">${p.desc || ''}</p>
         <div class="seller-note">
-          <i class="fas fa-store"></i>
-          <div>נמכר ומסופק על ידי <strong>${p.seller}</strong>${p.deliveryDays ? ` · אספקה תוך ${p.deliveryDays} ימי עסקים` : ''}${p.quantity ? ` · ${p.quantity} יח' במלאי` : ''}
+          ${storeLogoHtml(p, 48)}
+          <div>נמכר ומסופק על ידי <a href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}"><strong>${p.seller}</strong></a>${p.storeCity ? ` · ${p.storeCity}` : ''}${p.deliveryDays ? ` · אספקה תוך ${p.deliveryDays} ימי עסקים` : ''}${p.quantity ? ` · ${p.quantity} יח' במלאי` : ''}
+            <div class="store-contact">
+              ${p.storePhone ? `<a href="tel:${p.storePhone}"><i class="fas fa-phone"></i> ${p.storePhone}</a>` : ''}
+              ${waLink(p.storeWhatsapp || p.storePhone) ? `<a href="${waLink(p.storeWhatsapp || p.storePhone)}" target="_blank" rel="noopener" class="wa"><i class="fab fa-whatsapp"></i> וואטסאפ</a>` : ''}
+              <a href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}"><i class="fas fa-store"></i> לדף החנות</a>
+            </div>
             <small>האחריות למוצר, לאספקה, לאחריות ולשירות חלה על המוכר, לפי <a href="contract.html">הסכם המוכר</a>.</small></div>
         </div>`
           : `<p style="color:var(--text-muted);margin:16px 0">${p.desc || 'מוצר איכותי שעבר בדיקות קפדניות. אנחנו עומדים מאחורי כל פריט שאנו מוכרים, עם אחריות מלאה ומחויבות לאיכות.'}</p>`}
@@ -539,6 +544,81 @@ async function loadSellerProducts() {
     }
     if (added) document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { added } }));
   } catch { /* offline / dev ללא API */ }
+}
+
+// === Stores (הקניון השיתופי) ===
+// חנות = קבוצת המוצרים המאושרים של אותו מוכר, לפי שם החנות. פרטי החנות (לוגו,
+// טלפון, עיר...) נלקחים מהמוצר שאושר אחרון - כך עדכון בהגשה חדשה מתעדכן בכל המקומות.
+function storeSlug(name) {
+  return String(name || '').trim().toLowerCase().replace(/["'`]/g, '').replace(/[\s/]+/g, '-');
+}
+function waLink(phone) {
+  const d = String(phone || '').replace(/\D/g, '');
+  if (d.length < 9) return '';
+  return `https://wa.me/${d.startsWith('0') ? '972' + d.slice(1) : d}`;
+}
+function storeLogoHtml(s, size = 56) {
+  const logo = s.logo || s.storeLogo;
+  const name = s.name || s.seller || s.store || '?';
+  return logo
+    ? `<img src="${logo}" alt="${name}" class="store-logo" style="width:${size}px;height:${size}px">`
+    : `<span class="store-logo store-logo-letter" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.45)}px">${name.charAt(0)}</span>`;
+}
+function storesFromProducts() {
+  const map = new Map();
+  const sorted = [...products].filter(p => p.storeSlug || p.seller).sort((a, b) => Date.parse(b.approvedAt || 0) - Date.parse(a.approvedAt || 0));
+  for (const p of sorted) {
+    const slug = p.storeSlug || storeSlug(p.seller);
+    let s = map.get(slug);
+    if (!s) {
+      s = { slug, name: p.store || p.seller, logo: p.storeLogo || '', phone: p.storePhone || '', whatsapp: p.storeWhatsapp || p.storePhone || '', city: p.storeCity || '', website: p.storeWebsite || '', description: p.storeDescription || '', products: [] };
+      map.set(slug, s);
+    } else {
+      // מילוי חוסרים ממוצרים ישנים יותר
+      for (const k of ['logo', 'phone', 'whatsapp', 'city', 'website', 'description']) {
+        const src = { logo: p.storeLogo, phone: p.storePhone, whatsapp: p.storeWhatsapp, city: p.storeCity, website: p.storeWebsite, description: p.storeDescription }[k];
+        if (!s[k] && src) s[k] = src;
+      }
+    }
+    s.products.push(p);
+  }
+  return [...map.values()].sort((a, b) => b.products.length - a.products.length);
+}
+function storeCard(s) {
+  const cats = [...new Set(s.products.map(p => (categories.find(c => c.id === p.category) || {}).name).filter(Boolean))].slice(0, 3);
+  return `
+    <a href="store.html?s=${encodeURIComponent(s.slug)}" class="store-card">
+      ${storeLogoHtml(s, 64)}
+      <div class="store-card-body">
+        <h3>${s.name}</h3>
+        <p>${s.description || cats.join(' · ')}</p>
+        <div class="store-card-meta">
+          <span><i class="fas fa-box"></i> ${s.products.length} מוצרים</span>
+          ${s.city ? `<span><i class="fas fa-location-dot"></i> ${s.city}</span>` : ''}
+          ${s.phone ? `<span><i class="fas fa-phone"></i> ${s.phone}</span>` : ''}
+        </div>
+      </div>
+    </a>`;
+}
+function openStoreCard() {
+  return `
+    <a href="sell.html" class="store-card store-card-open">
+      <span class="store-logo store-logo-letter" style="width:64px;height:64px;font-size:28px"><i class="fas fa-plus"></i></span>
+      <div class="store-card-body">
+        <h3>פתחו חנות בקניון</h3>
+        <p>לוגו, טלפון ומוצרים לפי קטגוריות. החנות לוקחת 10% ממכירה, השאר אליכם.</p>
+        <div class="store-card-meta"><span><i class="fas fa-arrow-left"></i> להגשת מוצר ראשון</span></div>
+      </div>
+    </a>`;
+}
+// מרנדר רשימת חנויות לתוך מיכל; withOpen = להוסיף כרטיס "פתחו חנות" בסוף
+function renderStores(containerId, withOpen = true, limit = null) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  let list = storesFromProducts();
+  if (limit) list = list.slice(0, limit);
+  el.innerHTML = list.map(storeCard).join('') + (withOpen ? openStoreCard() : '');
+  return list.length;
 }
 
 // === Newsletter ===

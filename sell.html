@@ -42,6 +42,7 @@
     <nav class="main-nav">
       <a href="index.html">בית</a>
       <a href="products.html">חנות</a>
+      <a href="stores.html">החנויות</a>
       <a href="sell.html" class="active">מכרו דרכנו</a>
       <a href="index.html#categories">קטגוריות</a>
       <a href="about.html">אודות</a>
@@ -57,8 +58,8 @@
 <section class="page-header">
   <div class="container">
     <div class="breadcrumb"><a href="index.html">בית</a> / מכרו דרכנו</div>
-    <h1>יש לכם מוצר? מכרו אותו בחנות החירות</h1>
-    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מעלים מוצר, אנחנו בודקים ומאשרים, והוא עולה למדף לכל לקוחות החנות. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
+    <h1>פתחו חנות בקניון השיתופי</h1>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">שם חנות, לוגו וטלפון, ומוצרים לפי הקטגוריות של הקניון. אנחנו בודקים, מאשרים ומפרסמים, והמוצרים עולים למדף לכל לקוחות הקניון. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
   </div>
 </section>
 
@@ -68,8 +69,8 @@
       <div class="step-card">
         <span class="step-num">1</span>
         <i class="fas fa-upload step-icon"></i>
-        <h3>מעלים מוצר</h3>
-        <p>שם, תמונה, מחיר לצרכן ותיאור. ממלאים פרטי מוכר ומאשרים את הסכם המוכר.</p>
+        <h3>פותחים חנות ומעלים מוצר</h3>
+        <p>שם החנות, לוגו וטלפון מוצגים על כל מוצר ובדף החנות שלכם. לכל מוצר: תמונה, מחיר, קטגוריה ותיאור.</p>
       </div>
       <div class="step-card">
         <span class="step-num">2</span>
@@ -88,6 +89,32 @@
     <div class="sell-layout">
       <div>
         <form class="sell-form form-grid" id="sellForm" onsubmit="submitProduct(event)" novalidate>
+          <h2 style="margin-top:0"><i class="fas fa-store" style="color:var(--primary)"></i> החנות שלכם בקניון</h2>
+          <p class="hint">כך תוצג החנות ללקוחות: השם, הלוגו, הטלפון והעיר מופיעים על כל מוצר שלכם ובדף החנות. הפרטים נשמרים בדפדפן למוצר הבא.</p>
+          <div class="store-form-row">
+            <div class="form-field">
+              <label>לוגו החנות</label>
+              <label class="logo-drop" id="logoDrop" title="לחצו לבחירת לוגו">
+                <input type="file" id="logoInput" accept="image/*" onchange="handleLogo(this.files[0])">
+                <img id="logoPreview" alt="" hidden>
+                <span id="logoPlaceholder"><i class="fas fa-image"></i><br>לוגו</span>
+              </label>
+              <button type="button" class="btn btn-ghost" id="logoClear" onclick="clearLogo()" style="padding:4px 10px;font-size:12px;margin-top:6px" hidden>הסר לוגו</button>
+            </div>
+            <div class="form-grid" style="gap:12px">
+              <div class="form-row">
+                <div class="form-field"><label>שם החנות *</label><input type="text" name="store_name" maxlength="80" required placeholder="למשל: הבוסתן של רותי"></div>
+                <div class="form-field"><label>טלפון החנות (מוצג ללקוחות) *</label><input type="tel" name="store_phone" maxlength="40" required placeholder="050-0000000"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-field"><label>וואטסאפ (אם שונה מהטלפון)</label><input type="tel" name="store_whatsapp" maxlength="40"></div>
+                <div class="form-field"><label>עיר</label><input type="text" name="store_city" maxlength="80"></div>
+              </div>
+              <div class="form-field"><label>אתר / עמוד עסקי (אופציונלי)</label><input type="url" name="store_website" maxlength="300" placeholder="https://"></div>
+              <div class="form-field"><label>על החנות (משפט-שניים, מוצג בדף החנות) *</label><textarea name="store_description" rows="2" maxlength="600" required placeholder="מה אתם מייצרים או מוכרים, ולמי זה מתאים"></textarea></div>
+            </div>
+          </div>
+
           <h2><i class="fas fa-box" style="color:var(--primary)"></i> המוצר</h2>
           <p class="hint">כל השדות המסומנים ב-* הם חובה. התיאור והתמונה הם מה שהלקוח רואה - השקיעו בהם.</p>
 
@@ -129,16 +156,13 @@
           </div>
           <div class="form-row">
             <div class="form-field"><label>שם מלא *</label><input type="text" name="seller_name" maxlength="120" required></div>
-            <div class="form-field"><label>שם העסק / המותג</label><input type="text" name="seller_business" maxlength="120" placeholder="מוצג ללקוחות בשורת 'נמכר על ידי'"></div>
-          </div>
-          <div class="form-row">
             <div class="form-field"><label>מספר ת"ז / ח.פ / עוסק *</label><input type="text" name="seller_id_number" inputmode="numeric" maxlength="20" required></div>
-            <div class="form-field"><label>טלפון *</label><input type="tel" name="seller_phone" maxlength="40" required></div>
           </div>
           <div class="form-row">
+            <div class="form-field"><label>טלפון אישי (לא מוצג) *</label><input type="tel" name="seller_phone" maxlength="40" required></div>
             <div class="form-field"><label>אימייל *</label><input type="email" name="seller_email" maxlength="160" required></div>
-            <div class="form-field"><label>כתובת *</label><input type="text" name="seller_address" maxlength="200" required placeholder="רחוב, מספר, עיר"></div>
           </div>
+          <div class="form-field"><label>כתובת *</label><input type="text" name="seller_address" maxlength="200" required placeholder="רחוב, מספר, עיר"></div>
 
           <h2><i class="fas fa-file-contract" style="color:var(--primary)"></i> הסכם המוכר</h2>
           <p class="hint">גללו עד סוף ההסכם כדי לאפשר את אישורו. <a href="contract.html" target="_blank" style="color:var(--primary);text-decoration:underline">פתיחה בדף מלא / הדפסה</a></p>
@@ -181,7 +205,7 @@
         <div class="commission-box">
           <h3><i class="fas fa-shield-halved" style="color:var(--primary)"></i> חשוב לדעת</h3>
           <ul style="list-style:none;display:grid;gap:10px;font-size:14px;color:var(--text-muted)">
-            <li><i class="fas fa-check" style="color:var(--accent-2)"></i> החנות היא במה בלבד - אתם המוכר מול הלקוח.</li>
+            <li><i class="fas fa-check" style="color:var(--accent-2)"></i> הקניון הוא במה בלבד - אתם המוכר מול הלקוח. שם החנות, הלוגו והטלפון שלכם מוצגים בפומבי.</li>
             <li><i class="fas fa-check" style="color:var(--accent-2)"></i> אתם אחראים לאספקה, לאחריות, להחזרות ולשירות.</li>
             <li><i class="fas fa-check" style="color:var(--accent-2)"></i> מוצר יכול להיות מוסר מהמדף בכל עת.</li>
             <li><i class="fas fa-check" style="color:var(--accent-2)"></i> תוספי תזונה, תמרוקים ומוצרי חשמל דורשים אישורים לפי דין - באחריותכם.</li>
@@ -246,35 +270,97 @@ function updateCommission() {
   document.getElementById('calcPayout').textContent = fmt(price - fee);
 }
 
-// ---- תמונה: הקטנה בצד הלקוח ל-data URL (JPEG עד ~900px) ----
-let imageData = '';
-const MAX_SIDE = 900;
-function handleImage(file) {
-  if (!file || !file.type.startsWith('image/')) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(img.width * scale);
-      canvas.height = Math.round(img.height * scale);
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      let q = 0.82;
-      let out = canvas.toDataURL('image/jpeg', q);
-      while (out.length > 600_000 && q > 0.4) { q -= 0.1; out = canvas.toDataURL('image/jpeg', q); }
-      imageData = out;
-      document.getElementById('imagePreviewImg').src = out;
-      document.getElementById('imagePreview').hidden = false;
-      document.getElementById('imageDrop').style.display = 'none';
+// ---- תמונות: הקטנה בצד הלקוח ל-data URL ----
+// מוצר: JPEG עד 900px (~עד 600KB). לוגו: ריבוע 256px (~עד 150KB), PNG כדי לשמור שקיפות.
+function resizeImage(file, maxSide, { square = false, png = false, maxBytes = 600_000 } = {}) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) return reject(new Error('לא תמונה'));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (square) {
+          const side = Math.min(img.width, img.height, maxSide);
+          canvas.width = canvas.height = side;
+          const crop = Math.min(img.width, img.height);
+          ctx.drawImage(img, (img.width - crop) / 2, (img.height - crop) / 2, crop, crop, 0, 0, side, side);
+        } else {
+          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        let out = png ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.82);
+        if (out.length > maxBytes) {
+          let q = 0.82;
+          out = canvas.toDataURL('image/jpeg', q);
+          while (out.length > maxBytes && q > 0.4) { q -= 0.1; out = canvas.toDataURL('image/jpeg', q); }
+        }
+        resolve(out);
+      };
+      img.onerror = () => reject(new Error('קובץ תמונה לא תקין'));
+      img.src = reader.result;
     };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
+  });
 }
+
+let imageData = '';
+async function handleImage(file) {
+  try {
+    imageData = await resizeImage(file, 900);
+    document.getElementById('imagePreviewImg').src = imageData;
+    document.getElementById('imagePreview').hidden = false;
+    document.getElementById('imageDrop').style.display = 'none';
+  } catch (ex) { toast(ex.message, 'fa-circle-exclamation'); }
+}
+
+// ---- לוגו החנות ----
+let logoData = '';
+function showLogo(data) {
+  logoData = data || '';
+  const img = document.getElementById('logoPreview');
+  img.src = logoData;
+  img.hidden = !logoData;
+  document.getElementById('logoPlaceholder').hidden = !!logoData;
+  document.getElementById('logoClear').hidden = !logoData;
+}
+async function handleLogo(file) {
+  try {
+    showLogo(await resizeImage(file, 256, { square: true, png: true, maxBytes: 150_000 }));
+    saveStoreDraft();
+  } catch (ex) { toast(ex.message, 'fa-circle-exclamation'); }
+}
+function clearLogo() {
+  document.getElementById('logoInput').value = '';
+  showLogo('');
+  saveStoreDraft();
+}
+
+// ---- פרטי החנות נשמרים בדפדפן, כדי שהמוצר הבא ייכנס לאותה חנות ----
+const STORE_FIELDS = ['store_name', 'store_phone', 'store_whatsapp', 'store_city', 'store_website', 'store_description'];
+const STORE_DRAFT_KEY = 'noshop_store_draft';
+function saveStoreDraft() {
+  try {
+    const form = document.getElementById('sellForm');
+    const d = {};
+    STORE_FIELDS.forEach(k => { d[k] = form[k].value; });
+    d.store_logo = logoData;
+    localStorage.setItem(STORE_DRAFT_KEY, JSON.stringify(d));
+  } catch { /* אחסון חסום */ }
+}
+function applyStoreDetails(d, { overwrite = false } = {}) {
+  if (!d) return;
+  const form = document.getElementById('sellForm');
+  STORE_FIELDS.forEach(k => { if (d[k] && (overwrite || !form[k].value)) form[k].value = d[k]; });
+  if (d.store_logo && (overwrite || !logoData)) showLogo(d.store_logo);
+}
+try { applyStoreDetails(JSON.parse(localStorage.getItem(STORE_DRAFT_KEY) || 'null')); } catch { /* ignore */ }
+STORE_FIELDS.forEach(k => document.getElementById('sellForm')[k].addEventListener('input', saveStoreDraft));
 function clearImage() {
   imageData = '';
   document.getElementById('imageInput').value = '';
@@ -314,14 +400,18 @@ async function loadMine() {
     if (!r.ok) throw new Error();
     const { items } = await r.json();
     if (!items.length) { el.innerHTML = '<p style="color:var(--text-muted)">עדיין לא הגשתם מוצרים.</p>'; return; }
-    el.innerHTML = `<div class="mine-list">${items.map(it => {
+    // פרטי החנות מההגשה האחרונה - כדי שהמוצר הבא ייכנס לאותה חנות (גם ממכשיר אחר)
+    const last = items.find(it => it.store_name);
+    if (last) applyStoreDetails({ store_name: last.store_name, store_phone: last.store_phone, store_whatsapp: last.store_whatsapp, store_city: last.store_city, store_website: last.store_website, store_description: last.store_description, store_logo: last.store_logo });
+    const approvedStore = items.find(it => it.status === 'approved' && it.store_name);
+    el.innerHTML = `${approvedStore ? `<p style="margin-bottom:12px"><a href="store.html?s=${encodeURIComponent(storeSlug(approvedStore.store_name))}" class="btn btn-ghost" style="padding:8px 14px;font-size:13px"><i class="fas fa-store"></i> לדף החנות שלי: ${esc(approvedStore.store_name)}</a></p>` : ''}<div class="mine-list">${items.map(it => {
       const [label, icon] = STATUS_HE[it.status] || STATUS_HE.pending;
       const cat = categories.find(c => c.id === it.category);
       return `<div class="mine-item">
         <div class="thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : esc(it.emoji || '📦')}</div>
         <div>
           <strong>${esc(it.name)}</strong>
-          <div style="font-size:13px;color:var(--text-muted)">${cat ? esc(cat.name) : ''} · ₪${Number(it.price)} · הוגש ${new Date(it.submitted_at || it.createdAt).toLocaleDateString('he-IL')}</div>
+          <div style="font-size:13px;color:var(--text-muted)">${it.store_name ? `<i class="fas fa-store"></i> ${esc(it.store_name)} · ` : ''}${cat ? esc(cat.name) : ''} · ₪${Number(it.price)} · הוגש ${new Date(it.submitted_at || it.createdAt).toLocaleDateString('he-IL')}</div>
           ${it.status === 'rejected' && it.rejection_reason ? `<div class="reason"><i class="fas fa-circle-info"></i> ${esc(it.rejection_reason)}</div>` : ''}
         </div>
         <span class="status-pill ${it.status}"><i class="fas ${icon}"></i> ${label}</span>
@@ -350,7 +440,9 @@ async function submitProduct(e) {
     name: f.name, category: f.category, emoji: f.emoji, price: f.price, old_price: f.old_price || null,
     quantity: f.quantity || null, delivery_days: f.delivery_days || null, link: f.link, description: f.description,
     image: imageData,
-    seller_name: f.seller_name, seller_business: f.seller_business, seller_id_number: f.seller_id_number,
+    store_name: f.store_name, store_phone: f.store_phone, store_whatsapp: f.store_whatsapp, store_city: f.store_city,
+    store_website: f.store_website, store_description: f.store_description, store_logo: logoData,
+    seller_name: f.seller_name, seller_id_number: f.seller_id_number,
     seller_phone: f.seller_phone, seller_email: f.seller_email, seller_address: f.seller_address,
     contract_accepted: true, contract_version: SELLER_CONTRACT_VERSION,
   };
@@ -378,6 +470,8 @@ function resetSellForm() {
   const form = document.getElementById('sellForm');
   form.reset();
   clearImage();
+  // פרטי החנות נשארים - המוצר הבא נכנס לאותה חנות
+  try { applyStoreDetails(JSON.parse(localStorage.getItem(STORE_DRAFT_KEY) || 'null'), { overwrite: true }); } catch { /* ignore */ }
   updateCommission();
   form.hidden = false;
   document.getElementById('sellSuccess').hidden = true;

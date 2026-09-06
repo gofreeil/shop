@@ -32,9 +32,24 @@ function esc(v) {
 const DATA_IMAGE = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 const SAFE_LINK = /^https?:\/\/[^\s"'<>]+$/;
 
-// רשומת Strapi (approved) -> מוצר בפורמט של data/products.js
+// מזהה חנות לכתובת (store.html?s=...) - נגזר משם החנות; זהה ל-storeSlug ב-js/main.js
+function storeSlug(name) {
+	return String(name || '').trim().toLowerCase().replace(/["'`]/g, '').replace(/[\s/]+/g, '-');
+}
+
+// רשומת Strapi (approved) -> מוצר בפורמט של data/products.js, כולל פרטי החנות
+// של המוכר (הקניון השיתופי: שם, לוגו, טלפון, וואטסאפ, עיר, אתר, תיאור - ציבוריים)
 function toShopProduct(row) {
+	const storeName = esc(row.store_name || row.seller_display || '');
 	return {
+		store: storeName,
+		storeSlug: storeSlug(row.store_name || row.seller_display || ''),
+		storeLogo: DATA_IMAGE.test(row.store_logo || '') ? row.store_logo : '',
+		storePhone: esc(row.store_phone || ''),
+		storeWhatsapp: esc(row.store_whatsapp || row.store_phone || ''),
+		storeCity: esc(row.store_city || ''),
+		storeWebsite: SAFE_LINK.test(row.store_website || '') ? esc(row.store_website) : '',
+		storeDescription: esc(row.store_description || ''),
 		id: ID_BASE + Number(row.id),
 		documentId: row.documentId,
 		name: esc(row.name),
@@ -49,7 +64,7 @@ function toShopProduct(row) {
 		link: SAFE_LINK.test(row.link || '') ? esc(row.link) : '',
 		quantity: row.quantity,
 		deliveryDays: row.delivery_days,
-		seller: esc(row.seller_display || ''),
+		seller: storeName || esc(row.seller_display || ''),
 		badge: 'new',
 		featured: false,
 		approvedAt: row.decided_at || row.createdAt,

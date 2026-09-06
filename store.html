@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חנות בקניון | חנות החירות</title>
+<meta name="description" content="דף חנות בקניון השיתופי חנות החירות">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="חנות החירות">
+<meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
+<meta property="og:locale" content="he_IL">
+<meta name="theme-color" content="#6366f1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
+     האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YTEG7S0H9N"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
+	gtag('config', 'G-YTEG7S0H9N');
+</script>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <nav class="main-nav">
+      <a href="index.html">בית</a>
+      <a href="products.html">חנות</a>
+      <a href="stores.html" class="active">החנויות</a>
+      <a href="sell.html">מכרו דרכנו</a>
+      <a href="index.html#categories">קטגוריות</a>
+      <a href="about.html">אודות</a>
+      <a href="contact.html">צור קשר</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="cart.html" class="icon-btn cart-btn"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / <a href="stores.html">החנויות</a> / <span id="crumbName">חנות</span></div>
+    <div id="storeHeader"><h1>טוען חנות...</h1></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">הקניון השיתופי</span>
+        <h2 class="section-title" id="storeProductsTitle">המוצרים בחנות</h2>
+      </div>
+      <a href="stores.html" class="link-arrow">כל החנויות <i class="fas fa-arrow-left"></i></a>
+    </div>
+    <div class="products-grid" id="storeProducts"></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contract.html">הסכם המוכר</a></p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="quickViewModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" id="quickViewContent"></div>
+</div>
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script>
+const slug = new URLSearchParams(location.search).get('s') || '';
+let loaded = false;
+function renderStorePage() {
+  const s = storesFromProducts().find(x => x.slug === slug);
+  const head = document.getElementById('storeHeader');
+  const grid = document.getElementById('storeProducts');
+  if (!s) {
+    if (loaded) {
+      head.innerHTML = '<h1>החנות לא נמצאה</h1><p style="color:var(--text-muted);margin-top:8px">ייתכן שהחנות הוסרה או שהכתובת שגויה.</p>';
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-store-slash"></i><h2>אין כאן מוצרים</h2><a href="stores.html" class="btn btn-primary">לכל החנויות</a></div>`;
+    }
+    return;
+  }
+  document.title = `${s.name} | חנות החירות`;
+  document.getElementById('crumbName').textContent = s.name;
+  document.getElementById('storeProductsTitle').textContent = `המוצרים של ${s.name}`;
+  const wa = waLink(s.whatsapp || s.phone);
+  head.innerHTML = `
+    <div class="store-header">
+      ${storeLogoHtml(s, 96)}
+      <div>
+        <h1>${s.name}</h1>
+        ${s.description ? `<p class="store-desc">${s.description}</p>` : ''}
+        <div class="store-contact">
+          ${s.city ? `<span><i class="fas fa-location-dot"></i> ${s.city}</span>` : ''}
+          ${s.phone ? `<a href="tel:${s.phone}"><i class="fas fa-phone"></i> ${s.phone}</a>` : ''}
+          ${wa ? `<a href="${wa}" target="_blank" rel="noopener" class="wa"><i class="fab fa-whatsapp"></i> וואטסאפ</a>` : ''}
+          ${s.website ? `<a href="${s.website}" target="_blank" rel="noopener"><i class="fas fa-globe"></i> אתר</a>` : ''}
+          <span><i class="fas fa-box"></i> ${s.products.length} מוצרים</span>
+        </div>
+      </div>
+    </div>`;
+  renderProducts('storeProducts', s.products);
+}
+renderStorePage();
+document.addEventListener('productsUpdated', () => { loaded = true; renderStorePage(); });
+// אם השרת לא החזיר מוצרי מוכרים (או אין רשת) - אחרי רגע מציגים "לא נמצאה" במקום "טוען"
+setTimeout(() => { loaded = true; renderStorePage(); }, 6000);
+</script>
+</body>
+</html>

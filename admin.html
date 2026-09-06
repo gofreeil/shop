@@ -683,7 +683,8 @@ function renderSellerSubs() {
         </div>
         <p class="seller-desc">${escHtml(s.description)}</p>
         <div class="seller-grid">
-          <div><span>מוכר</span>${escHtml(s.seller_name)}${s.seller_business ? ` (${escHtml(s.seller_business)})` : ''}</div>
+          <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><span style="display:inline">חנות בקניון:</span>${/^data:image\//.test(s.store_logo || '') ? `<img src="${escHtml(s.store_logo)}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--border)">` : ''}<strong>${escHtml(s.store_name || s.seller_business || '-')}</strong>${s.store_phone ? ` · <a href="tel:${escHtml(s.store_phone)}">${escHtml(s.store_phone)}</a>` : ''}${s.store_city ? ` · ${escHtml(s.store_city)}` : ''}${s.store_website ? ` · <a href="${escHtml(s.store_website)}" target="_blank" rel="noopener">אתר</a>` : ''}${s.store_description ? `<span style="color:var(--text-muted)"> · ${escHtml(s.store_description)}</span>` : ''}</div>
+          <div><span>מוכר</span>${escHtml(s.seller_name)}</div>
           <div><span>ת"ז / ח.פ</span>${escHtml(s.seller_id_number)}</div>
           <div><span>טלפון</span><a href="tel:${escHtml(s.seller_phone)}">${escHtml(s.seller_phone)}</a></div>
           <div><span>אימייל</span><a href="mailto:${escHtml(s.seller_email)}">${escHtml(s.seller_email)}</a></div>

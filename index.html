@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>חנות החירות | חנות חכמה לחיים טובים יותר</title>
-<meta name="description" content="חנות מקוונת לבריאות טבעית, חקלאות ביתית, טכנולוגיה מתקדמת ועוד">
+<meta name="description" content="הקניון השיתופי של יוצאים לחירות - חנויות של אנשים מהקהילה: בריאות טבעית, חקלאות ביתית, טכנולוגיה, בית וגן ועוד">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/logo.png">
 <meta property="og:type" content="website">
@@ -46,6 +46,7 @@
     <nav class="main-nav">
       <a href="index.html" class="active">בית</a>
       <a href="products.html">חנות</a>
+      <a href="stores.html">החנויות</a>
       <a href="sell.html">מכרו דרכנו</a>
       <a href="#categories">קטגוריות</a>
       <a href="about.html">אודות</a>
@@ -89,21 +90,21 @@
   </div>
   <div class="container hero-inner">
     <div class="hero-content">
-      <span class="hero-badge"><i class="fas fa-sparkles"></i> חדש בחנות החירות</span>
-      <h1 class="hero-title">חיים טובים יותר <span class="gradient-text">מתחילים כאן</span></h1>
-      <p class="hero-subtitle">מוצרים נבחרים בקפידה בתחומי הבריאות הטבעית, החקלאות הביתית, הטכנולוגיה המתקדמת ועוד.</p>
+      <span class="hero-badge"><i class="fas fa-store"></i> הקניון השיתופי של יוצאים לחירות</span>
+      <h1 class="hero-title">קניון שיתופי <span class="gradient-text">של אנשים מהקהילה</span></h1>
+      <p class="hero-subtitle">כל אחד יכול לפתוח כאן חנות: לוגו, טלפון ומוצרים לפי קטגוריות. אנחנו מפרסמים ומביאים את הלקוחות, החנות לוקחת 10% ממכירה, והשאר למוכר.</p>
       <div class="hero-actions">
         <a href="products.html" class="btn btn-primary btn-lg">
           <i class="fas fa-shopping-bag"></i> התחל לקנות
         </a>
-        <a href="#categories" class="btn btn-ghost btn-lg">
-          גלה קטגוריות <i class="fas fa-arrow-left"></i>
+        <a href="sell.html" class="btn btn-ghost btn-lg">
+          <i class="fas fa-store"></i> פתחו חנות
         </a>
       </div>
       <div class="hero-stats">
-        <div class="stat"><strong>10K+</strong><span>לקוחות מרוצים</span></div>
-        <div class="stat"><strong>500+</strong><span>מוצרים נבחרים</span></div>
-        <div class="stat"><strong>4.9★</strong><span>דירוג ממוצע</span></div>
+        <div class="stat"><strong id="heroStores">0</strong><span>חנויות בקניון</span></div>
+        <div class="stat"><strong id="heroProducts">0</strong><span>מוצרים</span></div>
+        <div class="stat"><strong id="heroCategories">0</strong><span>קטגוריות</span></div>
       </div>
     </div>
     <div class="hero-visual">
@@ -134,8 +135,22 @@
   </div>
 </section>
 
+<!-- Stores (הקניון השיתופי) -->
+<section class="section section-alt" id="stores">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">הקניון השיתופי</span>
+        <h2 class="section-title">החנויות בקניון</h2>
+      </div>
+      <a href="stores.html" class="link-arrow">כל החנויות <i class="fas fa-arrow-left"></i></a>
+    </div>
+    <div class="stores-grid" id="storesGrid"></div>
+  </div>
+</section>
+
 <!-- Featured Products -->
-<section class="section section-alt">
+<section class="section">
   <div class="container">
     <div class="section-header">
       <div>
@@ -167,10 +182,10 @@
     <div class="sell-cta">
       <div class="sell-cta-icon"><i class="fas fa-handshake"></i></div>
       <div>
-        <h2>יש לכם מוצר? מכרו אותו אצלנו</h2>
-        <p>מעלים מוצר, אנחנו בודקים ומאשרים, והוא עולה למדף. החנות לוקחת 10% ממחיר המכירה - 90% אליכם.</p>
+        <h2>יש לכם מוצר? פתחו חנות בקניון</h2>
+        <p>שם חנות, לוגו וטלפון, ומוצרים לפי קטגוריות. אנחנו מאשרים ומפרסמים, החנות לוקחת 10% ממחיר המכירה - 90% אליכם.</p>
       </div>
-      <a href="sell.html" class="btn btn-primary btn-lg"><i class="fas fa-store"></i> להגשת מוצר</a>
+      <a href="sell.html" class="btn btn-primary btn-lg"><i class="fas fa-store"></i> פתחו חנות</a>
     </div>
   </div>
 </section>
@@ -208,6 +223,7 @@
       <div class="footer-col">
         <h4>חנות</h4>
         <a href="products.html">כל המוצרים</a>
+        <a href="stores.html">החנויות בקניון</a>
         <a href="products.html?category=health">בריאות טבעית</a>
         <a href="products.html?category=agriculture">חקלאות ביתית</a>
         <a href="products.html?category=tech">טכנולוגיה</a>
@@ -257,8 +273,12 @@
 <script>
   function renderHome() {
     renderCategories();
+    const storeCount = renderStores('storesGrid', true, 7);
     renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 4));
     renderProducts('newGrid', [...products].sort((a,b) => b.id - a.id).slice(0, 4));
+    document.getElementById('heroStores').textContent = storeCount;
+    document.getElementById('heroProducts').textContent = products.length;
+    document.getElementById('heroCategories').textContent = categories.length;
   }
   renderHome();
   // מוצרי מוכרים מאושרים נטענים מהשרת אחרי הרינדור הראשון - מרעננים כשהם מגיעים
