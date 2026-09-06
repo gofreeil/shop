@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מכרו איתנו | חנות החירות</title>
+<meta name="description" content="העלו מוצר למכירה בחנות החירות - אנחנו מאשרים, המוצר עולה למדף, החנות לוקחת 10% ממחיר המכירה">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="חנות החירות">
+<meta property="og:title" content="מכרו איתנו | חנות החירות">
+<meta property="og:description" content="העלו מוצר למכירה בחנות החירות - 10% לחנות, 90% אליכם">
+<meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="לוגו חנות החירות">
+<meta property="og:url" content="https://shop.gofreeil.com/sell">
+<meta property="og:locale" content="he_IL">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="מכרו איתנו | חנות החירות">
+<meta name="twitter:description" content="העלו מוצר למכירה בחנות החירות - 10% לחנות, 90% אליכם">
+<meta name="twitter:image" content="https://shop.gofreeil.com/images/logo.png">
+<meta name="theme-color" content="#6366f1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
+     האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YTEG7S0H9N"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
+	gtag('config', 'G-YTEG7S0H9N');
+</script>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <nav class="main-nav">
+      <a href="index.html">בית</a>
+      <a href="products.html">חנות</a>
+      <a href="sell.html" class="active">מכרו איתנו</a>
+      <a href="index.html#categories">קטגוריות</a>
+      <a href="about.html">אודות</a>
+      <a href="contact.html">צור קשר</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="cart.html" class="icon-btn cart-btn"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / מכרו איתנו</div>
+    <h1>יש לכם מוצר? מכרו אותו בחנות החירות</h1>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מעלים מוצר, אנחנו בודקים ומאשרים, והוא עולה למדף לכל לקוחות החנות. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="steps-grid">
+      <div class="step-card">
+        <span class="step-num">1</span>
+        <i class="fas fa-upload step-icon"></i>
+        <h3>מעלים מוצר</h3>
+        <p>שם, תמונה, מחיר לצרכן ותיאור. ממלאים פרטי מוכר ומאשרים את הסכם המוכר.</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">2</span>
+        <i class="fas fa-magnifying-glass-chart step-icon"></i>
+        <h3>אנחנו בודקים ומאשרים</h3>
+        <p>כל מוצר עובר אישור ידני של מנהל החנות. מאושר - עולה למדף. לא מתאים - תקבלו הודעה עם הסיבה.</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">3</span>
+        <i class="fas fa-hand-holding-dollar step-icon"></i>
+        <h3>מוכרים ומקבלים 90%</h3>
+        <p>החנות גובה מהלקוח, מנכה 10% עמלה, ומעבירה לכם את היתרה לאחר תקופת הביטול של הלקוח.</p>
+      </div>
+    </div>
+
+    <div class="sell-layout">
+      <div>
+        <form class="sell-form form-grid" id="sellForm" onsubmit="submitProduct(event)" novalidate>
+          <h2><i class="fas fa-box" style="color:var(--primary)"></i> המוצר</h2>
+          <p class="hint">כל השדות המסומנים ב-* הם חובה. התיאור והתמונה הם מה שהלקוח רואה - השקיעו בהם.</p>
+
+          <div class="form-field"><label>שם המוצר *</label><input type="text" name="name" maxlength="120" required placeholder="למשל: שמן זית כתית מעולה 750 מ״ל"></div>
+          <div class="form-row">
+            <div class="form-field"><label>קטגוריה *</label><select name="category" id="categorySelect" required></select></div>
+            <div class="form-field"><label>אימוג'י (אם אין תמונה)</label><input type="text" name="emoji" maxlength="4" placeholder="📦"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>מחיר לצרכן בש"ח (כולל מע"מ) *</label><input type="number" name="price" id="priceInput" min="1" max="1000000" step="0.5" required placeholder="100" oninput="updateCommission()"></div>
+            <div class="form-field"><label>מחיר לפני הנחה (אופציונלי)</label><input type="number" name="old_price" min="1" step="0.5" placeholder="למשל 129"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>כמות במלאי</label><input type="number" name="quantity" min="0" step="1" placeholder="למשל 20"></div>
+            <div class="form-field"><label>זמן אספקה (ימי עסקים)</label><input type="number" name="delivery_days" min="1" max="60" step="1" placeholder="למשל 3"></div>
+          </div>
+          <div class="form-field"><label>קישור לאתר / קטלוג (אופציונלי)</label><input type="url" name="link" maxlength="300" placeholder="https://"></div>
+          <div class="form-field"><label>תיאור המוצר *</label><textarea name="description" rows="5" maxlength="2000" required placeholder="מה המוצר, למי הוא מתאים, מה כלול, מידות/משקל, הוראות שימוש. בלי הבטחות רפואיות או טענות שאינכם יכולים לגבות."></textarea></div>
+
+          <div class="form-field">
+            <label>תמונת המוצר (מומלץ)</label>
+            <label class="image-drop" id="imageDrop">
+              <input type="file" id="imageInput" accept="image/*" onchange="handleImage(this.files[0])">
+              <i class="fas fa-image" style="font-size:28px;margin-bottom:6px;display:block"></i>
+              לחצו לבחירת תמונה או גררו לכאן · JPG/PNG/WebP · מוקטנת אוטומטית
+            </label>
+            <div class="image-preview" id="imagePreview" hidden>
+              <img id="imagePreviewImg" alt="תצוגה מקדימה">
+              <button type="button" onclick="clearImage()" title="הסר תמונה"><i class="fas fa-times"></i></button>
+            </div>
+          </div>
+
+          <h2><i class="fas fa-id-card" style="color:var(--primary)"></i> פרטי המוכר</h2>
+          <p class="hint">הפרטים משמשים לזיהוי הצד להסכם ולתשלומים. אינם מוצגים ללקוחות (מלבד שם העסק / שם המוכר).</p>
+          <div id="loginHint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--bg-alt);border:1px solid var(--border);font-size:14px">
+            <i class="fas fa-user-check" style="color:var(--primary)"></i>
+            <span id="loginHintText">מומלץ להתחבר לפני ההגשה - כך תוכלו לעקוב אחרי סטטוס האישור בדף זה.</span>
+            <button type="button" class="btn btn-ghost" id="loginHintBtn" onclick="openAuth('login')" style="padding:8px 14px;font-size:13px">התחברות / הרשמה</button>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>שם מלא *</label><input type="text" name="seller_name" maxlength="120" required></div>
+            <div class="form-field"><label>שם העסק / המותג</label><input type="text" name="seller_business" maxlength="120" placeholder="מוצג ללקוחות בשורת 'נמכר על ידי'"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>מספר ת"ז / ח.פ / עוסק *</label><input type="text" name="seller_id_number" inputmode="numeric" maxlength="20" required></div>
+            <div class="form-field"><label>טלפון *</label><input type="tel" name="seller_phone" maxlength="40" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-field"><label>אימייל *</label><input type="email" name="seller_email" maxlength="160" required></div>
+            <div class="form-field"><label>כתובת *</label><input type="text" name="seller_address" maxlength="200" required placeholder="רחוב, מספר, עיר"></div>
+          </div>
+
+          <h2><i class="fas fa-file-contract" style="color:var(--primary)"></i> הסכם המוכר</h2>
+          <p class="hint">גללו עד סוף ההסכם כדי לאפשר את אישורו. <a href="contract.html" target="_blank" style="color:var(--primary);text-decoration:underline">פתיחה בדף מלא / הדפסה</a></p>
+          <div class="contract-scroll" id="contractScroll"></div>
+
+          <label class="consent disabled" id="consentContractLabel">
+            <input type="checkbox" name="contract_accepted" id="consentContract" disabled required>
+            <span><strong>קראתי את הסכם המוכר במלואו ואני מסכים/ה לכל תנאיו</strong>
+            סימון זה מהווה חתימה אלקטרונית מחייבת (גרסה <span id="contractVersionLabel"></span>). ההסכם קובע שהאחריות המלאה למוצר, לאספקה, לאחריות ולשירות חלה עליי, כולל שיפוי החנות.</span>
+          </label>
+          <label class="consent">
+            <input type="checkbox" name="accuracy_confirmed" id="consentAccuracy" required>
+            <span><strong>אני מצהיר/ה שכל הפרטים נכונים</strong>
+            המוצר חוקי למכירה בישראל, בבעלותי או ברשותי למכרו, התיאור והתמונה מדויקים, ויש לי את כל האישורים הנדרשים לפי דין.</span>
+          </label>
+
+          <div id="submitError" style="display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.1);color:#b91c1c;font-size:14px"></div>
+          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-paper-plane"></i> שלח מוצר לאישור</button>
+        </form>
+
+        <div class="sell-success" id="sellSuccess" hidden>
+          <i class="fas fa-circle-check"></i>
+          <h2 style="font-size:26px;margin-bottom:8px">המוצר נשלח לאישור</h2>
+          <p style="color:var(--text-muted);margin-bottom:20px;max-width:520px;margin-inline:auto">תודה! מנהל החנות יבדוק את המוצר. מוצר מאושר עולה למדף אוטומטית, ותקבלו עדכון באימייל. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.</p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="resetSellForm()"><i class="fas fa-plus"></i> הגשת מוצר נוסף</button>
+            <a href="products.html" class="btn btn-ghost">לחנות</a>
+          </div>
+        </div>
+      </div>
+
+      <aside class="sell-side">
+        <div class="commission-box">
+          <h3><i class="fas fa-calculator" style="color:var(--primary)"></i> כמה תקבלו</h3>
+          <div class="commission-row"><span>מחיר לצרכן</span><span id="calcPrice">₪0</span></div>
+          <div class="commission-row"><span>עמלת החנות (10%)</span><span id="calcFee">-₪0</span></div>
+          <div class="commission-row total"><span>אתם מקבלים</span><span id="calcPayout">₪0</span></div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:12px">התשלום מועבר לאחר 14 יום ממסירת המוצר ללקוח (תקופת הביטול לפי חוק הגנת הצרכן), במחזור חודשי, כנגד חשבונית. פירוט מלא בסעיף 4 להסכם.</p>
+        </div>
+        <div class="commission-box">
+          <h3><i class="fas fa-shield-halved" style="color:var(--primary)"></i> חשוב לדעת</h3>
+          <ul style="list-style:none;display:grid;gap:10px;font-size:14px;color:var(--text-muted)">
+            <li><i class="fas fa-check" style="color:var(--accent-2)"></i> החנות היא במה בלבד - אתם המוכר מול הלקוח.</li>
+            <li><i class="fas fa-check" style="color:var(--accent-2)"></i> אתם אחראים לאספקה, לאחריות, להחזרות ולשירות.</li>
+            <li><i class="fas fa-check" style="color:var(--accent-2)"></i> מוצר יכול להיות מוסר מהמדף בכל עת.</li>
+            <li><i class="fas fa-check" style="color:var(--accent-2)"></i> תוספי תזונה, תמרוקים ומוצרי חשמל דורשים אישורים לפי דין - באחריותכם.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt" id="mine">
+  <div class="container" style="max-width:900px">
+    <div class="section-header">
+      <div>
+        <span class="section-eyebrow">מעקב</span>
+        <h2 class="section-title">המוצרים שהגשתי</h2>
+      </div>
+      <button class="btn btn-ghost" onclick="loadMine()" style="padding:8px 14px;font-size:13px"><i class="fas fa-rotate"></i> רענון</button>
+    </div>
+    <div id="mineList"><p style="color:var(--text-muted)">התחברו כדי לראות את סטטוס ההגשות שלכם.</p></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contract.html">הסכם המוכר</a></p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<script src="data/products.js"></script>
+<script src="js/contract.js"></script>
+<script src="js/main.js"></script>
+<script>
+// ---- קטגוריות + הסכם ----
+document.getElementById('categorySelect').innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+document.getElementById('contractScroll').innerHTML = SELLER_CONTRACT_HTML;
+document.getElementById('contractVersionLabel').textContent = SELLER_CONTRACT_VERSION;
+
+// אישור ההסכם נפתח רק אחרי גלילה עד סופו - כדי שיהיה תיעוד שניתנה הזדמנות לקרוא
+const scrollBox = document.getElementById('contractScroll');
+function unlockConsent() {
+  const cb = document.getElementById('consentContract');
+  cb.disabled = false;
+  document.getElementById('consentContractLabel').classList.remove('disabled');
+}
+scrollBox.addEventListener('scroll', () => {
+  if (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 24) unlockConsent();
+});
+// הסכם קצר מגובה התיבה (מסך גדול) - אין מה לגלול
+if (scrollBox.scrollHeight <= scrollBox.clientHeight + 4) unlockConsent();
+
+// ---- חישוב עמלה ----
+function fmt(n) { return '₪' + (Math.round(n * 100) / 100).toLocaleString('he-IL'); }
+function updateCommission() {
+  const price = parseFloat(document.getElementById('priceInput').value) || 0;
+  const fee = price * SELLER_COMMISSION_PERCENT / 100;
+  document.getElementById('calcPrice').textContent = fmt(price);
+  document.getElementById('calcFee').textContent = '-' + fmt(fee);
+  document.getElementById('calcPayout').textContent = fmt(price - fee);
+}
+
+// ---- תמונה: הקטנה בצד הלקוח ל-data URL (JPEG עד ~900px) ----
+let imageData = '';
+const MAX_SIDE = 900;
+function handleImage(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      let q = 0.82;
+      let out = canvas.toDataURL('image/jpeg', q);
+      while (out.length > 600_000 && q > 0.4) { q -= 0.1; out = canvas.toDataURL('image/jpeg', q); }
+      imageData = out;
+      document.getElementById('imagePreviewImg').src = out;
+      document.getElementById('imagePreview').hidden = false;
+      document.getElementById('imageDrop').style.display = 'none';
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function clearImage() {
+  imageData = '';
+  document.getElementById('imageInput').value = '';
+  document.getElementById('imagePreview').hidden = true;
+  document.getElementById('imageDrop').style.display = '';
+}
+const drop = document.getElementById('imageDrop');
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', e => handleImage(e.dataTransfer.files[0]));
+
+// ---- זהות: מילוי אוטומטי ו"המוצרים שלי" ----
+function applyUser() {
+  const form = document.getElementById('sellForm');
+  const hint = document.getElementById('loginHint');
+  if (currentUser) {
+    if (!form.seller_name.value) form.seller_name.value = currentUser.name || '';
+    if (!form.seller_email.value) form.seller_email.value = currentUser.email || '';
+    document.getElementById('loginHintText').textContent = `מחובר/ת כ-${currentUser.name}. ההגשה תקושר לחשבון שלך.`;
+    document.getElementById('loginHintBtn').hidden = true;
+  } else {
+    document.getElementById('loginHintText').textContent = 'מומלץ להתחבר לפני ההגשה - כך תוכלו לעקוב אחרי סטטוס האישור בדף זה.';
+    document.getElementById('loginHintBtn').hidden = false;
+  }
+  loadMine();
+}
+document.addEventListener('userChanged', applyUser);
+
+const STATUS_HE = { pending: ['ממתין לאישור', 'fa-clock'], approved: ['מאושר - על המדף', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+async function loadMine() {
+  const el = document.getElementById('mineList');
+  if (!currentUser) { el.innerHTML = '<p style="color:var(--text-muted)">התחברו כדי לראות את סטטוס ההגשות שלכם. <button class="btn btn-ghost" onclick="openAuth(\'login\')" style="padding:6px 12px;font-size:13px">התחברות</button></p>'; return; }
+  el.innerHTML = '<p style="color:var(--text-muted)">טוען...</p>';
+  try {
+    const r = await fetch('/api/seller-products?mine=1');
+    if (!r.ok) throw new Error();
+    const { items } = await r.json();
+    if (!items.length) { el.innerHTML = '<p style="color:var(--text-muted)">עדיין לא הגשתם מוצרים.</p>'; return; }
+    el.innerHTML = `<div class="mine-list">${items.map(it => {
+      const [label, icon] = STATUS_HE[it.status] || STATUS_HE.pending;
+      const cat = categories.find(c => c.id === it.category);
+      return `<div class="mine-item">
+        <div class="thumb">${it.image ? `<img src="${esc(it.image)}" alt="">` : esc(it.emoji || '📦')}</div>
+        <div>
+          <strong>${esc(it.name)}</strong>
+          <div style="font-size:13px;color:var(--text-muted)">${cat ? esc(cat.name) : ''} · ₪${Number(it.price)} · הוגש ${new Date(it.submitted_at || it.createdAt).toLocaleDateString('he-IL')}</div>
+          ${it.status === 'rejected' && it.rejection_reason ? `<div class="reason"><i class="fas fa-circle-info"></i> ${esc(it.rejection_reason)}</div>` : ''}
+        </div>
+        <span class="status-pill ${it.status}"><i class="fas ${icon}"></i> ${label}</span>
+      </div>`;
+    }).join('')}</div>`;
+  } catch {
+    el.innerHTML = '<p style="color:var(--text-muted)">לא ניתן לטעון כרגע. נסו שוב מאוחר יותר.</p>';
+  }
+}
+
+// ---- שליחה ----
+async function submitProduct(e) {
+  e.preventDefault();
+  const form = e.target;
+  const err = document.getElementById('submitError');
+  err.style.display = 'none';
+  if (!form.reportValidity()) return;
+  if (!document.getElementById('consentContract').checked) {
+    err.textContent = 'יש לגלול עד סוף ההסכם ולאשר אותו.';
+    err.style.display = 'block';
+    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  const f = Object.fromEntries(new FormData(form));
+  const data = {
+    name: f.name, category: f.category, emoji: f.emoji, price: f.price, old_price: f.old_price || null,
+    quantity: f.quantity || null, delivery_days: f.delivery_days || null, link: f.link, description: f.description,
+    image: imageData,
+    seller_name: f.seller_name, seller_business: f.seller_business, seller_id_number: f.seller_id_number,
+    seller_phone: f.seller_phone, seller_email: f.seller_email, seller_address: f.seller_address,
+    contract_accepted: true, contract_version: SELLER_CONTRACT_VERSION,
+  };
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שולח...';
+  try {
+    const r = await fetch('/api/seller-products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(json.error || 'ההגשה נכשלה');
+    form.hidden = true;
+    document.getElementById('sellSuccess').hidden = false;
+    document.getElementById('sellSuccess').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('המוצר נשלח לאישור', 'fa-circle-check');
+    loadMine();
+  } catch (ex) {
+    err.textContent = ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> שלח מוצר לאישור';
+  }
+}
+function resetSellForm() {
+  const form = document.getElementById('sellForm');
+  form.reset();
+  clearImage();
+  updateCommission();
+  form.hidden = false;
+  document.getElementById('sellSuccess').hidden = true;
+  applyUser();
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+updateCommission();
+applyUser();
+</script>
+</body>
+</html>

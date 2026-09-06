@@ -41,6 +41,7 @@
     <nav class="main-nav">
       <a href="index.html">בית</a>
       <a href="products.html" class="active">חנות</a>
+      <a href="sell.html">מכרו איתנו</a>
       <a href="index.html#categories">קטגוריות</a>
       <a href="about.html">אודות</a>
       <a href="contact.html">צור קשר</a>
@@ -198,6 +199,8 @@ function resetFilters() {
   document.getElementById('sortSelect').value = 'featured';
   applyFilters();
 }
+// מוצרי מוכרים מאושרים נטענים מהשרת אחרי הרינדור הראשון - מרעננים כשהם מגיעים
+document.addEventListener('productsUpdated', applyFilters);
 
 document.getElementById('priceRange').addEventListener('input', e => {
   document.getElementById('priceMax').textContent = '₪' + e.target.value;

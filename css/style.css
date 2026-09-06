@@ -835,3 +835,147 @@ input, textarea { font-family: inherit; font-size: inherit; }
       #f59e0b, #ef4444 30%, #db2777 55%, #a855f7 80%, #6366f1 100%);
 }
 .login-grad:hover { filter: brightness(1.1); }
+
+/* === מוצרי מוכרים (הקהל מעלה, החנות מאשרת) === */
+.product-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.product-seller {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-muted); margin-bottom: 12px;
+}
+.product-seller i { color: var(--primary); }
+.cart-item-image img, .quick-view-image img, .search-result-img img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+}
+.quick-view-image { overflow: hidden; }
+.seller-note {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px; border-radius: 12px;
+  background: var(--bg-alt); border: 1px solid var(--border);
+  font-size: 14px; margin: 8px 0 4px;
+}
+.seller-note > i { color: var(--primary); font-size: 18px; margin-top: 2px; }
+.seller-note small { display: block; color: var(--text-muted); margin-top: 4px; font-size: 12px; }
+.seller-note a { color: var(--primary); text-decoration: underline; }
+
+/* באנר "מכרו איתנו" בדף הבית */
+.sell-cta {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center;
+  padding: 28px 32px; border-radius: var(--radius-lg);
+  background: var(--bg-card); border: 1px solid var(--border);
+}
+.sell-cta-icon {
+  width: 64px; height: 64px; border-radius: 18px; font-size: 28px; color: white;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex; align-items: center; justify-content: center;
+}
+.sell-cta h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.sell-cta p { color: var(--text-muted); font-size: 15px; }
+
+/* דף מכרו איתנו */
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+.step-card {
+  position: relative; padding: 24px 20px 20px; border-radius: var(--radius-lg);
+  background: var(--bg-card); border: 1px solid var(--border);
+}
+.step-num {
+  position: absolute; top: -14px; right: 16px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); color: white; font-weight: 800; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-card i.step-icon { font-size: 26px; color: var(--primary); margin-bottom: 10px; }
+.step-card h3 { font-size: 17px; margin-bottom: 6px; }
+.step-card p { color: var(--text-muted); font-size: 14px; }
+.sell-layout { display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start; }
+.sell-form { background: var(--bg-card); padding: 32px; border-radius: 20px; border: 1px solid var(--border); }
+.sell-form h2 { font-size: 22px; margin: 8px 0 4px; }
+.sell-form h2:not(:first-child) { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+.sell-form .hint { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }
+.sell-side { position: sticky; top: 100px; display: grid; gap: 16px; }
+.commission-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; }
+.commission-box h3 { font-size: 16px; margin-bottom: 14px; }
+.commission-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; border-bottom: 1px dashed var(--border); }
+.commission-row:last-child { border-bottom: none; }
+.commission-row.total { font-weight: 800; font-size: 18px; color: var(--primary); }
+.image-drop {
+  border: 2px dashed var(--border); border-radius: 14px; padding: 20px;
+  text-align: center; color: var(--text-muted); cursor: pointer; transition: var(--transition);
+  background: var(--bg);
+}
+.image-drop:hover, .image-drop.drag { border-color: var(--primary); color: var(--text); }
+.image-drop input { display: none; }
+.image-preview { position: relative; margin-top: 10px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); aspect-ratio: 2 / 1; background: var(--bg-alt); }
+.image-preview img { width: 100%; height: 100%; object-fit: cover; }
+.image-preview button {
+  position: absolute; top: 8px; left: 8px; width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(0,0,0,0.55); color: white; display: flex; align-items: center; justify-content: center;
+}
+.contract-scroll {
+  max-height: 340px; overflow-y: auto; padding: 18px 20px;
+  border: 1.5px solid var(--border); border-radius: 12px; background: var(--bg);
+  font-size: 14px;
+}
+.contract-scroll .contract { padding: 0; border: none; box-shadow: none; }
+.contract-scroll .contract h1 { font-size: 20px; }
+.contract-scroll .contract h2 { font-size: 15px; }
+.consent {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 14px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg);
+  font-size: 14px; cursor: pointer;
+}
+.consent input { width: 20px; height: 20px; accent-color: var(--primary); flex-shrink: 0; margin-top: 2px; }
+.consent.disabled { opacity: 0.6; cursor: not-allowed; }
+.consent strong { display: block; margin-bottom: 2px; }
+.status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 700; }
+.status-pill.pending { background: rgba(245,158,11,0.15); color: #b45309; }
+.status-pill.approved { background: rgba(16,185,129,0.15); color: #047857; }
+.status-pill.rejected { background: rgba(239,68,68,0.15); color: #b91c1c; }
+.mine-list { display: grid; gap: 12px; }
+.mine-item {
+  display: grid; grid-template-columns: 72px 1fr auto; gap: 16px; align-items: center;
+  padding: 14px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border);
+}
+.mine-item .thumb { width: 72px; height: 72px; border-radius: 12px; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; font-size: 32px; overflow: hidden; }
+.mine-item .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mine-item .reason { font-size: 13px; color: #b91c1c; margin-top: 4px; }
+.sell-success { text-align: center; padding: 48px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
+.sell-success i { font-size: 64px; color: var(--accent-2); margin-bottom: 16px; }
+
+/* הסכם המוכר */
+.contract {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 40px 44px; line-height: 1.8; font-size: 15px;
+}
+.contract-head { text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid var(--border); }
+.contract-head h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+.contract-sub { color: var(--text-muted); font-size: 16px; }
+.contract-meta { color: var(--text-muted); font-size: 13px; margin-top: 6px; }
+.contract-notice {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.5);
+  border-radius: 12px; padding: 14px 16px; margin-bottom: 24px; font-size: 14px;
+}
+.contract-notice i { color: #d97706; font-size: 20px; margin-top: 2px; }
+.contract section { margin-bottom: 22px; }
+.contract h2 { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--text); }
+.contract ol { padding-right: 22px; display: grid; gap: 6px; }
+.contract li::marker { font-weight: 700; color: var(--primary); }
+.contract-critical { padding: 18px 20px; border-radius: 14px; background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.35); }
+.contract-critical h2 { color: #b91c1c; }
+
+@media (max-width: 1024px) {
+  .sell-layout { grid-template-columns: 1fr; }
+  .sell-side { position: static; }
+}
+@media (max-width: 720px) {
+  .sell-cta { grid-template-columns: 1fr; text-align: center; padding: 20px; }
+  .sell-cta-icon { margin: 0 auto; }
+  .steps-grid { grid-template-columns: 1fr; gap: 20px; }
+  .sell-form { padding: 20px 16px; }
+  .sell-form .form-row { grid-template-columns: 1fr; }
+  .contract { padding: 22px 18px; font-size: 14px; }
+  .contract-head h1 { font-size: 22px; }
+  .mine-item { grid-template-columns: 56px 1fr; }
+  .mine-item .thumb { width: 56px; height: 56px; }
+  .mine-item > :last-child { grid-column: 1 / -1; }
+}

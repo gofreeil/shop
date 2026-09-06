@@ -95,20 +95,26 @@
 <script src="data/products.js"></script>
 <script src="js/main.js"></script>
 <script>
-const sub = cart.reduce((s,i) => s + products.find(p => p.id === i.id).price * i.qty, 0);
-const ship = sub >= 199 ? 0 : 29;
-const tot = sub + ship;
+function renderOrderSummary() {
+  // מוצר מוכר שעדיין לא נטען מהשרת - נספר כ-0 עד שיגיע (productsUpdated מרענן)
+  const sub = cart.reduce((s,i) => s + (products.find(p => p.id === i.id)?.price || 0) * i.qty, 0);
+  const ship = sub >= 199 ? 0 : 29;
+  const tot = sub + ship;
 
-document.getElementById('orderItems').innerHTML = cart.map(i => {
-  const p = products.find(x => x.id === i.id);
-  return `<div class="summary-row"><span>${p.name} × ${i.qty}</span><span>₪${p.price * i.qty}</span></div>`;
-}).join('') || '<p style="color:var(--text-muted);text-align:center;padding:20px">העגלה ריקה</p>';
+  document.getElementById('orderItems').innerHTML = cart.map(i => {
+    const p = products.find(x => x.id === i.id);
+    if (!p) return '';
+    return `<div class="summary-row"><span>${p.name} × ${i.qty}</span><span>₪${p.price * i.qty}</span></div>`;
+  }).join('') || '<p style="color:var(--text-muted);text-align:center;padding:20px">העגלה ריקה</p>';
 
-document.getElementById('orderTotal').innerHTML = `
-  <div class="summary-row"><span>סכום ביניים</span><span>₪${sub}</span></div>
-  <div class="summary-row"><span>משלוח</span><span>${ship === 0 ? 'חינם' : '₪' + ship}</span></div>
-  <div class="summary-row total"><span>סה"כ</span><span class="price">₪${tot}</span></div>
-`;
+  document.getElementById('orderTotal').innerHTML = `
+    <div class="summary-row"><span>סכום ביניים</span><span>₪${sub}</span></div>
+    <div class="summary-row"><span>משלוח</span><span>${ship === 0 ? 'חינם' : '₪' + ship}</span></div>
+    <div class="summary-row total"><span>סה"כ</span><span class="price">₪${tot}</span></div>
+  `;
+}
+renderOrderSummary();
+document.addEventListener('productsUpdated', renderOrderSummary);
 
 function handleCheckout(e) {
   e.preventDefault();

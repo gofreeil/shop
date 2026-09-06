@@ -46,6 +46,7 @@
     <nav class="main-nav">
       <a href="index.html" class="active">בית</a>
       <a href="products.html">חנות</a>
+      <a href="sell.html">מכרו איתנו</a>
       <a href="#categories">קטגוריות</a>
       <a href="about.html">אודות</a>
       <a href="contact.html">צור קשר</a>
@@ -160,6 +161,20 @@
   </div>
 </section>
 
+<!-- Sell with us -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="sell-cta">
+      <div class="sell-cta-icon"><i class="fas fa-handshake"></i></div>
+      <div>
+        <h2>יש לכם מוצר? מכרו אותו אצלנו</h2>
+        <p>מעלים מוצר, אנחנו בודקים ומאשרים, והוא עולה למדף. החנות לוקחת 10% ממחיר המכירה - 90% אליכם.</p>
+      </div>
+      <a href="sell.html" class="btn btn-primary btn-lg"><i class="fas fa-store"></i> להגשת מוצר</a>
+    </div>
+  </div>
+</section>
+
 <!-- Newsletter -->
 <section class="newsletter">
   <div class="container newsletter-inner">
@@ -209,7 +224,8 @@
       <div class="footer-col">
         <h4>החברה</h4>
         <a href="about.html">אודותינו</a>
-        <a href="#">בלוג</a>
+        <a href="sell.html">מכרו איתנו</a>
+        <a href="contract.html">הסכם המוכר</a>
         <a href="#">קריירה</a>
         <a href="#">תנאי שימוש</a>
         <a href="#">פרטיות</a>
@@ -239,9 +255,14 @@
 <script src="data/products.js"></script>
 <script src="js/main.js"></script>
 <script>
-  renderCategories();
-  renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 4));
-  renderProducts('newGrid', [...products].sort((a,b) => b.id - a.id).slice(0, 4));
+  function renderHome() {
+    renderCategories();
+    renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 4));
+    renderProducts('newGrid', [...products].sort((a,b) => b.id - a.id).slice(0, 4));
+  }
+  renderHome();
+  // מוצרי מוכרים מאושרים נטענים מהשרת אחרי הרינדור הראשון - מרעננים כשהם מגיעים
+  document.addEventListener('productsUpdated', renderHome);
 </script>
 
 </body>

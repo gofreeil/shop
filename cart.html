@@ -38,6 +38,7 @@
     <nav class="main-nav">
       <a href="index.html">בית</a>
       <a href="products.html">חנות</a>
+      <a href="sell.html">מכרו איתנו</a>
       <a href="index.html#categories">קטגוריות</a>
       <a href="about.html">אודות</a>
       <a href="contact.html">צור קשר</a>
@@ -89,10 +90,12 @@ function renderCart() {
 
   const items = cart.map(item => {
     const p = products.find(x => x.id === item.id);
-    const cat = categories.find(c => c.id === p.category);
+    // מוצר מוכר שעדיין לא נטען מהשרת (או שהוסר) - מדלגים עד שיגיע
+    if (!p) return '';
+    const cat = categories.find(c => c.id === p.category) || categories[0];
     return `
       <div class="cart-item">
-        <div class="cart-item-image" style="background:${cat.color}22">${p.emoji}</div>
+        <div class="cart-item-image" style="background:${cat.color}22">${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.emoji}</div>
         <div>
           <div class="cart-item-name">${p.name}</div>
           <div class="cart-item-cat">${cat.name}</div>
@@ -108,7 +111,7 @@ function renderCart() {
     `;
   }).join('');
 
-  const subtotal = cart.reduce((s, i) => s + products.find(p => p.id === i.id).price * i.qty, 0);
+  const subtotal = cart.reduce((s, i) => s + (products.find(p => p.id === i.id)?.price || 0) * i.qty, 0);
   const shipping = subtotal >= 199 ? 0 : 29;
   const total = subtotal + shipping;
 
@@ -135,6 +138,8 @@ function renderCart() {
   `;
 }
 renderCart();
+// מוצרי מוכרים מאושרים נטענים מהשרת אחרי הרינדור הראשון - מרעננים כשהם מגיעים
+document.addEventListener('productsUpdated', renderCart);
 </script>
 </body>
 </html>

@@ -73,14 +73,14 @@ function updateWishlistCount() {
 
 // === Render ===
 function productCard(p) {
-  const cat = categories.find(c => c.id === p.category);
+  const cat = categories.find(c => c.id === p.category) || categories[0];
   const inWish = wishlist.includes(p.id);
   const badge = p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'sale' ? 'מבצע' : p.badge === 'new' ? 'חדש' : 'חם'}</span>` : '';
   const oldPrice = p.oldPrice ? `<span class="product-price-old">₪${p.oldPrice}</span>` : '';
   return `
     <div class="product-card" data-id="${p.id}">
       <div class="product-image" style="background: linear-gradient(135deg, ${cat.color}22, ${cat.color}11)">
-        <span style="font-size:80px">${p.emoji || '📦'}</span>
+        ${p.image ? `<img class="product-photo" src="${p.image}" alt="${p.name}" loading="lazy">` : `<span style="font-size:80px">${p.emoji || '📦'}</span>`}
         <div class="product-badges">${badge}</div>
         <div class="product-actions">
           <button onclick="openQuickView(${p.id})"><i class="fas fa-eye"></i> צפייה</button>
@@ -92,10 +92,12 @@ function productCard(p) {
       <div class="product-info">
         <span class="product-category">${cat.name}</span>
         <h3 class="product-name">${p.name}</h3>
-        <div class="product-rating">
+        ${p.seller
+          ? `<div class="product-seller" title="נמכר ומסופק על ידי המוכר"><i class="fas fa-store"></i> ${p.seller}</div>`
+          : `<div class="product-rating">
           <span class="stars">★★★★★</span>
           <span>${p.rating} (${p.reviews})</span>
-        </div>
+        </div>`}
         <div class="product-price-row">
           <div><span class="product-price">₪${p.price}</span>${oldPrice}</div>
           <button class="product-add" onclick="addToCart(${p.id})" title="הוסף לעגלה"><i class="fas fa-plus"></i></button>
@@ -135,23 +137,30 @@ function renderCategories() {
 function openQuickView(productId) {
   const p = products.find(x => x.id === productId);
   if (!p) return;
-  const cat = categories.find(c => c.id === p.category);
+  const cat = categories.find(c => c.id === p.category) || categories[0];
   const modal = document.getElementById('quickViewModal');
   const content = document.getElementById('quickViewContent');
   content.innerHTML = `
     <button class="modal-close" onclick="closeQuickView()"><i class="fas fa-times"></i></button>
     <div class="quick-view">
       <div class="quick-view-image" style="background: linear-gradient(135deg, ${cat.color}22, ${cat.color}11)">
-        <span>${p.emoji || '📦'}</span>
+        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : `<span>${p.emoji || '📦'}</span>`}
       </div>
       <div class="quick-view-info">
         <span class="product-category" style="color:${cat.color}">${cat.name}</span>
         <h2>${p.name}</h2>
-        <div class="product-rating" style="margin:12px 0">
+        ${p.seller ? '' : `<div class="product-rating" style="margin:12px 0">
           <span class="stars">★★★★★</span>
           <span>${p.rating} (${p.reviews} ביקורות)</span>
-        </div>
-        <p style="color:var(--text-muted);margin:16px 0">${p.desc || 'מוצר איכותי שעבר בדיקות קפדניות. אנחנו עומדים מאחורי כל פריט שאנו מוכרים, עם אחריות מלאה ומחויבות לאיכות.'}</p>
+        </div>`}
+        ${p.seller
+          ? `<p style="color:var(--text-muted);margin:16px 0">${p.desc || ''}</p>
+        <div class="seller-note">
+          <i class="fas fa-store"></i>
+          <div>נמכר ומסופק על ידי <strong>${p.seller}</strong>${p.deliveryDays ? ` · אספקה תוך ${p.deliveryDays} ימי עסקים` : ''}${p.quantity ? ` · ${p.quantity} יח' במלאי` : ''}
+            <small>האחריות למוצר, לאספקה, לאחריות ולשירות חלה על המוכר, לפי <a href="contract.html">הסכם המוכר</a>.</small></div>
+        </div>`
+          : `<p style="color:var(--text-muted);margin:16px 0">${p.desc || 'מוצר איכותי שעבר בדיקות קפדניות. אנחנו עומדים מאחורי כל פריט שאנו מוכרים, עם אחריות מלאה ומחויבות לאיכות.'}</p>`}
         <div style="display:flex;align-items:center;gap:12px;margin:20px 0">
           <span class="product-price" style="font-size:32px">₪${p.price}</span>
           ${p.oldPrice ? `<span class="product-price-old" style="font-size:18px">₪${p.oldPrice}</span>` : ''}
@@ -232,10 +241,10 @@ function initSearch() {
       categories.find(c => c.id === p.category && c.name.includes(q))
     ).slice(0, 6);
     suggestions.innerHTML = results.length ? results.map(p => {
-      const cat = categories.find(c => c.id === p.category);
+      const cat = categories.find(c => c.id === p.category) || categories[0];
       return `
         <a href="products.html?search=${encodeURIComponent(q)}" class="search-result" onclick="openQuickView(${p.id});event.preventDefault()">
-          <div class="search-result-img" style="background:${cat.color}22">${p.emoji}</div>
+          <div class="search-result-img" style="background:${cat.color}22">${p.image ? `<img src="${p.image}" alt="">` : p.emoji}</div>
           <div class="search-result-info">
             <div class="search-result-name">${p.name}</div>
             <div style="font-size:12px;color:var(--text-muted)">${cat.name}</div>
@@ -274,6 +283,8 @@ function injectAccountUI() {
 }
 function updateAccountBtn(btn) {
   btn = btn || document.getElementById('accountBtn');
+  // דפים שתלויים בזהות (למשל "המוצרים שלי" ב-sell.html) מאזינים לאירוע הזה
+  document.dispatchEvent(new CustomEvent('userChanged', { detail: { user: currentUser } }));
   if (!btn) return;
   btn.innerHTML = currentUser
     ? `<span style="background:var(--primary);color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">${currentUser.name.charAt(0)}</span>`
@@ -458,6 +469,7 @@ function renderAccountMenu() {
     <div style="display:grid;gap:6px">
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>
       <a href="cart.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shopping-bag"></i> העגלה שלי</a>
+      <a href="sell.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
       <button class="btn btn-ghost btn-block" onclick="logoutUser()" style="justify-content:flex-start;color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
     </div>
   `;
@@ -509,6 +521,26 @@ function renderWishlistModal() {
   `;
 }
 
+// === Seller products (מוצרים שהקהל הגיש ואושרו) ===
+// נטענים מ-/api/seller-products (פרוקסי ל-Strapi המשותף) ומתמזגים לתוך products.
+// הדפים מרנדרים קודם את המוצרים הקבועים, ומאזינים ל-productsUpdated כדי לרנדר מחדש.
+// ב-dev מקומי (http-server בלי API) הקריאה נכשלת בשקט.
+async function loadSellerProducts() {
+  try {
+    const res = await fetch('/api/seller-products');
+    if (!res.ok) return;
+    const { items } = await res.json();
+    if (!Array.isArray(items) || !items.length) return;
+    let added = 0;
+    for (const p of items) {
+      if (products.some(x => x.id === p.id)) continue;
+      products.push(p);
+      added++;
+    }
+    if (added) document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { added } }));
+  } catch { /* offline / dev ללא API */ }
+}
+
 // === Newsletter ===
 function handleNewsletter(e) {
   e.preventDefault();
@@ -523,6 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectConstructionBanner();
   injectAccountUI();
   hydrateUser();
+  loadSellerProducts();
   updateCartCount();
   updateWishlistCount();
   const wishBtn = document.getElementById('wishlistBtn');

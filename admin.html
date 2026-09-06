@@ -57,6 +57,34 @@
   .bar:hover { opacity: 0.8; }
   .bar-label { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--text-muted); }
   .bar-value { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; }
+  /* מוצרי מוכרים */
+  .nav-count { margin-right: auto; background: var(--accent); color: white; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; }
+  .nav-count[hidden] { display: none; }
+  .seller-card { display: grid; grid-template-columns: 120px 1fr auto; gap: 20px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; margin-bottom: 14px; background: var(--bg); }
+  .seller-card.approved { border-color: rgba(16,185,129,0.5); }
+  .seller-card.rejected { opacity: 0.8; }
+  .seller-thumb { width: 120px; height: 120px; border-radius: 12px; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; font-size: 48px; overflow: hidden; }
+  .seller-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .seller-title { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .seller-title strong { font-size: 18px; }
+  .seller-meta { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }
+  .seller-desc { font-size: 14px; margin-bottom: 12px; white-space: pre-line; max-height: 120px; overflow: auto; }
+  .seller-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 16px; font-size: 13px; padding: 12px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; }
+  .seller-grid span { color: var(--text-muted); display: block; font-size: 11px; }
+  .seller-money { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; font-size: 14px; }
+  .seller-money b { color: var(--accent-2); }
+  .seller-decision { margin-top: 10px; font-size: 13px; color: var(--text-muted); }
+  .seller-decision.rejected { color: #b91c1c; }
+  .seller-actions { display: flex; flex-direction: column; gap: 8px; min-width: 150px; }
+  .seller-actions .btn { justify-content: center; padding: 9px 14px; font-size: 13px; }
+  .btn-approve { background: var(--accent-2); color: white; }
+  .btn-reject { background: rgba(239,68,68,0.12); color: #b91c1c; }
+  @media (max-width: 900px) {
+    .seller-card { grid-template-columns: 1fr; }
+    .seller-thumb { width: 100%; height: 160px; }
+    .seller-grid { grid-template-columns: 1fr 1fr; }
+    .seller-actions { flex-direction: row; flex-wrap: wrap; }
+  }
   @media (max-width: 900px) {
     .admin-layout { grid-template-columns: 1fr; }
     .sidebar { display: none; }
@@ -101,6 +129,7 @@
       <a data-tab="orders"><i class="fas fa-shopping-bag"></i> הזמנות</a>
       <a data-tab="customers"><i class="fas fa-users"></i> לקוחות</a>
       <a data-tab="categories"><i class="fas fa-tags"></i> קטגוריות</a>
+      <a data-tab="sellers"><i class="fas fa-handshake"></i> מוצרי מוכרים <span class="nav-count" id="sellersPendingCount" hidden></span></a>
       <a data-tab="settings"><i class="fas fa-gear"></i> הגדרות</a>
       <a onclick="logout()" style="margin-top:24px;color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתק</a>
       <a href="index.html" style="color:var(--text-muted)"><i class="fas fa-arrow-left"></i> חזרה לאתר</a>
@@ -203,6 +232,41 @@
       <div class="panel">
         <div class="panel-header"><h2>קטגוריות</h2></div>
         <div id="categoriesGrid2" class="categories-grid"></div>
+      </div>
+    </div>
+
+    <!-- Sellers: מוצרים שהקהל הגיש למכירה (נשמרים ב-Strapi המשותף) -->
+    <div class="tab-section" id="tab-sellers">
+      <div class="panel" id="sellersAuthPanel" hidden>
+        <div class="panel-header"><h2><i class="fas fa-lock" style="color:var(--accent)"></i> נדרשת כניסה עם חשבון מנהל חנות</h2></div>
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:16px">
+          ההגשות נשמרות בשרת המשותף של "יוצאים לחירות", ואישור מוצר נחתם בשם החשבון שלך. התחבר/י עם החשבון המשותף
+          (חשבון עם תפקיד <code>super_admin</code> או <code>shop_admin</code>). כניסת הדמו admin/admin אינה מספיקה.
+        </p>
+        <form class="form-grid" onsubmit="sellerLogin(event)" style="max-width:420px">
+          <div class="form-field"><label>אימייל</label><input type="email" id="sellerLoginEmail" required autocomplete="username"></div>
+          <div class="form-field"><label>סיסמה</label><input type="password" id="sellerLoginPass" required autocomplete="current-password"></div>
+          <button type="submit" class="btn btn-primary" style="width:fit-content"><i class="fas fa-sign-in-alt"></i> כניסה</button>
+        </form>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>מוצרים שהקהל הגיש <span id="sellersSummary" style="font-weight:400;color:var(--text-muted);font-size:13px"></span></h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="sellersFilter" onchange="renderSellerSubs()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)">
+              <option value="pending">ממתינים לאישור</option>
+              <option value="approved">מאושרים (על המדף)</option>
+              <option value="rejected">נדחו</option>
+              <option value="">הכל</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadSellerSubmissions()" style="padding:8px 14px"><i class="fas fa-rotate"></i> רענן</button>
+          </div>
+        </div>
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
+          מוצר מאושר עולה לאתר תוך דקה (מטמון 60 שניות). החנות גובה 10% ממחיר המכירה; הסכום למוכר מוצג בכל כרטיס.
+          כל הגשה נושאת תיעוד של קבלת <a href="contract.html" target="_blank" style="color:var(--primary);text-decoration:underline">הסכם המוכר</a> (גרסה, מועד, IP).
+        </p>
+        <div id="sellersList"></div>
       </div>
     </div>
 
@@ -313,7 +377,7 @@ function switchTab(tab) {
   document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
-  const titles = { dashboard:'דשבורד', products:'מוצרים', orders:'הזמנות', customers:'לקוחות', categories:'קטגוריות', settings:'הגדרות' };
+  const titles = { dashboard:'דשבורד', products:'מוצרים', orders:'הזמנות', customers:'לקוחות', categories:'קטגוריות', sellers:'מוצרי מוכרים', settings:'הגדרות' };
   document.getElementById('pageTitle').textContent = titles[tab];
 }
 
@@ -470,6 +534,145 @@ function deleteProduct(id) {
   toast('המוצר נמחק', 'fa-trash');
 }
 
+// === Seller submissions (מוצרים שהקהל הגיש למכירה) ===
+// הנתונים ב-Strapi המשותף דרך /api/seller-products. הזהות לאישור היא החשבון
+// המשותף של יוצאים לחירות (עוגיית gofreeil-auth) - לא כניסת הדמו admin/admin.
+// Strapi מחזיר את פרטי המוכר רק למנהל; לכל אחד אחר הבקשה נכשלת ב-403.
+const COMMISSION = 10;
+let sellerSubs = [];
+function escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function ils(n) { return '₪' + (Math.round(Number(n) * 100) / 100).toLocaleString('he-IL'); }
+function fmtDate(d) { return d ? new Date(d).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' }) : '-'; }
+const SELLER_STATUS = { pending: ['ממתין', 'fa-clock'], approved: ['מאושר', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
+
+function updateSellersPendingCount() {
+  const n = sellerSubs.filter(s => s.status === 'pending').length;
+  const el = document.getElementById('sellersPendingCount');
+  el.textContent = n;
+  el.hidden = n === 0;
+}
+
+async function loadSellerSubmissions() {
+  const list = document.getElementById('sellersList');
+  const auth = document.getElementById('sellersAuthPanel');
+  list.innerHTML = '<p style="color:var(--text-muted)">טוען...</p>';
+  try {
+    const r = await fetch('/api/seller-products?all=1');
+    if (r.status === 403) {
+      auth.hidden = false;
+      list.innerHTML = '<p style="color:var(--text-muted)">התחבר/י עם חשבון מנהל חנות כדי לראות את ההגשות.</p>';
+      return;
+    }
+    if (!r.ok) throw new Error();
+    const { items } = await r.json();
+    auth.hidden = true;
+    sellerSubs = items;
+    updateSellersPendingCount();
+    renderSellerSubs();
+  } catch {
+    list.innerHTML = '<p style="color:#ef4444">לא ניתן לטעון את ההגשות. הפאנל עובד מול השרת רק בפריסה (Vercel), לא ב-http-server מקומי.</p>';
+  }
+}
+
+function renderSellerSubs() {
+  const filter = document.getElementById('sellersFilter').value;
+  const list = document.getElementById('sellersList');
+  const items = sellerSubs.filter(s => !filter || s.status === filter);
+  const counts = { pending: 0, approved: 0, rejected: 0 };
+  sellerSubs.forEach(s => { if (counts[s.status] != null) counts[s.status]++; });
+  document.getElementById('sellersSummary').textContent = `· ${counts.pending} ממתינים · ${counts.approved} מאושרים · ${counts.rejected} נדחו`;
+  if (!items.length) { list.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">אין הגשות בקטגוריה זו.</p>'; return; }
+  list.innerHTML = items.map(s => {
+    const [label, icon] = SELLER_STATUS[s.status] || SELLER_STATUS.pending;
+    const cat = categories.find(c => c.id === s.category);
+    const fee = Number(s.price) * (Number(s.commission_percent) || COMMISSION) / 100;
+    const safeLink = /^https?:\/\//.test(s.link || '') ? escHtml(s.link) : '';
+    return `<div class="seller-card ${s.status}">
+      <div class="seller-thumb">${/^data:image\//.test(s.image || '') ? `<img src="${escHtml(s.image)}" alt="">` : escHtml(s.emoji || '📦')}</div>
+      <div>
+        <div class="seller-title"><strong>${escHtml(s.name)}</strong><span class="status-pill ${s.status}"><i class="fas ${icon}"></i> ${label}</span></div>
+        <div class="seller-meta">
+          ${cat ? escHtml(cat.name) : escHtml(s.category)} · מחיר לצרכן <strong>${ils(s.price)}</strong>${s.old_price ? ` <s>${ils(s.old_price)}</s>` : ''}
+          ${s.quantity != null ? ` · ${s.quantity} יח' במלאי` : ''}${s.delivery_days ? ` · אספקה ${s.delivery_days} ימי עסקים` : ''}
+          ${safeLink ? ` · <a href="${safeLink}" target="_blank" rel="noopener" style="color:var(--primary)">קישור <i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}
+          · הוגש ${fmtDate(s.submitted_at || s.createdAt)}
+        </div>
+        <p class="seller-desc">${escHtml(s.description)}</p>
+        <div class="seller-grid">
+          <div><span>מוכר</span>${escHtml(s.seller_name)}${s.seller_business ? ` (${escHtml(s.seller_business)})` : ''}</div>
+          <div><span>ת"ז / ח.פ</span>${escHtml(s.seller_id_number)}</div>
+          <div><span>טלפון</span><a href="tel:${escHtml(s.seller_phone)}">${escHtml(s.seller_phone)}</a></div>
+          <div><span>אימייל</span><a href="mailto:${escHtml(s.seller_email)}">${escHtml(s.seller_email)}</a></div>
+          <div><span>כתובת</span>${escHtml(s.seller_address || '-')}</div>
+          <div><span>הסכם המוכר</span>${s.contract_accepted ? `גרסה ${escHtml(s.contract_version)} · ${fmtDate(s.contract_accepted_at)} · IP ${escHtml(s.contract_ip || '-')}` : '<b style="color:#b91c1c">לא אושר!</b>'}</div>
+        </div>
+        <div class="seller-money">
+          <span>מחיר לצרכן: <strong>${ils(s.price)}</strong></span>
+          <span>עמלת החנות (${Number(s.commission_percent) || COMMISSION}%): <strong>${ils(fee)}</strong></span>
+          <span>למוכר: <b>${ils(Number(s.price) - fee)}</b></span>
+        </div>
+        ${s.status !== 'pending' ? `<div class="seller-decision ${s.status}">${label} ב-${fmtDate(s.decided_at)}${s.decided_by ? ` על ידי ${escHtml(s.decided_by)}` : ''}${s.rejection_reason ? ` · סיבה: ${escHtml(s.rejection_reason)}` : ''}</div>` : ''}
+      </div>
+      <div class="seller-actions">
+        ${s.status !== 'approved' ? `<button class="btn btn-approve" onclick="decideSeller('${escHtml(s.documentId)}','approved')"><i class="fas fa-check"></i> אשר ופרסם</button>` : ''}
+        ${s.status !== 'rejected' ? `<button class="btn btn-reject" onclick="decideSeller('${escHtml(s.documentId)}','rejected')"><i class="fas fa-ban"></i> דחה</button>` : ''}
+        ${s.status !== 'pending' ? `<button class="btn btn-ghost" onclick="decideSeller('${escHtml(s.documentId)}','pending')"><i class="fas fa-clock"></i> החזר להמתנה</button>` : ''}
+        <button class="btn btn-ghost" style="color:#ef4444" onclick="deleteSeller('${escHtml(s.documentId)}')"><i class="fas fa-trash"></i> מחק</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function decideSeller(documentId, status) {
+  const body = { documentId, status };
+  if (status === 'rejected') {
+    const reason = prompt('סיבת הדחייה (תישלח למוכר ותוצג לו ב"המוצרים שלי"):', '');
+    if (reason === null) return;
+    body.rejection_reason = reason.trim();
+  } else if (status === 'approved' && !confirm('לאשר את המוצר? הוא יעלה למדף החנות תוך דקה.')) return;
+  try {
+    const r = await fetch('/api/seller-products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.status === 403) { toast('אין הרשאה - נדרש חשבון מנהל חנות', 'fa-lock'); document.getElementById('sellersAuthPanel').hidden = false; return; }
+    if (!r.ok) throw new Error();
+    const { item } = await r.json();
+    const idx = sellerSubs.findIndex(s => s.documentId === documentId);
+    if (idx >= 0) sellerSubs[idx] = { ...sellerSubs[idx], ...(item || {}), status, rejection_reason: body.rejection_reason ?? sellerSubs[idx].rejection_reason };
+    updateSellersPendingCount();
+    renderSellerSubs();
+    toast(status === 'approved' ? 'המוצר אושר ויעלה לאתר' : status === 'rejected' ? 'המוצר נדחה' : 'הוחזר להמתנה', status === 'rejected' ? 'fa-ban' : 'fa-check-circle');
+  } catch {
+    toast('הפעולה נכשלה, נסה שוב', 'fa-circle-exclamation');
+  }
+}
+
+async function deleteSeller(documentId) {
+  if (!confirm('למחוק את ההגשה לצמיתות? תיעוד ההסכם יימחק יחד איתה. עדיף "דחה".')) return;
+  try {
+    const r = await fetch('/api/seller-products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId }) });
+    if (!r.ok) throw new Error();
+    sellerSubs = sellerSubs.filter(s => s.documentId !== documentId);
+    updateSellersPendingCount();
+    renderSellerSubs();
+    toast('ההגשה נמחקה', 'fa-trash');
+  } catch {
+    toast('המחיקה נכשלה', 'fa-circle-exclamation');
+  }
+}
+
+async function sellerLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('sellerLoginEmail').value;
+  const password = document.getElementById('sellerLoginPass').value;
+  try {
+    const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+    if (!r.ok) { toast('אימייל או סיסמה שגויים', 'fa-circle-exclamation'); return; }
+    toast('מחובר - טוען הגשות');
+    loadSellerSubmissions();
+  } catch {
+    toast('שגיאת התחברות', 'fa-circle-exclamation');
+  }
+}
+
 // === Init ===
 function init() {
   renderProducts();
@@ -478,6 +681,7 @@ function init() {
   renderCustomers();
   renderCategories2();
   renderChart();
+  loadSellerSubmissions();
   document.getElementById('statOrders').textContent = mockOrders.length * 25;
   document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(a =>
     a.addEventListener('click', () => switchTab(a.dataset.tab))

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הסכם המוכר | חנות החירות</title>
+<meta name="description" content="הסכם שיתוף פעולה למכירת מוצרים בחנות החירות - תנאי ההתקשרות בין החנות לבין מציעי המוצרים">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="חנות החירות">
+<meta property="og:title" content="הסכם המוכר | חנות החירות">
+<meta property="og:description" content="תנאי ההתקשרות בין חנות החירות לבין מציעי המוצרים">
+<meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
+<meta property="og:url" content="https://shop.gofreeil.com/contract">
+<meta property="og:locale" content="he_IL">
+<meta name="theme-color" content="#6366f1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
+     האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YTEG7S0H9N"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
+	gtag('config', 'G-YTEG7S0H9N');
+</script>
+<style>
+  @media print {
+    .header, .footer, .page-header, .construction-banner, .toast, .contract-actions { display: none !important; }
+    body { background: #fff; color: #000; }
+    .contract { border: none; box-shadow: none; padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <nav class="main-nav">
+      <a href="index.html">בית</a>
+      <a href="products.html">חנות</a>
+      <a href="sell.html" class="active">מכרו איתנו</a>
+      <a href="index.html#categories">קטגוריות</a>
+      <a href="about.html">אודות</a>
+      <a href="contact.html">צור קשר</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="cart.html" class="icon-btn cart-btn"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / <a href="sell.html">מכרו איתנו</a> / הסכם המוכר</div>
+    <h1>הסכם המוכר</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:900px">
+    <div class="contract-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <a href="sell.html" class="btn btn-primary"><i class="fas fa-store"></i> להגשת מוצר</a>
+      <button class="btn btn-ghost" onclick="window.print()"><i class="fas fa-print"></i> הדפסה / שמירה כ-PDF</button>
+    </div>
+    <div id="contractBody"></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 חנות החירות. כל הזכויות שמורות.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<script src="data/products.js"></script>
+<script src="js/contract.js"></script>
+<script src="js/main.js"></script>
+<script>
+  document.getElementById('contractBody').innerHTML = SELLER_CONTRACT_HTML;
+</script>
+</body>
+</html>
