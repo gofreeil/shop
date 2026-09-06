@@ -43,7 +43,6 @@
       <a href="sell.html" class="active">מכרו דרכנו</a>
       <a href="index.html#categories">קטגוריות</a>
       <a href="about.html">אודות</a>
-      <a href="contact.html">צור קשר</a>
     </nav>
     <div class="header-actions">
       <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
@@ -227,10 +226,11 @@
 <footer class="footer">
   <div class="container">
     <div class="footer-bottom" style="border:none">
-      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contract.html">הסכם המוכר</a></p>
+      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a> · <a href="contract.html">הסכם המוכר</a></p>
     </div>
   </div>
 </footer>
+
 <!-- עורך תמונה: זום / מרכוז / סיבוב בתוך מסגרת 4:3 (כמו כרטיס המוצר) -->
 <div class="modal crop-modal" id="cropModal">
   <div class="modal-overlay" onclick="closeCrop()"></div>
@@ -258,7 +258,6 @@
     </div>
   </div>
 </div>
-
 
 <div class="toast" id="toast"></div>
 <script src="data/products.js"></script>
@@ -567,8 +566,8 @@ function saveCrop() {
     toast('התמונה עודכנה', 'fa-circle-check');
   }
   closeCrop();
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('cropModal').classList.contains('active')) closeCrop(); });
 }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('cropModal').classList.contains('active')) closeCrop(); });
 
 // ---- לוגו החנות ----
 let logoData = '';
