@@ -899,7 +899,7 @@ function openStoreCard() {
     <a href="sell.html" class="store-card store-card-open">
       <span class="store-logo store-logo-letter" style="width:64px;height:64px;font-size:28px"><i class="fas fa-plus"></i></span>
       <div class="store-card-body">
-        <h3>פתחו חנות בקניון</h3>
+        <h3>פתח חנות בקניון</h3>
         <p>לוגו, טלפון ומוצרים לפי קטגוריות. החנות לוקחת 10% ממכירה, השאר אליכם.</p>
         <div class="store-card-meta"><span><i class="fas fa-arrow-left"></i> להגשת מוצר ראשון</span></div>
       </div>
