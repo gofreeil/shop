@@ -63,6 +63,21 @@ function toShopProduct(row) {
 	};
 }
 
+// אותם כללי אמון כמו ב-controller בשרת: super_admin / shop_admin לפי app_role.
+const SHOP_ADMIN_ROLES = new Set(['super_admin', 'shop_admin']);
+async function isShopAdmin(req) {
+	const jwt = readCookie(req.headers.cookie, 'gofreeil-auth');
+	if (!jwt) return false;
+	try {
+		const r = await fetch(STRAPI_URL + '/api/users/me', { headers: { Authorization: `Bearer ${jwt}` }, signal: AbortSignal.timeout(10_000) });
+		if (!r.ok) return false;
+		const u = await r.json();
+		return SHOP_ADMIN_ROLES.has(u?.app_role) || String(u?.email || '').toLowerCase() === 'yahavanter@gmail.com';
+	} catch {
+		return false;
+	}
+}
+
 async function strapi(url, init) {
 	const r = await fetch(url, { ...init, signal: AbortSignal.timeout(15_000) });
 	let json = null;
@@ -79,14 +94,13 @@ module.exports = async (req, res) => {
 				return res.status(r.ok ? 200 : r.status).json(r.ok ? { items: r.json?.data ?? [] } : { error: 'forbidden' });
 			}
 			if (q.all) {
+				// מנהל חנות בלבד: מאמתים את התפקיד מול Strapi לפני שמחזירים משהו, כדי
+				// שהפאנל יקבל 403 ברור (ויציג מסך כניסה) גם כשאין עדיין הגשות.
+				if (!(await isShopAdmin(req))) return res.status(403).json({ error: 'forbidden' });
 				const url = ENDPOINT + '?sort=createdAt:desc&pagination[pageSize]=200';
 				const r = await strapi(url, { headers: authHeaders(req) });
 				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 403 : 502).json({ error: 'forbidden' });
-				// Strapi מחזיר לציבור רק approved ומסנן שדות - אם חזרו שדות מוכר, המשתמש מנהל.
-				const items = r.json?.data ?? [];
-				const isAdmin = items.length === 0 || items.some(x => 'seller_email' in x);
-				if (!isAdmin) return res.status(403).json({ error: 'forbidden' });
-				return res.status(200).json({ items });
+				return res.status(200).json({ items: r.json?.data ?? [] });
 			}
 			const url = ENDPOINT + '?filters[status][$eq]=approved&sort=decided_at:desc&pagination[pageSize]=200';
 			const r = await strapi(url, { headers: { 'Content-Type': 'application/json' } });
