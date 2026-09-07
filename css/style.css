@@ -1199,3 +1199,25 @@ a.product-seller:hover { color: var(--primary); }
 }
 .crop-toolbar .tools button:hover { border-color: var(--primary); color: var(--primary); }
 .crop-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+
+/* === FAQ (about.html#faq) === */
+.faq-list { display: grid; gap: 12px; }
+.faq-item {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.faq-item[open], .faq-item:hover { border-color: var(--primary); }
+.faq-item summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 16px 20px; cursor: pointer; list-style: none;
+  font-weight: 700; font-size: 17px; color: var(--text);
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary i { color: var(--primary); font-size: 14px; flex-shrink: 0; transition: var(--transition); }
+.faq-item[open] summary i { transform: rotate(180deg); }
+.faq-item p { padding: 0 20px 18px; color: var(--text-muted); font-size: 15px; line-height: 1.7; }
+@media (max-width: 720px) {
+  .faq-item summary { padding: 14px 16px; font-size: 15px; }
+  .faq-item p { padding: 0 16px 16px; font-size: 14px; }
+}
