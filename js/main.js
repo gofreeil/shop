@@ -669,7 +669,10 @@ function injectAccountUI() {
   btn.setAttribute('aria-label', 'חשבון');
   btn.onclick = () => currentUser ? openAccountMenu() : openAuth('login');
   updateAccountBtn(btn);
-  actions.insertBefore(btn, actions.firstChild);
+  // בקצה השמאלי של סרגל הפעולות (אחרי העגלה); בנייד ההמבורגר נשאר בקצה
+  const mobileToggle = document.getElementById('mobileMenuToggle');
+  if (mobileToggle && mobileToggle.parentNode === actions) actions.insertBefore(btn, mobileToggle);
+  else actions.appendChild(btn);
 }
 function updateAccountBtn(btn) {
   btn = btn || document.getElementById('accountBtn');

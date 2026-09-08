@@ -580,6 +580,22 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 .product-add:hover { background: var(--primary-dark); transform: scale(1.1); }
 
+/* גלריות עמוד הבית (מוצרים מובילים / הגעות אחרונות) - תצוגה מוקטנת: 5 כרטיסים בשורה, טקסטים וריווחים קטנים יותר */
+.products-grid--compact { grid-template-columns: repeat(5, 1fr); gap: 12px; }
+.products-grid--compact .product-image { aspect-ratio: 5 / 4; font-size: 40px; }
+.products-grid--compact .product-image > span { font-size: 60px !important; }
+.products-grid--compact .product-info { padding: 10px 12px; }
+.products-grid--compact .product-category { font-size: 11px; }
+.products-grid--compact .product-name { font-size: 14px; margin: 4px 0 6px; }
+.products-grid--compact .product-rating { font-size: 12px; margin-bottom: 8px; }
+.products-grid--compact .product-price { font-size: 17px; }
+.products-grid--compact .product-price-old { font-size: 12px; }
+.products-grid--compact .product-add { width: 32px; height: 32px; border-radius: 8px; font-size: 13px; }
+.products-grid--compact .product-badge { padding: 3px 8px; font-size: 10px; }
+.products-grid--compact .product-badges { top: 8px; right: 8px; }
+@media (max-width: 1024px) { .products-grid--compact { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 768px) { .products-grid--compact { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+
 /* === Promo Banner === */
 .promo-banner {
   background: linear-gradient(135deg, var(--accent-2), #059669);
