@@ -3,7 +3,6 @@ const categories = [
   { id: 'agriculture', name: 'חקלאות ביתית', icon: 'fa-seedling', color: '#84cc16', desc: 'גינון אורבני, זרעים, ציוד', image: 'images/agriculture.jpg' },
   { id: 'tech', name: 'טכנולוגיה מתקדמת', icon: 'fa-microchip', color: '#6366f1', desc: 'גאדג׳טים חכמים, אלקטרוניקה', image: 'images/tech.jpg' },
   { id: 'home', name: 'בית וגן', icon: 'fa-home', color: '#f59e0b', desc: 'כלי בית, עיצוב, אביזרים' },
-  { id: 'kitchen', name: 'מטבח בריא', icon: 'fa-utensils', color: '#ef4444', desc: 'כלי מטבח, סופרפודים, אביזרים' },
   { id: 'beauty', name: 'יופי וטיפוח', icon: 'fa-spa', color: '#a855f7', desc: 'קוסמטיקה טבעית, טיפוח' }
 ];
 
@@ -37,12 +36,6 @@ const products = [
   { id: 20, name: 'מנורת LED חכמה RGB', category: 'home', price: 179, rating: 4.6, reviews: 234, icon: 'fa-lightbulb', emoji: '💡' },
   { id: 21, name: 'סט מצעי במבוק אקולוגי', category: 'home', price: 449, rating: 4.9, reviews: 189, icon: 'fa-bed', emoji: '🛏️', featured: true },
   { id: 22, name: 'מפזר ארומה אולטרסוני', category: 'home', price: 159, rating: 4.7, reviews: 267, icon: 'fa-spa', emoji: '🌸' },
-
-  // Kitchen
-  { id: 23, name: 'בלנדר ואקום פרימיום', category: 'kitchen', price: 799, oldPrice: 999, rating: 4.8, reviews: 145, icon: 'fa-blender', emoji: '🥤', badge: 'sale' },
-  { id: 24, name: 'סט סכינים יפניים', category: 'kitchen', price: 599, rating: 4.9, reviews: 234, icon: 'fa-utensils', emoji: '🔪', featured: true },
-  { id: 25, name: 'מסחטת מיצים איטית', category: 'kitchen', price: 1299, rating: 4.8, reviews: 178, icon: 'fa-glass-water', emoji: '🍹', badge: 'hot' },
-  { id: 26, name: 'אבקת מאצ׳ה יפנית פרימיום', category: 'kitchen', price: 119, rating: 4.7, reviews: 156, icon: 'fa-mug-hot', emoji: '🍵' },
 
   // Beauty
   { id: 33, name: 'סרום ויטמין C טהור', category: 'beauty', price: 189, oldPrice: 249, rating: 4.8, reviews: 456, icon: 'fa-droplet', emoji: '✨', featured: true, badge: 'sale' },

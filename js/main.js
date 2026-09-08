@@ -122,10 +122,9 @@ function renderCategories() {
     const count = products.filter(p => p.category === c.id).length;
     return `
       <a href="products.html?category=${c.id}" class="category-card${c.image ? ' has-image' : ''}">
-        ${c.image ? `<div class="category-bg" style="background-image:url('${c.image}')"></div>` : ''}
-        <div class="category-icon" style="background: linear-gradient(135deg, ${c.color}, ${c.color}dd)">
+        ${c.image ? `<div class="category-bg" style="background-image:url('${c.image}')"></div>` : `<div class="category-icon" style="background: linear-gradient(135deg, ${c.color}, ${c.color}dd)">
           <i class="fas ${c.icon}"></i>
-        </div>
+        </div>`}
         <h3>${c.name}</h3>
         <p>${c.desc}</p>
         <span class="count">${count} מוצרים <i class="fas fa-arrow-left"></i></span>
