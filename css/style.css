@@ -414,7 +414,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 .category-card.has-image:hover { transform: none; box-shadow: none; }
 .category-card.has-image h3 { margin-bottom: 10px; padding: 0 4px; }
-.category-card.has-image p, .category-card.has-image .count { padding: 0 4px; }
+.category-card.has-image p { padding: 0 4px; margin-bottom: 0; }
 .category-bg {
   display: block; height: 130px; border-radius: 18px;
   background-size: cover; background-position: center;
@@ -429,7 +429,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 @media (min-width: 1025px) {
   .hero-visual { display: none; }
   .hero-categories { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 22px; }
-  .hero-categories .category-bg { height: 120px; }
+  .hero-categories .category-bg { height: 190px; }
   .hero-categories .category-card { animation: cardFloatSoft 7s ease-in-out infinite; }
   .hero-categories .category-card:nth-child(1) { animation-delay: 0s; }
   .hero-categories .category-card:nth-child(2) { animation-delay: -1.5s; }
