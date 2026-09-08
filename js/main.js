@@ -132,6 +132,81 @@ function renderCategories() {
     `;
   }).join('');
   targets.forEach(el => { el.innerHTML = html; });
+  initTapHints(targets.flatMap(el => [...el.querySelectorAll('.category-card')]));
+}
+
+// === Tap hint ("לחץ לכניסה") - vanilla port of purchasing_groups TapHint.svelte ===
+// One hint per page load: fires after scrolling settles, on the first card whose
+// centre sits in the middle of the screen. Phone shows a real hand tapping the
+// card, laptop shows a mouse cursor clicking. Skipped for prefers-reduced-motion
+// unless ?hand=1 is in the URL (test mode: repeats on every card you stop on).
+function initTapHints(cards) {
+  if (!cards.length) return;
+  const forced = new URLSearchParams(location.search).has('hand');
+  if (!forced && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const label = 'לחץ לכניסה';
+  const mq = window.matchMedia('(min-width: 769px)');
+  const cursorSvg = '<span class="tap-cursor"><svg viewBox="0 0 24 24" width="34" height="34"><path d="M4.5 3.2 L4.5 19.6 L8.9 15.6 L11.6 21.4 L14.6 20 L11.9 14.4 L18 14.2 Z" fill="#ffffff" stroke="#0b1220" stroke-width="1.3" stroke-linejoin="round"/></svg></span>';
+  const handImg = '<img class="tap-hand" src="images/finger.webp" alt="" width="500" height="802" decoding="async">';
+  const hints = cards.map(card => {
+    const h = document.createElement('div');
+    h.className = 'tap-hint';
+    h.setAttribute('aria-hidden', 'true');
+    card.appendChild(h);
+    return h;
+  });
+  let shown = false, playing = false, settleTimer;
+  const vh = () => window.innerHeight || document.documentElement.clientHeight;
+  // render the pieces (transparent) while the card is within a screen of the viewport,
+  // so the hand image is downloaded and decoded before the animation starts
+  function arm(h) {
+    if (h.dataset.armed) return;
+    h.dataset.armed = '1';
+    const desktop = mq.matches;
+    h.classList.toggle('desktop', desktop);
+    h.innerHTML = '<span class="tap-ring"></span>' + (desktop ? cursorSvg : handImg) + '<span class="tap-label">' + label + '</span>';
+  }
+  function prime() {
+    const v = vh();
+    hints.forEach(h => {
+      const r = h.getBoundingClientRect();
+      if (r.height && r.top < v * 2 && r.bottom > -v) arm(h);
+    });
+  }
+  function fire() {
+    if (playing || (!forced && shown)) return stop();
+    const v = vh();
+    const h = hints.find(x => {
+      const r = x.getBoundingClientRect();
+      if (!r.height) return false; // hidden copy of the grid
+      const c = r.top + r.height / 2;
+      return c >= v * 0.3 && c <= v * 0.72;
+    });
+    if (!h) return;
+    if (!forced) { shown = true; stop(); }
+    arm(h);
+    playing = true;
+    setTimeout(() => {
+      h.classList.add('play');
+      // 4.2s - the hand leaves after 3, the label lingers another second
+      setTimeout(() => { h.classList.remove('play'); playing = false; }, 4200);
+    }, 50);
+  }
+  function onScroll() {
+    if (!forced && shown) return stop();
+    prime();
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(fire, 160);
+  }
+  function stop() {
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+    clearTimeout(settleTimer);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  prime();
+  settleTimer = setTimeout(fire, 700);
 }
 
 // === Quick View ===
