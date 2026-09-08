@@ -167,6 +167,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 .icon-btn:hover { background: var(--bg-alt); }
 .cart-btn:hover { color: var(--primary); }
+.cart-emoji { font-size: 20px; line-height: 1; font-style: normal; }
 
 /* טולטיפ לכפתורי סרגל הפעולות (data-tip מוצב ב-JS) */
 .header-actions .icon-btn[data-tip]::after {
