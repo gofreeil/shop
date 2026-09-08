@@ -67,6 +67,12 @@ async function isShopAdmin(req) {
 	}
 }
 
+// סופר-אדמין (עורך את תוכן האתר מתוך הדפים) - אותו כלל כמו ב-controller של
+// shop-site-override ב-Strapi: app_role של super_admin או האימייל הקבוע.
+function isSuperAdminUser(u) {
+	return u?.app_role === 'super_admin' || String(u?.email || '').toLowerCase() === 'yahavanter@gmail.com';
+}
+
 // קריאה ל-Strapi עם timeout; מחזיר {ok, status, json}
 async function strapiFetch(url, init) {
 	const r = await fetch(url, { ...init, signal: AbortSignal.timeout(15_000) });
@@ -75,4 +81,4 @@ async function strapiFetch(url, init) {
 	return { ok: r.ok, status: r.status, json };
 }
 
-module.exports = { STRAPI_URL, readCookie, setSharedCookie, clearSharedCookie, parseBody, authHeaders, isShopAdmin, strapiFetch };
+module.exports = { STRAPI_URL, readCookie, setSharedCookie, clearSharedCookie, parseBody, authHeaders, isShopAdmin, isSuperAdminUser, strapiFetch };

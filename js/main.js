@@ -724,7 +724,7 @@ async function hydrateUser() {
     const res = await fetch('/api/me');
     const { user } = await res.json();
     if (user) {
-      currentUser = { name: user.name, email: user.email };
+      currentUser = { name: user.name, email: user.email, superAdmin: !!user.superAdmin };
       localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     } else if (currentUser) {
       currentUser = null;

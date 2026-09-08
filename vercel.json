@@ -3,7 +3,8 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/img/:d/:i", "destination": "/api/product-image?d=:d&i=:i" },
-    { "source": "/p/:id", "destination": "/api/product-page?id=:id" }
+    { "source": "/p/:id", "destination": "/api/product-page?id=:id" },
+    { "source": "/site-img/:d", "destination": "/api/site-image?d=:d" }
   ],
   "functions": {
     "api/product-page.js": { "includeFiles": "data/products.js" }
