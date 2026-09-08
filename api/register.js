@@ -1,4 +1,4 @@
-const { STRAPI_URL, setSharedCookie, parseBody, friendlyName } = require('./_shared');
+const { STRAPI_URL, setSharedCookie, parseBody, friendlyName, avatarUrl } = require('./_shared');
 
 // הרשמה מול ה-Strapi המשותף; מצליח → שותל את העוגייה המשותפת ומחזיר את המשתמש.
 module.exports = async (req, res) => {
@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
 		if (!r.ok) return res.status(400).json({ error: 'taken' });
 		const data = await r.json();
 		setSharedCookie(res, data.jwt);
-		return res.status(200).json({ user: { name: friendlyName(data.user), email: data.user.email } });
+		return res.status(200).json({ user: { name: friendlyName(data.user), email: data.user.email, avatar: avatarUrl(data.user) } });
 	} catch {
 		return res.status(500).json({ error: 'server' });
 	}

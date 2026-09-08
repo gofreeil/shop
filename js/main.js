@@ -578,6 +578,13 @@ function displayName(u) {
   const local = String(u?.email || '').split('@')[0];
   return local ? local.split(/[._-]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'משתמש';
 }
+// אווטאר: תמונת הפרופיל של המשתמש (גוגל / Strapi / Gravatar); האות הראשונה רק אם התמונה לא נטענת
+function avatarHtml(size, fontSize) {
+  const initial = (currentUser?.name || '?').charAt(0);
+  const fallback = `background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;width:${size}px;height:${size}px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${fontSize}px;font-weight:700;flex-shrink:0`;
+  if (!currentUser?.avatar) return `<span style="${fallback}">${initial}</span>`;
+  return `<img src="${currentUser.avatar}" alt="" referrerpolicy="no-referrer" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:block;flex-shrink:0" onerror="this.outerHTML='<span style=&quot;${fallback}&quot;>${initial}</span>'">`;
+}
 function injectAccountUI() {
   const actions = document.querySelector('.header-actions');
   if (!actions || document.getElementById('accountBtn')) return;
@@ -595,7 +602,7 @@ function updateAccountBtn(btn) {
   document.dispatchEvent(new CustomEvent('userChanged', { detail: { user: currentUser } }));
   if (!btn) return;
   btn.innerHTML = currentUser
-    ? `<span style="background:var(--primary);color:white;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">${currentUser.name.charAt(0)}</span>`
+    ? avatarHtml(28, 13)
     : '<i class="fas fa-user"></i>';
 }
 
@@ -697,7 +704,7 @@ async function handleLogin(e) {
     });
     if (!res.ok) { toast('אימייל או סיסמה שגויים', 'fa-circle-exclamation'); return; }
     const { user } = await res.json();
-    currentUser = { name: displayName(user), email: user.email, superAdmin: !!user.superAdmin };
+    currentUser = { name: displayName(user), email: user.email, avatar: user.avatar || null, superAdmin: !!user.superAdmin };
     localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     updateAccountBtn();
     closeAuth();
@@ -717,7 +724,7 @@ async function handleRegister(e) {
     });
     if (!res.ok) { toast('כבר קיים חשבון עם המייל הזה', 'fa-circle-exclamation'); return; }
     const { user } = await res.json();
-    currentUser = { name: displayName(user), email: user.email };
+    currentUser = { name: displayName(user), email: user.email, avatar: user.avatar || null };
     localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     updateAccountBtn();
     closeAuth();
@@ -732,7 +739,7 @@ async function hydrateUser() {
     const res = await fetch('/api/me');
     const { user } = await res.json();
     if (user) {
-      currentUser = { name: displayName(user), email: user.email, superAdmin: !!user.superAdmin };
+      currentUser = { name: displayName(user), email: user.email, avatar: user.avatar || null, superAdmin: !!user.superAdmin };
       localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     } else if (currentUser) {
       currentUser = null;
@@ -770,7 +777,7 @@ function renderAccountMenu() {
   content.innerHTML = `
     <button class="modal-close" onclick="closeAccountMenu()"><i class="fas fa-times"></i></button>
     <div style="text-align:center;margin-bottom:20px">
-      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin:0 auto 12px">${currentUser.name.charAt(0)}</div>
+      <div style="width:64px;height:64px;margin:0 auto 12px">${avatarHtml(64, 26)}</div>
       <h2 style="font-size:20px;margin-bottom:4px">${currentUser.name}</h2>
       <p style="color:var(--text-muted);font-size:13px">${currentUser.email}</p>
       ${currentUser.superAdmin ? '<span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#4f46e5);color:#fff;font-size:12px;font-weight:700"><i class="fas fa-crown"></i> מנהל ראשי</span>' : ''}
