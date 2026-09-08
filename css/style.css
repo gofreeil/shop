@@ -407,24 +407,25 @@ input, textarea { font-family: inherit; font-size: inherit; }
   font-size: 12px; color: var(--primary); font-weight: 600;
 }
 
-/* category card with a full-bleed photo background (zoomed-in) */
+/* category card with a photo band: title above the image, description and count below it */
 .category-bg {
-  position: absolute; inset: 0; z-index: 0;
+  display: block; height: 110px; border-radius: 12px;
   background-size: cover; background-position: center;
-  transform: scale(1.1);
+  margin: 0 0 10px; overflow: hidden;
   transition: transform .6s ease;
 }
-.category-bg::after {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,.25) 0%, rgba(0,0,0,.65) 100%);
+.category-card.has-image { display: flex; flex-direction: column; }
+.category-card.has-image h3 { margin-bottom: 10px; }
+.category-card.has-image:hover .category-bg { transform: scale(1.03); }
+
+/* desktop: category banners live inside the hero instead of the floating demo cards */
+.hero-categories { display: none; }
+@media (min-width: 1025px) {
+  .hero-visual { display: none; }
+  .hero-categories { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .hero-categories .category-bg { height: 96px; }
+  #categories { display: none; }
 }
-.category-card.has-image:hover .category-bg { transform: scale(1.18); }
-.category-card.has-image { display: flex; flex-direction: column; justify-content: flex-end; min-height: 150px; }
-.category-card.has-image > *:not(.category-bg) { position: relative; z-index: 1; }
-.category-card.has-image h3 { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
-.category-card.has-image p { color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
-.category-card.has-image .count { color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
-.category-card.has-image .category-icon { box-shadow: 0 2px 10px rgba(0,0,0,.35); }
 
 /* === Product Grid === */
 .products-grid {

@@ -116,21 +116,22 @@ function renderProducts(containerId, list) {
   el.innerHTML = list.map(productCard).join('');
 }
 function renderCategories() {
-  const el = document.getElementById('categoriesGrid');
-  if (!el) return;
-  el.innerHTML = categories.map(c => {
+  // rendered twice: inside the hero (desktop) and in its own section (mobile/tablet); CSS shows one at a time
+  const targets = ['categoriesGrid', 'heroCategoriesGrid'].map(id => document.getElementById(id)).filter(Boolean);
+  if (!targets.length) return;
+  const html = categories.map(c => {
     const count = products.filter(p => p.category === c.id).length;
     return `
       <a href="products.html?category=${c.id}" class="category-card${c.image ? ' has-image' : ''}">
-        ${c.image ? `<div class="category-bg" style="background-image:url('${c.image}')"></div>` : `<div class="category-icon" style="background: linear-gradient(135deg, ${c.color}, ${c.color}dd)">
+        ${c.image ? `<h3>${c.name}</h3><div class="category-bg" style="background-image:url('${c.image}')"></div>` : `<div class="category-icon" style="background: linear-gradient(135deg, ${c.color}, ${c.color}dd)">
           <i class="fas ${c.icon}"></i>
-        </div>`}
-        <h3>${c.name}</h3>
+        </div><h3>${c.name}</h3>`}
         <p>${c.desc}</p>
         <span class="count">${count} מוצרים <i class="fas fa-arrow-left"></i></span>
       </a>
     `;
   }).join('');
+  targets.forEach(el => { el.innerHTML = html; });
 }
 
 // === Quick View ===
@@ -569,6 +570,14 @@ function injectConstructionBanner() {
 }
 
 // === Auth ===
+// שם תצוגה: לעולם לא מזהה-מכונה של ספק ההזדהות (google_1164…) - כמו בשאר האתרים
+function displayName(u) {
+  const name = String(u?.name || '').trim();
+  const machine = /^(google|facebook|apple|community|local)[_-]/i.test(name) || /^[a-z][a-z0-9]*[_-]d{5,}$/i.test(name);
+  if (name && !name.includes('@') && !machine) return name;
+  const local = String(u?.email || '').split('@')[0];
+  return local ? local.split(/[._-]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : 'משתמש';
+}
 function injectAccountUI() {
   const actions = document.querySelector('.header-actions');
   if (!actions || document.getElementById('accountBtn')) return;
@@ -688,11 +697,11 @@ async function handleLogin(e) {
     });
     if (!res.ok) { toast('אימייל או סיסמה שגויים', 'fa-circle-exclamation'); return; }
     const { user } = await res.json();
-    currentUser = { name: user.name, email: user.email };
+    currentUser = { name: displayName(user), email: user.email, superAdmin: !!user.superAdmin };
     localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     updateAccountBtn();
     closeAuth();
-    toast(`שלום ${user.name}!`, 'fa-hand-wave');
+    toast(`שלום ${currentUser.name}!`, 'fa-hand-wave');
   } catch {
     toast('שגיאת התחברות, נסה שוב', 'fa-circle-exclamation');
   }
@@ -708,11 +717,11 @@ async function handleRegister(e) {
     });
     if (!res.ok) { toast('כבר קיים חשבון עם המייל הזה', 'fa-circle-exclamation'); return; }
     const { user } = await res.json();
-    currentUser = { name: user.name, email: user.email };
+    currentUser = { name: displayName(user), email: user.email };
     localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     updateAccountBtn();
     closeAuth();
-    toast(`ברוך הבא ${user.name}!`, 'fa-circle-check');
+    toast(`ברוך הבא ${currentUser.name}!`, 'fa-circle-check');
   } catch {
     toast('שגיאת הרשמה, נסה שוב', 'fa-circle-exclamation');
   }
@@ -723,7 +732,7 @@ async function hydrateUser() {
     const res = await fetch('/api/me');
     const { user } = await res.json();
     if (user) {
-      currentUser = { name: user.name, email: user.email, superAdmin: !!user.superAdmin };
+      currentUser = { name: displayName(user), email: user.email, superAdmin: !!user.superAdmin };
       localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     } else if (currentUser) {
       currentUser = null;
@@ -764,8 +773,12 @@ function renderAccountMenu() {
       <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;margin:0 auto 12px">${currentUser.name.charAt(0)}</div>
       <h2 style="font-size:20px;margin-bottom:4px">${currentUser.name}</h2>
       <p style="color:var(--text-muted);font-size:13px">${currentUser.email}</p>
+      ${currentUser.superAdmin ? '<span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#4f46e5);color:#fff;font-size:12px;font-weight:700"><i class="fas fa-crown"></i> מנהל ראשי</span>' : ''}
     </div>
     <div style="display:grid;gap:6px">
+      ${currentUser.superAdmin ? `
+      <a href="admin.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול החנות</a>
+      <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();document.getElementById('seToggle')?.click()" style="justify-content:flex-start"><i class="fas fa-pen-to-square" style="color:#f59e0b"></i> עריכת תוכן האתר</button>` : ''}
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>
       <a href="cart.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shopping-bag"></i> העגלה שלי</a>
       <a href="sell.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
