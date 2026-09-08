@@ -789,6 +789,10 @@ function init() {
 
 // Auto-login check (must run after all declarations)
 if (localStorage.getItem('noshop_admin')) showAdmin();
+else {
+  // סופר-אדמין מזוהה לפי העוגייה המשותפת של יוצאים לחירות (/api/me) - נכנס בלי סיסמה
+  fetch('/api/me').then(r => r.json()).then(({ user }) => { if (user?.superAdmin) showAdmin(); }).catch(() => {});
+}
 </script>
 </body>
 </html>

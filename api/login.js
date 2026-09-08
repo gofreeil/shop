@@ -1,4 +1,4 @@
-const { STRAPI_URL, setSharedCookie, parseBody } = require('./_shared');
+const { STRAPI_URL, setSharedCookie, parseBody, isSuperAdminUser, friendlyName } = require('./_shared');
 
 // התחברות אימייל+סיסמה מול ה-Strapi המשותף; מצליח → שותל את העוגייה המשותפת.
 module.exports = async (req, res) => {
@@ -16,7 +16,7 @@ module.exports = async (req, res) => {
 		if (!r.ok) return res.status(401).json({ error: 'bad_credentials' });
 		const data = await r.json();
 		setSharedCookie(res, data.jwt);
-		return res.status(200).json({ user: { name: data.user.username, email: data.user.email } });
+		return res.status(200).json({ user: { name: friendlyName(data.user), email: data.user.email, superAdmin: isSuperAdminUser(data.user) } });
 	} catch {
 		return res.status(500).json({ error: 'server' });
 	}

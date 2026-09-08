@@ -73,6 +73,22 @@ function isSuperAdminUser(u) {
 	return u?.app_role === 'super_admin' || String(u?.email || '').toLowerCase() === 'yahavanter@gmail.com';
 }
 
+// משתמשי OAuth נשמרים ב-Strapi המשותף עם username בצורת "google_1164…" - מזהה-מכונה,
+// לא שם. אותו כלל כמו בשאר האתרים (קהילה בשכונה, קבוצות רכישה): לעולם לא להציג אותו.
+function isMachineUsername(name) {
+	return /^(google|facebook|apple|community|local)[_-]/i.test(String(name || '').trim()) || /^[a-z][a-z0-9]*[_-]d{5,}$/i.test(String(name || '').trim());
+}
+
+// שם תצוגה: שם אמיתי אם קיים על הרשומה ← username אנושי ← החלק שלפני ה-@ באימייל ← "משתמש"
+function friendlyName(u) {
+	const full = [u?.firstname, u?.lastname].filter(Boolean).join(' ').trim();
+	const real = String(u?.name || u?.displayName || u?.display_name || full || u?.username || '').trim();
+	if (real && !real.includes('@') && !isMachineUsername(real)) return real;
+	const local = String(u?.email || '').split('@')[0].trim();
+	if (!local) return 'משתמש';
+	return local.split(/[._-]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
 // קריאה ל-Strapi עם timeout; מחזיר {ok, status, json}
 async function strapiFetch(url, init) {
 	const r = await fetch(url, { ...init, signal: AbortSignal.timeout(15_000) });
@@ -81,4 +97,4 @@ async function strapiFetch(url, init) {
 	return { ok: r.ok, status: r.status, json };
 }
 
-module.exports = { STRAPI_URL, readCookie, setSharedCookie, clearSharedCookie, parseBody, authHeaders, isShopAdmin, isSuperAdminUser, strapiFetch };
+module.exports = { STRAPI_URL, readCookie, setSharedCookie, clearSharedCookie, parseBody, authHeaders, isShopAdmin, isSuperAdminUser, isMachineUsername, friendlyName, strapiFetch };
