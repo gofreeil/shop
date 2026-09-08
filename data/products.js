@@ -1,6 +1,6 @@
 const categories = [
   { id: 'health', name: 'בריאות טבעית', icon: 'fa-leaf', color: '#10b981', desc: 'ויטמינים, צמחי מרפא, תוספי תזונה' },
-  { id: 'agriculture', name: 'חקלאות ביתית', icon: 'fa-seedling', color: '#84cc16', desc: 'גינון אורבני, זרעים, ציוד' },
+  { id: 'agriculture', name: 'חקלאות ביתית', icon: 'fa-seedling', color: '#84cc16', desc: 'גינון אורבני, זרעים, ציוד', image: 'images/agriculture.jpg' },
   { id: 'tech', name: 'טכנולוגיה מתקדמת', icon: 'fa-microchip', color: '#6366f1', desc: 'גאדג׳טים חכמים, אלקטרוניקה' },
   { id: 'home', name: 'בית וגן', icon: 'fa-home', color: '#f59e0b', desc: 'כלי בית, עיצוב, אביזרים' },
   { id: 'kitchen', name: 'מטבח בריא', icon: 'fa-utensils', color: '#ef4444', desc: 'כלי מטבח, סופרפודים, אביזרים' },
