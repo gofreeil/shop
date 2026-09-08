@@ -407,23 +407,35 @@ input, textarea { font-family: inherit; font-size: inherit; }
   font-size: 12px; color: var(--primary); font-weight: 600;
 }
 
-/* category card with a photo band: title above the image, description and count below it */
+/* category card with a photo: no outer frame - the photo itself is the card, title above it, description and count below */
+.category-card.has-image {
+  display: flex; flex-direction: column;
+  background: transparent; border: none; padding: 0; box-shadow: none;
+}
+.category-card.has-image:hover { transform: none; box-shadow: none; }
+.category-card.has-image h3 { margin-bottom: 10px; padding: 0 4px; }
+.category-card.has-image p, .category-card.has-image .count { padding: 0 4px; }
 .category-bg {
-  display: block; height: 110px; border-radius: 12px;
+  display: block; height: 130px; border-radius: 18px;
   background-size: cover; background-position: center;
   margin: 0 0 10px; overflow: hidden;
-  transition: transform .6s ease;
+  box-shadow: var(--shadow-lg);
+  transition: transform .4s ease, box-shadow .4s ease;
 }
-.category-card.has-image { display: flex; flex-direction: column; }
-.category-card.has-image h3 { margin-bottom: 10px; }
-.category-card.has-image:hover .category-bg { transform: scale(1.03); }
+.category-card.has-image:hover .category-bg { transform: translateY(-6px) scale(1.02); }
 
-/* desktop: category banners live inside the hero instead of the floating demo cards */
+/* desktop: category banners live inside the hero instead of the floating demo cards, and float like they did */
 .hero-categories { display: none; }
 @media (min-width: 1025px) {
   .hero-visual { display: none; }
-  .hero-categories { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-  .hero-categories .category-bg { height: 96px; }
+  .hero-categories { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 22px; }
+  .hero-categories .category-bg { height: 120px; }
+  .hero-categories .category-card { animation: cardFloat 6s ease-in-out infinite; }
+  .hero-categories .category-card:nth-child(1) { animation-delay: 0s; }
+  .hero-categories .category-card:nth-child(2) { animation-delay: -1.5s; }
+  .hero-categories .category-card:nth-child(3) { animation-delay: -3s; }
+  .hero-categories .category-card:nth-child(4) { animation-delay: -4.5s; }
+  .hero-categories .category-card:hover { animation-play-state: paused; }
   #categories { display: none; }
 }
 
