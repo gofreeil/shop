@@ -1,27 +1,34 @@
 // === עורך תוכן בתוך האתר (סופר-אדמין) ===
-// כל טקסט ותמונה קבועים בדף מקבלים גלגל שיניים קטן במצב עריכה. עריכה נשמרת
-// כ"דריסה" ב-Strapi (shop-site-overrides דרך api/site-content.js) ומוחלת בכל
-// טעינת דף מעל ה-HTML הקבוע - בלי דיפלוי. הזיהוי של אלמנט הוא הדף + הנתיב
-// שלו בעץ ה-HTML הקבוע (או product:<id> לתמונת מוצר).
+// כל טקסט ותמונה קבועים בדף מקבלים גלגל שיניים קטן במצב עריכה, וגם ישויות
+// דינמיות: כרטיס מוצר (תמונה ראשית, שם, תיאור) וכרטיס קטגוריה (תמונה, שם,
+// תיאור). עריכה נשמרת כ"דריסה" ב-Strapi (shop-site-overrides דרך
+// api/site-content.js) ומוחלת בכל טעינת דף מעל ה-HTML הקבוע - בלי דיפלוי.
+// הזיהוי של אלמנט קבוע הוא הדף + הנתיב שלו בעץ ה-HTML; ישויות מזוהות
+// product:<id> / category:<id>; טקסטים גלובליים - global:<name>.
 //
 // הסקריפט חייב להיטען מיד אחרי js/main.js ולפני הסקריפט של הדף: בזמן הריצה
-// שלו ה-DOM הוא ה-HTML הקבוע בלבד, וזה מה שמצלם את רשימת האלמנטים הניתנים
-// לעריכה. תוכן שנוצר אחר כך ב-JS (מוצרים, מודלים, באנר) אינו נערך כאן.
+// שלו ה-DOM הוא ה-HTML הקבוע בלבד (זה מה שמצלם את האלמנטים הניתנים לעריכה),
+// ורשימות products/categories כבר קיימות אבל עוד לא רונדרו - לכן דריסות
+// מהמטמון המקומי מוחלות כאן סינכרונית ומופיעות כבר בציור הראשון.
 (() => {
   'use strict';
 
   const PAGE = (location.pathname.replace(/^\/+|\.html$/g, '') || 'index').toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 40);
   const API = '/api/site-content';
+  const CACHE_KEY = 'noshop_overrides_' + PAGE;
   const SKIP = 'script,style,noscript,template,.modal,#toast,#lightbox,.search-bar,#constructionBanner,#accountBtn,.se-ui,input,select,textarea,option,[data-noedit]';
   const TEXT_STYLE_KEYS = ['fontSize', 'lineHeight', 'fontWeight', 'textAlign', 'color', 'marginTop', 'marginBottom', 'letterSpacing'];
   const IMAGE_STYLE_KEYS = ['width', 'height', 'maxWidth', 'objectFit', 'objectPosition', 'borderRadius', 'marginTop', 'marginBottom', 'opacity'];
+  // טקסטים שנוצרים ב-JS אחרי הטעינה (לא ב-HTML הקבוע) אבל זהים בכל הדפים
+  const LATE_STATIC = [{ sel: '#constructionBanner > span', key: 'global:banner' }];
 
   // --- צילום ה-HTML הקבוע (בזמן טעינת הסקריפט, לפני רינדור דינמי) ---
   const STATIC = new WeakSet();
-  const ORIGINAL = new Map();   // key -> {el, kind, html, style, src, alt}
+  const ORIGINAL = new Map();   // key -> {el, kind, html, style, src, alt, applied}
   const KEY_OF = new WeakMap(); // el -> key
   const overrides = new Map();  // key -> {kind, data}
-  let productOverrides = new Map(); // id -> data
+  const entityOverrides = new Map(); // 'product:1' / 'category:health' -> data
+  const entityOrig = new Map();      // key -> ערכי המקור ברשימה (לשחזור)
   let isAdmin = false, editing = false;
 
   document.querySelectorAll('body *').forEach(el => STATIC.add(el));
@@ -72,6 +79,18 @@
       }
     }
   })();
+  // אלמנטים שנוצרים ב-JS בזמן DOMContentLoaded (main.js נרשם לפנינו ולכן רץ קודם)
+  document.addEventListener('DOMContentLoaded', () => {
+    for (const { sel, key } of LATE_STATIC) {
+      const el = document.querySelector(sel);
+      if (!el || ORIGINAL.has(key)) continue;
+      STATIC.add(el);
+      KEY_OF.set(el, key);
+      ORIGINAL.set(key, { el, kind: 'text', html: el.innerHTML, style: el.getAttribute('style') || '' });
+      const ov = overrides.get(key);
+      if (ov) applyOverride(key, ov);
+    }
+  });
 
   // --- ניקוי HTML של טקסט (נכנס ל-innerHTML אצל כל הגולשים) ---
   const ALLOWED_TAGS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'S', 'SPAN', 'BR', 'A', 'SMALL', 'SUP', 'SUB', 'MARK']);
@@ -105,6 +124,7 @@
     cleanNode(t.content);
     return t.innerHTML;
   }
+  const plain = v => (typeof v === 'string' ? v.replace(/<[^>]*>/g, '').trim().slice(0, 300) : '');
 
   // --- החלת סגנון ---
   const SAFE_CSS = /^[\w\s.%#(),\-]{1,60}$/;
@@ -143,82 +163,168 @@
       applyImage(el, ov.data, o.style);
     }
   }
+  function restoreOriginal(key) {
+    const o = ORIGINAL.get(key);
+    if (!o) return;
+    if (o.kind === 'text') { o.el.innerHTML = o.html; o.el.setAttribute('style', o.style); o.applied = undefined; }
+    else { o.el.setAttribute('src', o.src); o.el.setAttribute('alt', o.alt); o.el.setAttribute('style', o.style); }
+  }
   function applyAll() {
-    for (const [key, ov] of overrides) {
-      if (key.startsWith('product:')) continue;
-      applyOverride(key, ov);
-    }
-    applyProductOverrides();
+    for (const [key, ov] of overrides) if (!entityOf(key)) applyOverride(key, ov);
+    applyEntityOverrides();
   }
 
-  // --- תמונות מוצר (product:<id>) - מעדכנות את רשימת המוצרים + הכרטיסים המוצגים ---
-  function applyProductOverrides() {
-    if (!productOverrides.size) return;
+  // --- ישויות דינמיות: product:<id> (תמונה ראשית, שם, תיאור) / category:<id> (תמונה, שם, תיאור) ---
+  // מעדכנות את הרשימות products/categories (כך שכל רינדור עתידי - כרטיסים, חלון
+  // מוצר, שיתוף - מקבל אותן) וגם את הכרטיסים שכבר מוצגים.
+  function entityOf(key) {
+    const m = /^(product|category):(.+)$/.exec(key || '');
+    return m ? { type: m[1], id: m[1] === 'product' ? Number(m[2]) : m[2] } : null;
+  }
+  function prodList() { return typeof products !== 'undefined' && Array.isArray(products) ? products : []; }
+  function catList() { return typeof categories !== 'undefined' && Array.isArray(categories) ? categories : []; }
+  function applyEntityOverrides() {
     let changed = false;
-    // products מוגדר ב-const ב-data/products.js (לא על window)
-    const list = typeof products !== 'undefined' && Array.isArray(products) ? products : [];
-    {
-      for (const p of list) {
-        const d = productOverrides.get(p.id);
-        if (!d || !d.src || p.image === d.src) continue;
-        p.image = d.src;
-        p.images = [d.src, ...(Array.isArray(p.images) ? p.images.slice(1) : [])];
-        changed = true;
+    for (const [key, d] of entityOverrides) {
+      const e = entityOf(key);
+      const f = d.fields || {};
+      if (e.type === 'product') {
+        const p = prodList().find(x => x.id === e.id);
+        if (!p) continue;
+        if (!entityOrig.has(key)) entityOrig.set(key, { image: p.image, images: p.images, name: p.name, desc: p.desc });
+        if (d.src && p.image !== d.src) { p.image = d.src; p.images = [d.src, ...(Array.isArray(p.images) ? p.images.slice(1) : [])]; changed = true; }
+        if (f.name && p.name !== f.name) { p.name = f.name; changed = true; }
+        if (f.desc && p.desc !== f.desc) { p.desc = f.desc; changed = true; }
+      } else {
+        const c = catList().find(x => x.id === e.id);
+        if (!c) continue;
+        if (!entityOrig.has(key)) entityOrig.set(key, { image: c.image, name: c.name, desc: c.desc });
+        if (d.src && c.image !== d.src) { c.image = d.src; changed = true; }
+        if (f.name && c.name !== f.name) { c.name = f.name; changed = true; }
+        if (f.desc && c.desc !== f.desc) { c.desc = f.desc; changed = true; }
       }
     }
-    patchProductCards();
+    patchEntityDom();
+    // הדפים מרנדרים מחדש על productsUpdated (בטעינה הראשונה עוד אין מאזינים - ואז הרינדור הראשון כבר משתמש ברשימות המעודכנות)
     if (changed) document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { overrides: true } }));
   }
-  function patchProductCards() {
+  function restoreEntity(key) {
+    const e = entityOf(key), o = entityOrig.get(key);
+    if (!e || !o) return;
+    const item = (e.type === 'product' ? prodList() : catList()).find(x => x.id === e.id);
+    if (item) Object.assign(item, o);
+    entityOrig.delete(key);
+  }
+  function categoryIdOf(card) {
+    try { return new URL(card.getAttribute('href') || '', location.href).searchParams.get('category'); } catch { return null; }
+  }
+  function setFit(img, style) {
+    const s = style || {};
+    img.style.objectFit = s.objectFit && SAFE_CSS.test(s.objectFit) ? s.objectFit : '';
+    img.style.objectPosition = s.objectPosition && SAFE_CSS.test(s.objectPosition) ? s.objectPosition : '';
+  }
+  function patchEntityDom() {
+    if (!entityOverrides.size) return;
     for (const card of document.querySelectorAll('.product-card[data-id]')) {
-      const d = productOverrides.get(Number(card.dataset.id));
+      const d = entityOverrides.get('product:' + Number(card.dataset.id));
       if (!d) continue;
       const box = card.querySelector('.product-image');
       let img = box?.querySelector('img.product-photo');
       if (d.src && !img && box) {
-        box.querySelector('span')?.remove();
+        box.querySelector(':scope > span')?.remove();
         img = document.createElement('img');
         img.className = 'product-photo';
         img.alt = '';
         box.prepend(img);
       }
-      if (!img) continue;
-      if (d.src && img.getAttribute('src') !== d.src) img.src = d.src;
-      const s = d.style || {};
-      img.style.objectFit = s.objectFit && SAFE_CSS.test(s.objectFit) ? s.objectFit : '';
-      img.style.objectPosition = s.objectPosition && SAFE_CSS.test(s.objectPosition) ? s.objectPosition : '';
+      if (img) { if (d.src && img.getAttribute('src') !== d.src) img.src = d.src; setFit(img, d.style); }
+      const f = d.fields || {};
+      const nm = card.querySelector('.product-name');
+      if (f.name && nm && nm.textContent !== f.name) nm.textContent = f.name;
+    }
+    for (const card of document.querySelectorAll('.category-card')) {
+      const id = categoryIdOf(card);
+      const d = id && entityOverrides.get('category:' + id);
+      if (!d) continue;
+      const f = d.fields || {};
+      const bg = card.querySelector('.category-bg');
+      if (bg && d.src) {
+        bg.style.backgroundImage = `url("${d.src}")`;
+        bg.style.backgroundPosition = d.style?.objectPosition && SAFE_CSS.test(d.style.objectPosition) ? d.style.objectPosition : '';
+      }
+      const h = card.querySelector('h3');
+      if (f.name && h && h.textContent !== f.name) h.textContent = f.name;
+      const p = card.querySelector('p');
+      if (f.desc && p && p.textContent !== f.desc) p.textContent = f.desc;
     }
   }
-  let cardObserver = null;
-  function watchProductCards() {
-    if (cardObserver || !productOverrides.size) return;
+  let entityObserver = null;
+  function watchEntities() {
+    if (entityObserver || !entityOverrides.size) return;
     let t = 0;
-    cardObserver = new MutationObserver(() => { clearTimeout(t); t = setTimeout(patchProductCards, 30); });
-    cardObserver.observe(document.body, { childList: true, subtree: true });
+    entityObserver = new MutationObserver(muts => {
+      if (muts.every(m => m.target.closest?.('.se-ui'))) return;
+      clearTimeout(t);
+      t = setTimeout(patchEntityDom, 30);
+    });
+    entityObserver.observe(document.body, { childList: true, subtree: true });
   }
-  document.addEventListener('productsUpdated', e => { if (!e.detail?.overrides) applyProductOverrides(); });
+  // מוצרי מוכרים מגיעים מהשרת אחרי הטעינה - מחילים עליהם את הדריסות כשהם נטענים
+  document.addEventListener('productsUpdated', e => { if (!e.detail?.overrides) applyEntityOverrides(); });
 
-  // --- טעינה ---
+  // --- טעינה: מטמון מקומי (סינכרוני, בציור הראשון) ואז רענון מהשרת ---
+  let lastJson = '';
+  function ingest(items) {
+    const gone = new Set(overrides.keys());
+    overrides.clear();
+    entityOverrides.clear();
+    for (const it of items || []) {
+      if (!it?.key || !it.data) continue;
+      overrides.set(it.key, { kind: it.kind, data: it.data });
+      if (entityOf(it.key)) entityOverrides.set(it.key, it.data);
+      gone.delete(it.key);
+    }
+    for (const key of gone) { if (entityOf(key)) restoreEntity(key); else restoreOriginal(key); }
+  }
+  // המטמון מפוצל: דריסות הדף תחת מפתח הדף, והגלובליות (מוצרים, קטגוריות, באנר)
+  // תחת '*' - כך גם ביקור ראשון בדף אחר מקבל אותן כבר בציור הראשון.
+  const isGlobal = key => !!entityOf(key) || key.startsWith('global:');
+  const GLOBAL_CACHE_KEY = 'noshop_overrides_*';
+  function readCache(k) {
+    try { const c = JSON.parse(localStorage.getItem(k) || 'null'); return c?.items && Date.now() - c.t < 7 * 864e5 ? c.items : null; } catch { return null; }
+  }
+  function writeCache(items) {
+    const t = Date.now();
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({ t, items: items.filter(i => !isGlobal(i.key)) }));
+      localStorage.setItem(GLOBAL_CACHE_KEY, JSON.stringify({ t, items: items.filter(i => isGlobal(i.key)) }));
+    } catch { /* מלא */ }
+  }
+  {
+    const cached = [...(readCache(CACHE_KEY) || []), ...(readCache(GLOBAL_CACHE_KEY) || [])];
+    if (cached.length) { lastJson = JSON.stringify(cached); ingest(cached); applyAll(); }
+  }
   async function load() {
     try {
       const res = await fetch(`${API}?page=${encodeURIComponent(PAGE)}`);
       if (!res.ok) return;
       const { items } = await res.json();
-      overrides.clear();
-      productOverrides = new Map();
-      for (const it of items || []) {
-        if (!it?.key || !it.data) continue;
-        overrides.set(it.key, { kind: it.kind, data: it.data });
-        if (it.key.startsWith('product:')) productOverrides.set(Number(it.key.slice(8)), it.data);
-      }
-      applyAll();
-      watchProductCards();
+      const list = Array.isArray(items) ? items : [];
+      writeCache(list);
+      const j = JSON.stringify(list);
+      if (j !== lastJson) { lastJson = j; ingest(list); applyAll(); }
+      watchEntities();
       renderToggle();
       if (editing) refreshGears();
     } catch { /* offline / dev ללא API */ }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
   else load();
+  function updateCache() {
+    const items = [...overrides].map(([key, ov]) => ({ key, kind: ov.kind, data: ov.data }));
+    lastJson = JSON.stringify(items);
+    writeCache(items);
+  }
 
   // --- זיהוי סופר-אדמין ---
   function setAdmin(v) {
@@ -247,6 +353,7 @@ body.se-editing .se-hidden-preview{opacity:.35}
 .se-gear{position:absolute;width:22px;height:22px;border-radius:50%;background:#4f46e5;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;pointer-events:auto;transform:translate(-50%,-50%);padding:0}
 .se-gear:hover{background:#f59e0b;transform:translate(-50%,-50%) scale(1.15)}
 .se-gear.img{background:#0d9488}
+.se-gear.entity{background:#db2777}
 .se-gear.done{background:#16a34a}
 #sePanel{position:fixed;top:0;left:0;bottom:0;width:min(340px,92vw);z-index:4100;background:#fff;color:#0c4a6e;box-shadow:8px 0 30px rgba(0,0,0,.25);display:flex;flex-direction:column;font-size:14px}
 #sePanel[hidden]{display:none}
@@ -256,7 +363,8 @@ body.se-editing .se-hidden-preview{opacity:.35}
 .se-body{flex:1;overflow:auto;padding:12px 16px}
 .se-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .se-row label{flex:0 0 96px;color:#334155;font-size:13px}
-.se-row input[type=number],.se-row input[type=text],.se-row select{flex:1;min-width:0;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;font-size:13px;background:#fff;color:inherit}
+.se-row input[type=number],.se-row input[type=text],.se-row select,.se-row textarea{flex:1;min-width:0;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;font-size:13px;background:#fff;color:inherit}
+.se-row textarea{min-height:64px;resize:vertical}
 .se-row input[type=range]{flex:1}
 .se-row input[type=color]{width:38px;height:30px;padding:0;border:1px solid #cbd5e1;border-radius:8px;background:#fff}
 .se-seg{display:flex;flex:1;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden}
@@ -326,9 +434,10 @@ body.se-editing .se-hidden-preview{opacity:.35}
       if (o.kind === 'text' && o.el !== current?.el && o.el.innerHTML !== o.html && o.el.innerHTML !== o.applied) continue;
       list.push({ key, el: o.el, kind: o.kind });
     }
-    for (const card of document.querySelectorAll('.product-card[data-id]')) {
-      const box = card.querySelector('.product-image');
-      if (box) list.push({ key: 'product:' + Number(card.dataset.id), el: box, kind: 'product' });
+    for (const card of document.querySelectorAll('.product-card[data-id]')) list.push({ key: 'product:' + Number(card.dataset.id), el: card, kind: 'product' });
+    for (const card of document.querySelectorAll('.category-card')) {
+      const id = categoryIdOf(card);
+      if (id && catList().some(c => c.id === id)) list.push({ key: 'category:' + id, el: card, kind: 'category' });
     }
     return list;
   }
@@ -344,7 +453,7 @@ body.se-editing .se-hidden-preview{opacity:.35}
       gearTimer = setTimeout(refreshGears, 80);
     });
     gearObserver.observe(document.body, { childList: true, subtree: true });
-    if (typeof toast === 'function') toast('מצב עריכה: לחצו על גלגל שיניים ליד טקסט או תמונה', 'fa-gear');
+    if (typeof toast === 'function') toast('מצב עריכה: לחצו על גלגל שיניים ליד טקסט, תמונה, מוצר או קטגוריה', 'fa-gear');
   }
   function exitEditMode() {
     if (current) cancelEdit();
@@ -361,6 +470,7 @@ body.se-editing .se-hidden-preview{opacity:.35}
     renderToggle();
   }
   let gearMap = new Map(); // el -> gear
+  const GEAR_TITLE = { text: 'עריכת טקסט', image: 'עריכת תמונה', product: 'עריכת מוצר (תמונה, שם, תיאור)', category: 'עריכת קטגוריה (תמונה, שם, תיאור)' };
   function refreshGears() {
     if (!editing) return;
     const layer = document.getElementById('seGears');
@@ -369,17 +479,16 @@ body.se-editing .se-hidden-preview{opacity:.35}
     for (const t of targets) {
       seen.add(t.el);
       t.el.classList.add('se-editable');
-      if (t.kind !== 'product' && overrides.get(t.key)?.data?.style?.hidden && t.el !== current?.el) {
-        t.el.style.display = '';
-        t.el.classList.add('se-hidden-preview');
+      if (t.kind === 'text' || t.kind === 'image') {
+        if (overrides.get(t.key)?.data?.style?.hidden && t.el !== current?.el) { t.el.style.display = ''; t.el.classList.add('se-hidden-preview'); }
       }
       let g = gearMap.get(t.el);
       if (!g) {
         g = document.createElement('button');
         g.type = 'button';
-        g.className = 'se-gear' + (t.kind === 'text' ? '' : ' img');
+        g.className = 'se-gear' + (t.kind === 'image' ? ' img' : t.kind === 'text' ? '' : ' entity');
         g.innerHTML = '<i class="fas fa-gear"></i>';
-        g.title = t.kind === 'text' ? 'עריכת טקסט' : 'עריכת תמונה';
+        g.title = GEAR_TITLE[t.kind];
         g.onclick = e => { e.preventDefault(); e.stopPropagation(); openEditor(g._target); };
         layer.appendChild(g);
         gearMap.set(t.el, g);
@@ -432,13 +541,15 @@ body.se-editing .se-hidden-preview{opacity:.35}
       newSrc: '',
     };
     current.data.style = current.data.style || {};
+    current.data.fields = current.data.fields || {};
     el.classList.add('se-active');
     el.classList.remove('se-hidden-preview');
     const panel = document.getElementById('sePanel');
     panel.hidden = false;
     if (t.kind === 'text') renderTextPanel(panel);
     else if (t.kind === 'image') renderImagePanel(panel);
-    else renderProductPanel(panel);
+    else if (t.kind === 'product') renderProductPanel(panel);
+    else renderCategoryPanel(panel);
     positionGears();
   }
   function shortKey(key) { return key.replace(/^[^|]*\|/, '').replace(/>/g, ' › '); }
@@ -453,9 +564,14 @@ body.se-editing .se-hidden-preview{opacity:.35}
       <div class="se-err" id="seErr"></div>
     </div>`;
   }
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const num = (label, prop, ph, step = 1, min = 0) => `<div class="se-row"><label>${label}</label><input type="number" data-prop="${prop}" placeholder="${ph}" step="${step}" min="${min}"><span style="color:#94a3b8;font-size:12px">px</span></div>`;
   const seg = (label, prop, opts) => `<div class="se-row"><label>${label}</label><div class="se-seg" data-seg="${prop}">${opts.map(([v, l]) => `<button type="button" data-v="${v}" title="${l}">${l}</button>`).join('')}</div></div>`;
   const chk = (label, prop) => `<div class="se-row"><label>${label}</label><input type="checkbox" data-prop="${prop}"></div>`;
+  const field = (label, name, ph, multi) => `<div class="se-row"><label>${label}</label>${multi ? `<textarea data-field="${name}" placeholder="${esc(ph)}"></textarea>` : `<input type="text" data-field="${name}" placeholder="${esc(ph)}">`}</div>`;
+  const focal = () => `<div class="se-row"><label>מוקד אופקי</label><input type="range" data-pos="x" min="0" max="100" value="50"></div>
+      <div class="se-row"><label>מוקד אנכי</label><input type="range" data-pos="y" min="0" max="100" value="50"></div>
+      <p class="se-hint">המוקד קובע איזה חלק מהתמונה נשאר במרכז כשהיא נחתכת.</p>`;
 
   function renderTextPanel(panel) {
     const { el, key } = current;
@@ -483,9 +599,9 @@ body.se-editing .se-hidden-preview{opacity:.35}
   function renderImagePanel(panel) {
     const { el, key } = current;
     panel.innerHTML = panelHead('עריכת תמונה', key) + `<div class="se-body">
-      <img class="se-preview" id="sePreview" src="${el.currentSrc || el.src}" alt="">
+      <img class="se-preview" id="sePreview" src="${esc(el.currentSrc || el.src)}" alt="">
       <label class="se-file"><i class="fas fa-upload"></i> החלפת תמונה <input type="file" accept="image/*" data-act="file"></label>
-      <div class="se-row"><label>טקסט חלופי</label><input type="text" data-prop="alt" placeholder="${el.alt || ''}"></div>
+      <div class="se-row"><label>טקסט חלופי</label><input type="text" data-prop="alt" placeholder="${esc(el.alt)}"></div>
       <div class="se-sec">גודל</div>
       <div class="se-row"><label>רוחב</label><input type="text" data-prop="width" placeholder="${Math.round(el.getBoundingClientRect().width)}px"></div>
       <div class="se-row"><label>גובה</label><input type="text" data-prop="height" placeholder="אוטו"></div>
@@ -494,9 +610,7 @@ body.se-editing .se-hidden-preview{opacity:.35}
       <div class="se-sec">מיקום</div>
       ${seg('יישור', 'align', [['default', 'אוטו'], ['right', 'ימין'], ['center', 'מרכז'], ['left', 'שמאל']])}
       <div class="se-row"><label>מילוי</label><select data-prop="objectFit"><option value="">ברירת מחדל</option><option value="cover">חיתוך (cover)</option><option value="contain">הכל בפנים (contain)</option><option value="fill">מתיחה</option></select></div>
-      <div class="se-row"><label>מוקד אופקי</label><input type="range" data-pos="x" min="0" max="100" value="50"></div>
-      <div class="se-row"><label>מוקד אנכי</label><input type="range" data-pos="y" min="0" max="100" value="50"></div>
-      <p class="se-hint">המוקד קובע איזה חלק מהתמונה נשאר במרכז כשהיא נחתכת.</p>
+      ${focal()}
       ${num('מרווח מעל', 'marginTop', 0, 1, -100)}
       ${num('מרווח מתחת', 'marginBottom', 0, 1, -100)}
       <div class="se-row"><label>שקיפות</label><input type="range" data-prop="opacity" min="0.1" max="1" step="0.05" value="1"></div>
@@ -507,36 +621,72 @@ body.se-editing .se-hidden-preview{opacity:.35}
 
   function renderProductPanel(panel) {
     const { el, key } = current;
+    const p = prodList().find(x => x.id === entityOf(key).id) || {};
     const img = el.querySelector('img.product-photo');
-    panel.innerHTML = panelHead('תמונת מוצר', key) + `<div class="se-body">
-      ${img ? `<img class="se-preview" id="sePreview" src="${img.currentSrc || img.src}" alt="">` : `<div class="se-preview" id="sePreview" style="display:flex;align-items:center;justify-content:center;font-size:48px">${el.querySelector('span')?.textContent || '📦'}</div>`}
+    panel.innerHTML = panelHead('עריכת מוצר', key) + `<div class="se-body">
+      ${img ? `<img class="se-preview" id="sePreview" src="${esc(img.currentSrc || img.src)}" alt="">` : `<div class="se-preview" id="sePreview" style="display:flex;align-items:center;justify-content:center;font-size:48px">${esc(el.querySelector('.product-image > span')?.textContent || '📦')}</div>`}
       <label class="se-file"><i class="fas fa-upload"></i> החלפת התמונה הראשית <input type="file" accept="image/*" data-act="file"></label>
-      <p class="se-hint">התמונה תחליף את התמונה הראשית של המוצר בכל מקום באתר (כרטיס, חלון מוצר, שיתוף).</p>
+      <p class="se-hint">משפיע על המוצר בכל מקום באתר: כרטיס, חלון מוצר, עגלה ושיתוף.</p>
+      <div class="se-sec">טקסטים</div>
+      ${field('שם המוצר', 'name', p.name)}
+      ${field('תיאור', 'desc', p.desc, true)}
+      <p class="se-hint">ריק = השם/התיאור המקוריים.</p>
       <div class="se-sec">תצוגה בכרטיס</div>
       <div class="se-row"><label>מילוי</label><select data-prop="objectFit"><option value="">ברירת מחדל</option><option value="cover">חיתוך (cover)</option><option value="contain">הכל בפנים (contain)</option></select></div>
-      <div class="se-row"><label>מוקד אופקי</label><input type="range" data-pos="x" min="0" max="100" value="50"></div>
-      <div class="se-row"><label>מוקד אנכי</label><input type="range" data-pos="y" min="0" max="100" value="50"></div>
+      ${focal()}
     </div>` + panelFoot(overrides.has(key));
     bindPanel(panel);
   }
 
-  function styleTarget() {
-    return current.kind === 'product' ? current.el.querySelector('img.product-photo') : current.el;
+  function renderCategoryPanel(panel) {
+    const { el, key } = current;
+    const c = catList().find(x => x.id === entityOf(key).id) || {};
+    const bg = el.querySelector('.category-bg');
+    const src = c.image || (bg ? /url\(["']?(.*?)["']?\)/.exec(bg.style.backgroundImage)?.[1] : '') || '';
+    panel.innerHTML = panelHead('עריכת קטגוריה', key) + `<div class="se-body">
+      ${src ? `<img class="se-preview" id="sePreview" src="${esc(src)}" alt="">` : `<div class="se-preview" id="sePreview" style="display:flex;align-items:center;justify-content:center;color:#94a3b8">אין תמונה</div>`}
+      <label class="se-file"><i class="fas fa-upload"></i> ${src ? 'החלפת' : 'הוספת'} תמונת באנר <input type="file" accept="image/*" data-act="file"></label>
+      <p class="se-hint">משפיע על הקטגוריה בכל הדפים (באנר, תווית בכרטיסי המוצרים, סינון).</p>
+      <div class="se-sec">טקסטים</div>
+      ${field('שם הקטגוריה', 'name', c.name)}
+      ${field('תיאור', 'desc', c.desc, true)}
+      <p class="se-hint">ריק = השם/התיאור המקוריים.</p>
+      <div class="se-sec">חיתוך התמונה</div>
+      ${focal()}
+    </div>` + panelFoot(overrides.has(key));
+    bindPanel(panel);
   }
+
+  function isEntity() { return current.kind === 'product' || current.kind === 'category'; }
   function livePreview() {
-    const { kind, data } = current;
-    const el = styleTarget();
-    if (!el) return;
+    const { kind, data, el } = current;
     if (kind === 'text') applyStyle(el, 'text', data.style, current.base);
     else if (kind === 'image') applyStyle(el, 'image', data.style, current.base);
-    else { el.style.objectFit = data.style.objectFit || ''; el.style.objectPosition = data.style.objectPosition || ''; }
-    if (data.style.hidden) { el.style.display = ''; el.classList.add('se-hidden-preview'); } else el.classList.remove('se-hidden-preview');
+    else if (kind === 'product') {
+      const img = el.querySelector('img.product-photo');
+      if (img) setFit(img, data.style);
+      const nm = el.querySelector('.product-name');
+      if (nm) nm.textContent = data.fields.name || current.origFields.name;
+    } else {
+      const bg = el.querySelector('.category-bg');
+      if (bg) bg.style.backgroundPosition = data.style.objectPosition || '';
+      const h = el.querySelector('h3'), p = el.querySelector('p');
+      if (h) h.textContent = data.fields.name || current.origFields.name;
+      if (p) p.textContent = data.fields.desc || current.origFields.desc;
+    }
+    if (!isEntity()) { if (data.style.hidden) { el.style.display = ''; el.classList.add('se-hidden-preview'); } else el.classList.remove('se-hidden-preview'); }
     positionGears();
   }
   function bindPanel(panel) {
-    const { data } = current;
+    const { data, el } = current;
     const st = data.style;
     const pos = (st.objectPosition || '50% 50%').split(/\s+/);
+    if (isEntity()) {
+      const e = entityOf(current.key);
+      const orig = entityOrig.get(current.key);
+      const item = (e.type === 'product' ? prodList() : catList()).find(x => x.id === e.id) || {};
+      current.origFields = { name: orig?.name ?? item.name ?? '', desc: orig?.desc ?? item.desc ?? '' };
+    }
     panel.querySelectorAll('[data-prop]').forEach(inp => {
       const p = inp.dataset.prop;
       const raw = p === 'alt' ? (data.alt || '') : st[p];
@@ -556,12 +706,21 @@ body.se-editing .se-hidden-preview{opacity:.35}
         livePreview();
       });
     });
+    panel.querySelectorAll('[data-field]').forEach(inp => {
+      const f = inp.dataset.field;
+      inp.value = data.fields[f] || '';
+      inp.addEventListener('input', () => {
+        const v = plain(inp.value);
+        if (v) data.fields[f] = v; else delete data.fields[f];
+        livePreview();
+      });
+    });
     panel.querySelectorAll('[data-pos]').forEach(r => {
       r.value = parseFloat(pos[r.dataset.pos === 'x' ? 0 : 1]) || 50;
       r.addEventListener('input', () => {
         const x = panel.querySelector('[data-pos=x]').value, y = panel.querySelector('[data-pos=y]').value;
         st.objectPosition = `${x}% ${y}%`;
-        if (!st.objectFit && current.kind !== 'product') st.objectFit = 'cover';
+        if (!st.objectFit && current.kind === 'image') st.objectFit = 'cover';
         livePreview();
       });
     });
@@ -572,19 +731,24 @@ body.se-editing .se-hidden-preview{opacity:.35}
       s.querySelectorAll('button').forEach(b => { b.onclick = () => { if (b.dataset.v && b.dataset.v !== 'default') st[p] = b.dataset.v; else delete st[p]; sync(); livePreview(); }; });
     });
     panel.querySelector('[data-act=clearColor]')?.addEventListener('click', () => { delete st.color; livePreview(); });
-    panel.querySelector('[data-act=file]')?.addEventListener('change', async e => {
-      const f = e.target.files?.[0];
+    panel.querySelector('[data-act=file]')?.addEventListener('change', async ev => {
+      const f = ev.target.files?.[0];
       if (!f) return;
       try {
         const src = await resizeImage(f);
         current.newSrc = src;
         const prev = document.getElementById('sePreview');
         if (prev?.tagName === 'IMG') prev.src = src; else if (prev) prev.outerHTML = `<img class="se-preview" id="sePreview" src="${src}" alt="">`;
-        if (current.kind === 'image') current.el.src = src;
-        else {
-          let img = current.el.querySelector('img.product-photo');
-          if (!img) { current.el.querySelector('span')?.remove(); img = document.createElement('img'); img.className = 'product-photo'; img.alt = ''; current.el.prepend(img); }
-          img.src = src;
+        if (current.kind === 'image') el.src = src;
+        else if (current.kind === 'product') {
+          const box = el.querySelector('.product-image');
+          let img = box?.querySelector('img.product-photo');
+          if (!img && box) { box.querySelector(':scope > span')?.remove(); img = document.createElement('img'); img.className = 'product-photo'; img.alt = ''; box.prepend(img); }
+          if (img) img.src = src;
+        } else {
+          let bg = el.querySelector('.category-bg');
+          if (!bg) { bg = document.createElement('div'); bg.className = 'category-bg'; el.prepend(bg); el.classList.add('has-image'); }
+          bg.style.backgroundImage = `url("${src}")`;
         }
         livePreview();
       } catch (ex) { showErr(ex.message || 'התמונה לא נטענה'); }
@@ -612,15 +776,9 @@ body.se-editing .se-hidden-preview{opacity:.35}
   function cancelEdit() {
     if (!current) return;
     const { el, kind, snap } = current;
-    if (kind === 'text') { el.innerHTML = snap.html; el.setAttribute('style', snap.style); }
-    else if (kind === 'image') { el.setAttribute('src', snap.src); el.setAttribute('alt', snap.alt); el.setAttribute('style', snap.style); }
-    else {
-      // כרטיס מוצר: מחזירים את מה שהיה לפני (תמונה שנוספה רק לתצוגה מקדימה נמחקת)
-      const img = el.querySelector('img.product-photo');
-      if (img && !snap.html.includes('product-photo')) img.remove();
-      else if (img) { const prevSrc = snap.html.match(/class="product-photo"[^>]*src="([^"]*)"/)?.[1]; if (prevSrc) img.src = prevSrc; }
-      patchProductCards();
-    }
+    if (kind === 'image') { el.setAttribute('src', snap.src); el.setAttribute('alt', snap.alt); el.setAttribute('style', snap.style); }
+    else { el.innerHTML = snap.html; el.setAttribute('style', snap.style); }
+    if (kind === 'category' && !snap.html.includes('category-bg')) el.classList.remove('has-image');
     closePanel();
   }
   async function saveEdit() {
@@ -635,21 +793,22 @@ body.se-editing .se-hidden-preview{opacity:.35}
       payload = { kind: 'text', data: { html: sanitizeHtml(el.innerHTML), style: data.style } };
     } else {
       // src נשלח רק אם נבחרה תמונה חדשה; אחרת השרת שומר את התמונה הקיימת
-      payload = { kind: 'image', data: { src: current.newSrc || '', alt: data.alt || '', style: data.style } };
+      payload = { kind: 'image', data: { src: current.newSrc || '', alt: data.alt || '', style: data.style, fields: data.fields } };
     }
+    const page = entityOf(key) || key.startsWith('global:') ? '*' : PAGE;
     try {
-      const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, page: kind === 'product' ? '*' : PAGE, ...payload }) });
+      const res = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, page, ...payload }) });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || (res.status === 403 ? 'אין הרשאה - יש להתחבר כסופר-אדמין' : 'השמירה נכשלה'));
       const item = json.item;
       overrides.set(key, { kind: item.kind, data: item.data });
-      if (kind === 'product') productOverrides.set(Number(key.slice(8)), item.data);
       const o = ORIGINAL.get(key);
       if (o && kind === 'text') o.applied = el.innerHTML;
       if (kind === 'image' && item.data.src) el.src = item.data.src;
       current = null;
       closePanel();
-      if (kind === 'product') { applyProductOverrides(); watchProductCards(); }
+      if (entityOf(key)) { entityOverrides.set(key, item.data); applyEntityOverrides(); watchEntities(); }
+      updateCache();
       renderToggle();
       if (typeof toast === 'function') toast('נשמר - השינוי מוצג לכל הגולשים', 'fa-circle-check');
     } catch (ex) {
@@ -668,23 +827,21 @@ body.se-editing .se-hidden-preview{opacity:.35}
       setTimeout(() => { if (rb.isConnected) { delete rb.dataset.armed; rb.innerHTML = '<i class="fas fa-rotate-left"></i> חזרה למקור'; } }, 4000);
       return;
     }
-    const { key, el, kind } = current;
+    const { key, kind } = current;
     showErr('');
     try {
       const res = await fetch(`${API}?key=${encodeURIComponent(key)}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(res.status === 403 ? 'אין הרשאה' : 'המחיקה נכשלה');
       overrides.delete(key);
-      const o = ORIGINAL.get(key);
-      if (kind === 'text' && o) { el.innerHTML = o.html; el.setAttribute('style', o.style); o.applied = undefined; }
-      else if (kind === 'image' && o) { el.setAttribute('src', o.src); el.setAttribute('alt', o.alt); el.setAttribute('style', o.style); }
-      else if (kind === 'product') {
-        productOverrides.delete(Number(key.slice(8)));
-        const img = el.querySelector('img.product-photo');
-        if (img) { img.style.objectFit = ''; img.style.objectPosition = ''; }
-        if (typeof toast === 'function') toast('התמונה המקורית תוצג אחרי רענון הדף', 'fa-rotate-left');
-      }
+      if (entityOf(key)) {
+        entityOverrides.delete(key);
+        restoreEntity(key);
+        document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { overrides: true } }));
+        if (typeof toast === 'function') toast('הוחזר למקור (בדפים אחרים - אחרי רענון)', 'fa-rotate-left');
+      } else restoreOriginal(key);
       current = null;
       closePanel();
+      updateCache();
       renderToggle();
     } catch (ex) { showErr(ex.message); }
   }

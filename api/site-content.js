@@ -33,7 +33,8 @@ module.exports = async (req, res) => {
 		if (req.method === 'GET') {
 			const page = String(req.query?.page || '').trim().slice(0, 40);
 			if (!/^[a-z0-9_-]{1,40}$/.test(page)) return res.status(400).json({ error: 'page' });
-			const url = `${ENDPOINT}?filters[page][$eq]=${encodeURIComponent(page)}&pagination[pageSize]=500`;
+			// דריסות הדף + דריסות גלובליות (page='*': מוצרים, קטגוריות, באנר) שחלות בכל הדפים
+			const url = `${ENDPOINT}?filters[page][$in][0]=${encodeURIComponent(page)}&filters[page][$in][1]=*&pagination[pageSize]=500`;
 			const r = await strapi(url, { headers: { 'Content-Type': 'application/json' } });
 			if (!r.ok) return res.status(502).json({ items: [] });
 			// העורך מבקש ?fresh=1 (בלי קאש) כדי לראות מיד את מה ששמר
