@@ -672,8 +672,23 @@ function injectAccountUI() {
   if (mobileToggle && mobileToggle.parentNode === actions) actions.insertBefore(btn, mobileToggle);
   else actions.appendChild(btn);
 }
+// טולטיפ קצר לכל כפתור בסרגל הפעולות (מוצג ב-CSS דרך data-tip)
+function applyHeaderTooltips() {
+  const actions = document.querySelector('.header-actions');
+  if (!actions) return;
+  actions.querySelectorAll('.icon-btn').forEach(btn => {
+    let tip = '';
+    if (btn.id === 'searchToggle') tip = 'חיפוש מוצרים, קטגוריות וחנויות';
+    else if (btn.id === 'accountBtn') tip = currentUser ? 'החשבון שלי' : 'התחברות / הרשמה';
+    else if (btn.id === 'mobileMenuToggle') tip = 'תפריט';
+    else if (btn.classList.contains('cart-btn')) tip = 'עגלת הקניות';
+    else if (btn.querySelector('.fa-heart')) tip = 'המועדפים שלי';
+    if (tip) { btn.setAttribute('data-tip', tip); btn.setAttribute('aria-label', tip); btn.removeAttribute('title'); }
+  });
+}
 function updateAccountBtn(btn) {
   btn = btn || document.getElementById('accountBtn');
+  applyHeaderTooltips();
   // דפים שתלויים בזהות (למשל "המוצרים שלי" ב-sell.html) מאזינים לאירוע הזה
   document.dispatchEvent(new CustomEvent('userChanged', { detail: { user: currentUser } }));
   if (!btn) return;
@@ -1024,6 +1039,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSearch();
   injectConstructionBanner();
   injectAccountUI();
+  applyHeaderTooltips();
   hydrateUser();
   loadSellerProducts();
   updateCartCount();
