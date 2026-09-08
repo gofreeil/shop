@@ -65,7 +65,7 @@ function toShopProduct(row) {
 		id: ID_BASE + Number(row.id),
 		documentId: row.documentId,
 		name: esc(row.name),
-		category: esc(row.category || 'home'),
+		category: esc(row.category || 'health'),
 		price: Number(row.price),
 		oldPrice: row.old_price ? Number(row.old_price) : null,
 		rating: 5,

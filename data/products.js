@@ -2,7 +2,6 @@ const categories = [
   { id: 'health', name: 'בריאות טבעית', icon: 'fa-leaf', color: '#10b981', desc: 'ויטמינים, צמחי מרפא, תוספי תזונה', image: 'images/health.jpg' },
   { id: 'agriculture', name: 'חקלאות ביתית', icon: 'fa-seedling', color: '#84cc16', desc: 'גינון אורבני, זרעים, ציוד', image: 'images/agriculture.jpg' },
   { id: 'tech', name: 'טכנולוגיה מתקדמת', icon: 'fa-microchip', color: '#6366f1', desc: 'גאדג׳טים חכמים, אלקטרוניקה', image: 'images/tech.jpg' },
-  { id: 'home', name: 'בית וגן', icon: 'fa-home', color: '#f59e0b', desc: 'כלי בית, עיצוב, אביזרים' },
   { id: 'beauty', name: 'יופי וטיפוח', icon: 'fa-spa', color: '#a855f7', desc: 'קוסמטיקה טבעית, טיפוח', image: 'images/beauty.jpg' }
 ];
 
@@ -30,12 +29,6 @@ const products = [
   { id: 16, name: 'שעון חכם פרימיום', category: 'tech', price: 1299, rating: 4.8, reviews: 412, icon: 'fa-clock', emoji: '⌚', featured: true, badge: 'hot' },
   { id: 17, name: 'מטען אלחוטי 3-ב-1', category: 'tech', price: 199, rating: 4.6, reviews: 289, icon: 'fa-bolt', emoji: '⚡' },
   { id: 18, name: 'מצלמת בית חכמה 360°', category: 'tech', price: 349, rating: 4.7, reviews: 156, icon: 'fa-video', emoji: '📹', badge: 'new' },
-
-  // Home
-  { id: 19, name: 'מטהר אוויר HEPA חכם', category: 'home', price: 899, oldPrice: 1199, rating: 4.8, reviews: 312, icon: 'fa-wind', emoji: '💨', featured: true, badge: 'sale' },
-  { id: 20, name: 'מנורת LED חכמה RGB', category: 'home', price: 179, rating: 4.6, reviews: 234, icon: 'fa-lightbulb', emoji: '💡' },
-  { id: 21, name: 'סט מצעי במבוק אקולוגי', category: 'home', price: 449, rating: 4.9, reviews: 189, icon: 'fa-bed', emoji: '🛏️', featured: true },
-  { id: 22, name: 'מפזר ארומה אולטרסוני', category: 'home', price: 159, rating: 4.7, reviews: 267, icon: 'fa-spa', emoji: '🌸' },
 
   // Beauty
   { id: 33, name: 'סרום ויטמין C טהור', category: 'beauty', price: 189, oldPrice: 249, rating: 4.8, reviews: 456, icon: 'fa-droplet', emoji: '✨', featured: true, badge: 'sale' },
