@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>החשבון שלי | חנות החירות</title>
+<meta name="description" content="החשבון שלי בחנות החירות - היסטוריית ההזמנות, המוצרים שאהבתי והרשמה לעדכונים ומבצעים">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+<meta name="theme-color" content="#6366f1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
+     האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YTEG7S0H9N"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
+	gtag('config', 'G-YTEG7S0H9N');
+</script>
+<style>
+  .account-top { display: grid; grid-template-columns: 1fr 1.2fr; gap: 16px; margin-bottom: 20px; }
+  .account-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px; display: flex; align-items: center; gap: 16px;
+  }
+  .account-card .who { flex: 1; min-width: 0; }
+  .account-card .who h2 { font-size: 20px; margin-bottom: 2px; }
+  .account-card .who p { color: var(--text-muted); font-size: 14px; word-break: break-all; }
+  .account-card .actions { display: flex; flex-direction: column; gap: 6px; }
+  .account-card .actions .btn { padding: 8px 12px; font-size: 13px; }
+  /* טופס ההרשמה לעדכונים - עבר לכאן מדף הבית (אותם סגנונות .newsletter) */
+  .account-news { border-radius: var(--radius-lg); padding: 18px 20px; }
+  .account-news h2 { font-size: 20px; margin-bottom: 4px; }
+  .account-news p { font-size: 14px; margin-bottom: 12px; }
+  .account-guest { text-align: center; padding: 40px 20px; }
+  .account-guest i { font-size: 48px; color: var(--primary); margin-bottom: 12px; }
+  .account-guest h2 { font-size: 22px; margin-bottom: 8px; }
+  .account-guest p { color: var(--text-muted); margin-bottom: 18px; }
+  .account-section { margin-top: 24px; }
+  .orders-list { display: grid; gap: 12px; }
+  .order-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+  .order-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .order-head strong { font-size: 15px; }
+  .order-head .date { color: var(--text-muted); font-size: 13px; margin-right: auto; }
+  .status { padding: 3px 10px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .status.new { background: rgba(245,158,11,0.15); color: var(--accent); }
+  .status.confirmed, .status.shipped { background: rgba(99,102,241,0.15); color: var(--primary); }
+  .status.completed { background: rgba(16,185,129,0.15); color: var(--accent-2); }
+  .status.cancelled { background: rgba(239,68,68,0.15); color: #ef4444; }
+  .order-items { list-style: none; display: grid; gap: 4px; font-size: 14px; }
+  .order-items li { display: flex; justify-content: space-between; gap: 10px; }
+  .order-items li span:last-child { color: var(--text-muted); white-space: nowrap; }
+  .order-foot { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 14px; }
+  .order-foot .price { font-weight: 700; }
+  .account-empty { text-align: center; padding: 24px 16px; color: var(--text-muted); background: var(--bg-alt); border-radius: var(--radius-lg); }
+  .account-empty i { font-size: 28px; margin-bottom: 8px; display: block; }
+  @media (max-width: 768px) {
+    .account-top { grid-template-columns: 1fr; }
+    .account-card { flex-wrap: wrap; }
+    .account-card .actions { flex-direction: row; width: 100%; }
+    .account-card .actions .btn { flex: 1; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <nav class="main-nav">
+      <div class="nav-dropdown">
+        <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
+        <div class="nav-dropdown-menu" id="navCategoriesMenu"></div>
+      </div>
+      <a href="about.html">אודות</a>
+      <a href="sell.html">הוסף חנות</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" aria-label="מצב כהה"><i class="fas fa-moon"></i></button>
+      <a href="#" class="icon-btn" id="wishlistBtn" aria-label="מועדפים"><i class="fas fa-heart"></i><span class="badge" id="wishlistCount">0</span></a>
+      <a href="cart.html" class="icon-btn cart-btn" aria-label="עגלה"><i class="fas fa-shopping-bag"></i><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / החשבון שלי</div>
+    <h1>החשבון שלי</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:1000px">
+
+    <div class="account-card account-guest" id="accountGuest" hidden>
+      <div style="width:100%">
+        <i class="fas fa-user-circle"></i>
+        <h2>התחברו כדי לראות את החשבון שלכם</h2>
+        <p>היסטוריית ההזמנות, המוצרים שאהבתם והרשמה לעדכונים ומבצעים.</p>
+        <button class="btn btn-primary" onclick="openAuth('login')"><i class="fas fa-sign-in-alt"></i> התחברות / הרשמה</button>
+      </div>
+    </div>
+
+    <div id="accountMain" hidden>
+      <div class="account-top">
+        <div class="account-card" id="accountCard"></div>
+        <div class="newsletter account-news">
+          <h2><i class="fas fa-envelope-open-text"></i> עדכונים ומבצעים</h2>
+          <p>הצטרפו לרשימת התפוצה ותקבלו ראשונים מוצרים חדשים והנחות.</p>
+          <form class="newsletter-form" onsubmit="handleNewsletter(event)">
+            <input type="email" id="newsEmail" placeholder="האימייל שלך לעדכונים ומבצעים" required>
+            <button type="submit" class="btn btn-primary">הצטרף <i class="fas fa-paper-plane"></i></button>
+          </form>
+        </div>
+      </div>
+
+      <div class="account-section" id="orders">
+        <div class="section-header">
+          <div>
+            <span class="section-eyebrow">היסטוריה</span>
+            <h2 class="section-title">ההזמנות שלי</h2>
+          </div>
+          <button class="btn btn-ghost" onclick="loadOrders(true)" style="padding:8px 14px;font-size:13px"><i class="fas fa-rotate"></i> רענון</button>
+        </div>
+        <div id="ordersList"><p style="color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> טוען הזמנות...</p></div>
+      </div>
+
+      <div class="account-section" id="favorites">
+        <div class="section-header">
+          <div>
+            <span class="section-eyebrow">מועדפים</span>
+            <h2 class="section-title">המוצרים שאהבתי</h2>
+          </div>
+        </div>
+        <div id="favList"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a> · <a href="contract.html">הסכם המוכר</a></p>
+    </div>
+  </div>
+</footer>
+
+<!-- תצוגה מהירה של מוצר (הכרטיסים במועדפים פותחים אותה) -->
+<div class="modal" id="quickViewModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" id="quickViewContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/site-editor.js"></script>
+<script>
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+const ORDER_STATUS = { new: 'התקבלה', confirmed: 'אושרה', shipped: 'נשלחה', completed: 'הושלמה', cancelled: 'בוטלה' };
+const fmtDate = d => d ? new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const money = n => '₪' + (Math.round(Number(n) * 100) / 100).toLocaleString('he-IL');
+
+let ordersLoadedFor = null;
+
+function renderAccount() {
+  const guest = document.getElementById('accountGuest');
+  const main = document.getElementById('accountMain');
+  guest.hidden = !!currentUser;
+  main.hidden = !currentUser;
+  if (!currentUser) { ordersLoadedFor = null; return; }
+  document.getElementById('accountCard').innerHTML = `
+    ${avatarHtml(72, 28)}
+    <div class="who">
+      <h2>${esc(currentUser.name)}</h2>
+      <p>${esc(currentUser.email)}</p>
+      ${currentUser.superAdmin ? '<span style="display:inline-block;margin-top:6px;padding:3px 12px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#4f46e5);color:#fff;font-size:12px;font-weight:700"><i class="fas fa-crown"></i> מנהל ראשי</span>' : ''}
+    </div>
+    <div class="actions">
+      ${currentUser.superAdmin ? '<a href="admin.html" class="btn btn-ghost"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול</a>' : ''}
+      <a href="sell.html#mine" class="btn btn-ghost"><i class="fas fa-store"></i> המוצרים שהגשתי</a>
+      <button class="btn btn-ghost" onclick="logoutUser()" style="color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
+    </div>
+  `;
+  const emailInput = document.getElementById('newsEmail');
+  if (emailInput && !emailInput.value) emailInput.value = currentUser.email || '';
+  loadOrders();
+  renderFavorites();
+}
+
+async function loadOrders(force = false) {
+  const el = document.getElementById('ordersList');
+  if (!currentUser) return;
+  if (!force && ordersLoadedFor === currentUser.email) return;
+  ordersLoadedFor = currentUser.email;
+  el.innerHTML = '<p style="color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> טוען הזמנות...</p>';
+  try {
+    const r = await fetch('/api/orders?mine=1');
+    if (r.status === 401) { el.innerHTML = '<div class="account-empty"><i class="fas fa-lock"></i>פג תוקף ההתחברות. התחברו שוב כדי לראות את ההזמנות.</div>'; return; }
+    if (!r.ok) throw new Error();
+    const { items } = await r.json();
+    if (!items?.length) {
+      el.innerHTML = '<div class="account-empty"><i class="fas fa-box-open"></i>עדיין אין הזמנות. <a href="index.html#products">לכל המוצרים</a></div>';
+      return;
+    }
+    el.innerHTML = `<div class="orders-list">${items.map(orderCard).join('')}</div>`;
+  } catch {
+    el.innerHTML = '<div class="account-empty"><i class="fas fa-triangle-exclamation"></i>לא הצלחנו לטעון את ההזמנות. <a href="#" onclick="loadOrders(true);return false">נסו שוב</a></div>';
+  }
+}
+
+function orderCard(o) {
+  const items = Array.isArray(o.items) ? o.items : [];
+  const status = ORDER_STATUS[o.status] ? o.status : 'new';
+  const shipping = Number(o.shipping) || 0;
+  return `<div class="order-card">
+    <div class="order-head">
+      <strong>הזמנה ${esc(o.order_number || '')}</strong>
+      <span class="status ${status}">${ORDER_STATUS[status]}</span>
+      <span class="date">${fmtDate(o.createdAt)}</span>
+    </div>
+    <ul class="order-items">${items.map(it => `<li><span>${esc(it.emoji || '📦')} ${esc(it.name)}${it.qty > 1 ? ` × ${it.qty}` : ''}${it.seller_display ? ` <small style="color:var(--text-muted)">· ${esc(it.seller_display)}</small>` : ''}</span><span>${money(it.price * (it.qty || 1))}</span></li>`).join('')}</ul>
+    <div class="order-foot">
+      <span style="color:var(--text-muted)">משלוח: ${shipping === 0 ? 'חינם' : money(shipping)}${o.customer_city ? ` · ${esc(o.customer_city)}` : ''}</span>
+      <span>סה"כ <span class="price">${money(o.total)}</span></span>
+    </div>
+  </div>`;
+}
+
+function renderFavorites() {
+  const el = document.getElementById('favList');
+  if (!el) return;
+  const items = wishlist.map(id => products.find(p => p.id === id)).filter(Boolean);
+  el.innerHTML = items.length
+    ? `<div class="products-grid">${items.map(productCard).join('')}</div>`
+    : '<div class="account-empty"><i class="far fa-heart"></i>עדיין לא אהבת מוצרים. לחצו על ❤️ על מוצר כדי לשמור אותו כאן.</div>';
+}
+
+document.addEventListener('DOMContentLoaded', renderAccount);
+document.addEventListener('userChanged', renderAccount);
+document.addEventListener('wishlistChanged', renderFavorites);
+document.addEventListener('productsUpdated', renderFavorites);
+</script>
+</body>
+</html>

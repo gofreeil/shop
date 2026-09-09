@@ -36,9 +36,12 @@
   <div class="container header-inner">
     <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
     <nav class="main-nav">
-      <a href="sell.html">מכרו דרכנו</a>
-      <a href="index.html#categories">קטגוריות</a>
+      <div class="nav-dropdown">
+        <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
+        <div class="nav-dropdown-menu" id="navCategoriesMenu"></div>
+      </div>
       <a href="about.html">אודות</a>
+      <a href="sell.html">הוסף חנות</a>
     </nav>
     <div class="header-actions">
       <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>

@@ -60,6 +60,8 @@ function toggleWishlist(productId) {
     toast('נוסף למועדפים', 'fa-heart');
   }
   localStorage.setItem(STORAGE.WISHLIST, JSON.stringify(wishlist));
+  // דפים שמציגים את המועדפים (account.html) מאזינים ומתרעננים
+  document.dispatchEvent(new CustomEvent('wishlistChanged', { detail: { wishlist } }));
   updateWishlistCount();
   document.querySelectorAll(`[data-wishlist="${productId}"]`).forEach(btn => {
     btn.classList.toggle('active', wishlist.includes(productId));
@@ -561,6 +563,7 @@ function ensureSearchUI() {
     btn.innerHTML = '<i class="fas fa-search"></i>';
     actions.insertBefore(btn, actions.firstChild);
   }
+  placeSearchToggle();
   if (!document.getElementById('searchBar')) {
     const bar = document.createElement('div');
     bar.id = 'searchBar';
@@ -672,11 +675,30 @@ function injectAccountUI() {
   if (mobileToggle && mobileToggle.parentNode === actions) actions.insertBefore(btn, mobileToggle);
   else actions.appendChild(btn);
 }
+// כפתור החיפוש: בדסקטופ בסוף הניווט הראשי (אחרי "הוסף חנות"); בנייד הניווט מוסתר, אז חוזר לסרגל הפעולות
+const navMobileQuery = window.matchMedia('(max-width: 720px)');
+function placeSearchToggle() {
+  const btn = document.getElementById('searchToggle');
+  const nav = document.querySelector('.main-nav');
+  const actions = document.querySelector('.header-actions');
+  if (!btn || !actions) return;
+  if (nav && !navMobileQuery.matches) { if (btn.parentNode !== nav) nav.appendChild(btn); }
+  else if (btn.parentNode !== actions) actions.insertBefore(btn, actions.firstChild);
+}
+navMobileQuery.addEventListener('change', placeSearchToggle);
+// תפריט הקטגוריות הנפתח בניווט הראשי (נפתח בהצבעה דרך CSS)
+function injectCategoriesMenu() {
+  const menu = document.getElementById('navCategoriesMenu');
+  if (!menu || typeof categories === 'undefined') return;
+  menu.innerHTML = categories.map(c => `<a href="products.html?category=${c.id}"><i class="fas ${c.icon}" style="color:${c.color}"></i> ${c.name}</a>`).join('')
+    + '<a href="products.html" class="all"><i class="fas fa-th-large"></i> כל המוצרים</a>';
+}
 // טולטיפ קצר לכל כפתור בסרגל הפעולות (מוצג ב-CSS דרך data-tip)
 function applyHeaderTooltips() {
   const actions = document.querySelector('.header-actions');
   if (!actions) return;
-  actions.querySelectorAll('.icon-btn').forEach(btn => {
+  const buttons = [...actions.querySelectorAll('.icon-btn'), ...document.querySelectorAll('.main-nav .icon-btn')];
+  buttons.forEach(btn => {
     let tip = '';
     if (btn.id === 'searchToggle') tip = 'חיפוש מוצרים, קטגוריות וחנויות';
     else if (btn.id === 'accountBtn') tip = currentUser ? 'החשבון שלי' : 'התחברות / הרשמה';
@@ -693,7 +715,7 @@ function updateAccountBtn(btn) {
   document.dispatchEvent(new CustomEvent('userChanged', { detail: { user: currentUser } }));
   if (!btn) return;
   btn.innerHTML = currentUser
-    ? avatarHtml(28, 13)
+    ? avatarHtml(32, 15)
     : '<i class="fas fa-user"></i>';
 }
 
@@ -877,6 +899,7 @@ function renderAccountMenu() {
       ${currentUser.superAdmin ? `
       <a href="admin.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול החנות</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();document.getElementById('seToggle')?.click()" style="justify-content:flex-start"><i class="fas fa-pen-to-square" style="color:#f59e0b"></i> עריכת תוכן האתר</button>` : ''}
+      <a href="account.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-user-circle" style="color:var(--primary)"></i> החשבון שלי - הזמנות, מועדפים ועדכונים</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>
       <a href="cart.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shopping-bag"></i> העגלה שלי</a>
       <a href="sell.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
@@ -1039,6 +1062,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSearch();
   injectConstructionBanner();
   injectAccountUI();
+  injectCategoriesMenu();
   applyHeaderTooltips();
   hydrateUser();
   loadSellerProducts();

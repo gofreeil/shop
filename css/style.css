@@ -147,7 +147,8 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 .logo-text { color: var(--text); }
 
-.main-nav { display: flex; gap: 4px; }
+.main-nav { display: flex; gap: 4px; align-items: center; }
+.main-nav .icon-btn { margin-right: 4px; }
 .main-nav a {
   padding: 10px 16px; border-radius: 10px;
   font-weight: 500; color: var(--text-muted); font-size: 15px;
@@ -156,6 +157,30 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .main-nav a:hover { color: var(--text); background: var(--bg-alt); }
 .main-nav a.active { color: var(--primary); background: rgba(6,182,212,0.1); }
 
+/* תפריט קטגוריות נפתח בהצבעה (וגם בפוקוס מקלדת) */
+.nav-dropdown { position: relative; }
+.nav-dropdown > a .fa-chevron-down { font-size: 10px; margin-right: 4px; transition: var(--transition); }
+.nav-dropdown:hover > a .fa-chevron-down, .nav-dropdown:focus-within > a .fa-chevron-down { transform: rotate(180deg); }
+.nav-dropdown-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; min-width: 230px;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg, var(--shadow)); padding: 6px; z-index: 50;
+  display: grid; gap: 2px;
+  opacity: 0; visibility: hidden; transform: translateY(-6px); transition: var(--transition);
+}
+/* גשר בלתי נראה בין הכפתור לתפריט כדי שהתפריט לא ייסגר במעבר העכבר */
+.nav-dropdown::after { content: ''; position: absolute; left: 0; right: 0; top: 100%; height: 8px; }
+.nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown:focus-within .nav-dropdown-menu {
+  opacity: 1; visibility: visible; transform: translateY(0);
+}
+.nav-dropdown-menu a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text);
+}
+.nav-dropdown-menu a i { width: 18px; text-align: center; font-size: 14px; }
+.nav-dropdown-menu a:hover { background: var(--bg-alt); color: var(--primary); }
+.nav-dropdown-menu a.all { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 11px; border-radius: 0 0 8px 8px; color: var(--primary); }
+
 .header-actions { display: flex; gap: 4px; align-items: center; }
 .icon-btn {
   position: relative;
@@ -163,14 +188,15 @@ input, textarea { font-family: inherit; font-size: inherit; }
   border-radius: 12px;
   display: inline-flex; align-items: center; justify-content: center;
   color: var(--text); transition: var(--transition);
-  font-size: 16px;
+  font-size: 20px;
 }
 .icon-btn:hover { background: var(--bg-alt); }
 .cart-btn:hover { color: var(--primary); }
-.cart-emoji { font-size: 20px; line-height: 1; font-style: normal; }
+.cart-emoji { font-size: 26px; line-height: 1; font-style: normal; }
+#accountBtn { font-size: 22px; }
 
 /* טולטיפ לכפתורי סרגל הפעולות (data-tip מוצב ב-JS) */
-.header-actions .icon-btn[data-tip]::after {
+.header-actions .icon-btn[data-tip]::after, .main-nav .icon-btn[data-tip]::after {
   content: attr(data-tip);
   position: absolute; top: calc(100% + 6px); left: 50%;
   transform: translateX(-50%) translateY(-4px);
@@ -180,19 +206,22 @@ input, textarea { font-family: inherit; font-size: inherit; }
   box-shadow: var(--shadow); pointer-events: none;
   opacity: 0; visibility: hidden; transition: var(--transition); z-index: 5;
 }
-.header-actions .icon-btn[data-tip]:hover::after,
-.header-actions .icon-btn[data-tip]:focus-visible::after {
+.header-actions .icon-btn[data-tip]:hover::after, .main-nav .icon-btn[data-tip]:hover::after,
+.header-actions .icon-btn[data-tip]:focus-visible::after, .main-nav .icon-btn[data-tip]:focus-visible::after {
   opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
 }
-@media (hover: none) { .header-actions .icon-btn[data-tip]::after { display: none; } }
+@media (hover: none) { .header-actions .icon-btn[data-tip]::after, .main-nav .icon-btn[data-tip]::after { display: none; } }
 
+/* התג יושב בפינה החיצונית של הכפתור, עם מסגרת בצבע הרקע, כדי שלא יסתיר את האייקון */
 .badge {
-  position: absolute; top: 4px; left: 4px;
+  position: absolute; top: -4px; left: -4px;
   background: var(--accent);
-  color: white; font-size: 10px; font-weight: 700;
-  min-width: 18px; height: 18px;
-  border-radius: 9px; padding: 0 5px;
+  color: white; font-size: 10px; font-weight: 700; line-height: 1;
+  min-width: 20px; height: 20px;
+  border-radius: 10px; padding: 0 4px;
+  border: 2px solid var(--bg-card); box-sizing: border-box;
   display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
 }
 
 .mobile-only { display: none; }
@@ -662,10 +691,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white; padding: 16px 0;
 }
-.newsletter-inner {
-  display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px;
-  align-items: center;
-}
+.newsletter-inner { display: grid; grid-template-columns: 1fr; align-items: center; }
 .newsletter-cta { display: flex; align-items: center; gap: 16px; }
 .newsletter-cta > div { flex: 1; }
 .newsletter-cta .btn-light { flex-shrink: 0; }
@@ -931,7 +957,6 @@ input, textarea { font-family: inherit; font-size: inherit; }
   .hero-visual { height: 280px; max-width: 500px; margin: 0 auto; }
   .categories-grid, .products-grid { grid-template-columns: repeat(3, 1fr); }
   .testimonials-grid { grid-template-columns: repeat(3, 1fr); }
-  .newsletter-inner { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .shop-layout { grid-template-columns: 1fr; }
   .filters { position: static; max-height: none; }
@@ -944,7 +969,10 @@ input, textarea { font-family: inherit; font-size: inherit; }
   .mobile-only { display: inline-flex; }
   .topbar-links a:not(:first-child) { display: none; }
   .header-inner { padding: 8px 14px; gap: 8px; }
-  .icon-btn { width: 36px; height: 36px; font-size: 14px; }
+  .icon-btn { width: 38px; height: 38px; font-size: 18px; }
+  .cart-emoji { font-size: 23px; }
+  .badge { min-width: 18px; height: 18px; border-radius: 9px; font-size: 9px; padding: 0 3px; }
+  #accountBtn { font-size: 20px; }
 
   /* features stay 4 across — icon on top, tiny text */
   .features-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }

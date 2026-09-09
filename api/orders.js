@@ -5,6 +5,7 @@ const { STRAPI_URL, parseBody, authHeaders, isShopAdmin, strapiFetch } = require
 // SMS + מייל; מוכרים: מייל אספקה; לקוח: אישור) נשלחות שם ב-afterCreate.
 //
 //   POST /api/orders           יצירת הזמנה מהצ'קאאוט (ציבורי)
+//   GET  /api/orders?mine=1    ההזמנות של המשתמש המחובר (דף החשבון)
 //   GET  /api/orders?all=1     כל ההזמנות לפאנל (מנהל חנות בלבד)
 //   PUT  /api/orders           עדכון סטטוס / הערה (מנהל חנות בלבד)
 const ENDPOINT = STRAPI_URL + '/api/shop-orders';
@@ -38,6 +39,12 @@ module.exports = async (req, res) => {
 				const r = await strapiFetch(`${ENDPOINT}/related?ids=${encodeURIComponent(ids)}`, { headers: { 'Content-Type': 'application/json' } });
 				res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 				return res.status(200).json({ related: r.ok ? (r.json?.data ?? {}) : {} });
+			}
+			// היסטוריית ההזמנות של המשתמש המחובר (לפי המשתמש או האימייל; ה-controller מסנן)
+			if (req.query?.mine) {
+				const r = await strapiFetch(ENDPOINT + '/mine', { headers: authHeaders(req) });
+				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 401 : 502).json({ error: r.status === 401 || r.status === 403 ? 'נדרשת התחברות' : 'failed' });
+				return res.status(200).json({ items: r.json?.data ?? [] });
 			}
 			if (!req.query?.all) return res.status(400).json({ error: 'bad request' });
 			if (!(await isShopAdmin(req))) return res.status(403).json({ error: 'forbidden' });

@@ -44,9 +44,12 @@
     </a>
 
     <nav class="main-nav">
-      <a href="sell.html">מכרו דרכנו</a>
-      <a href="#categories">קטגוריות</a>
+      <div class="nav-dropdown">
+        <a href="#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
+        <div class="nav-dropdown-menu" id="navCategoriesMenu"></div>
+      </div>
       <a href="about.html">אודות</a>
+      <a href="sell.html">הוסף חנות</a>
     </nav>
 
     <div class="header-actions">
@@ -159,7 +162,7 @@
   </div>
 </section>
 
-<!-- Sell with us + club (one strip) -->
+<!-- Sell with us (הרשמה לעדכונים עברה לדף החשבון) -->
 <section class="newsletter">
   <div class="container newsletter-inner">
     <div class="newsletter-cta">
@@ -169,10 +172,6 @@
       </div>
       <a href="sell.html" class="btn btn-light"><i class="fas fa-store"></i> פתח חנות</a>
     </div>
-    <form class="newsletter-form" onsubmit="handleNewsletter(event)">
-      <input type="email" placeholder="האימייל שלך לעדכונים ומבצעים" required>
-      <button type="submit" class="btn btn-primary">הצטרף <i class="fas fa-paper-plane"></i></button>
-    </form>
   </div>
 </section>
 
