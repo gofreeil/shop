@@ -321,6 +321,14 @@ input, textarea { font-family: inherit; font-size: inherit; }
   margin-bottom: 10px;
 }
 
+.hero-parent-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--text); color: #fff;
+  padding: 5px 12px; border-radius: 100px; font-size: 13px; font-weight: 600;
+  white-space: nowrap; margin-bottom: 14px;
+}
+.hero-parent-link:hover { background: var(--primary-dark); color: #fff; }
+
 .hero-title {
   font-size: clamp(32px, 4.5vw, 56px);
   font-weight: 800; line-height: 1.1; margin-bottom: 10px;
