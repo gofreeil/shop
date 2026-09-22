@@ -8,7 +8,7 @@ const { STRAPI_URL, readCookie, parseBody, authHeaders, isShopAdmin, strapiFetch
 //   GET  /api/seller-products?mine=1     ההגשות של המשתמש המחובר
 //   POST /api/seller-products            הגשת מוצר (אנונימי או מחובר) + תיעוד קבלת ההסכם
 //   PUT  /api/seller-products            אישור / דחייה / הערה (מנהל חנות בלבד - Strapi אוכף)
-//   PUT  /api/seller-products?mine=1     ניהול מלאי עצמי - כמות/מחיר/אספקה/תיאור/קישור על מוצר של המשתמש בלבד
+//   PUT  /api/seller-products?mine=1     ניהול מלאי עצמי - כמות/מחיר/אספקה/תיאור/קישור/תצוגה (visibility) על מוצר של המשתמש בלבד
 //
 // הזהות עוברת ב-JWT מהעוגייה המשותפת gofreeil-auth; Strapi מחליט מי מנהל.
 const ENDPOINT = STRAPI_URL + '/api/shop-seller-products';
@@ -132,7 +132,7 @@ module.exports = async (req, res) => {
 			// ניהול מלאי עצמי (לוח המכוונים של המוכר): רק שדות המלאי/מחיר, ורק על המוצר שלו - Strapi אוכף בעלות
 			if (req.query?.mine) {
 				const data = {};
-				for (const k of ['quantity', 'price', 'old_price', 'delivery_days', 'description', 'link']) {
+				for (const k of ['quantity', 'price', 'old_price', 'delivery_days', 'description', 'link', 'visibility', 'neighborhoods']) {
 					if (body[k] !== undefined) data[k] = body[k];
 				}
 				const r = await strapi(`${ENDPOINT}/mine/${encodeURIComponent(documentId)}`, {

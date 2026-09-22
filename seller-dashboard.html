@@ -153,7 +153,7 @@
           <p class="sd-hint">שנו כמות במלאי או מחיר ישירות כאן - השינוי נשמר מיד. עריכה מלאה (תמונות, תיאור) דרך "המוצרים שהגשתי".</p>
           <div style="overflow-x:auto">
             <table>
-              <thead><tr><th>מוצר</th><th>מחיר</th><th>מלאי</th><th>נמכרו</th><th>סטטוס</th></tr></thead>
+              <thead><tr><th>מוצר</th><th>מחיר</th><th>מלאי</th><th>נמכרו</th><th>תצוגה</th><th>סטטוס</th></tr></thead>
               <tbody id="dashProductsTable"></tbody>
             </table>
           </div>
@@ -255,7 +255,7 @@ function renderStats() {
   const live = dashOrders.filter(o => o.status !== 'cancelled');
   const thisMonth = live.filter(o => inMonth(o.createdAt));
   const revenueMonth = thisMonth.reduce((s, o) => s + Number(o.my_subtotal || 0), 0);
-  const approvedProducts = dashProducts.filter(p => p.status === 'approved');
+  const approvedProducts = dashProducts.filter(p => p.status === 'approved' && (p.visibility || 'visible') !== 'hidden');
   const lowStock = approvedProducts.filter(p => p.quantity != null && p.quantity <= LOW_STOCK);
   const cards = [
     { icon: 'fa-shekel-sign', color: 'linear-gradient(135deg,#10b981,#059669)', value: ils(revenueMonth), label: 'הכנסות החודש (אחרי עמלה: ' + ils(revenueMonth * 0.9) + ')' },
@@ -286,6 +286,7 @@ function renderChart() {
 }
 
 const PROD_STATUS = { pending: ['ממתין', 'fa-clock'], approved: ['מאושר', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
+const VIS_LABELS = { visible: 'מופיע', hidden: 'לא מופיע', neighborhoods: 'בשכונות בלבד' };
 function unitsSold(documentId) {
   let n = 0;
   for (const o of dashOrders) {
@@ -296,11 +297,12 @@ function unitsSold(documentId) {
 }
 function renderProductsTable() {
   const tbody = document.getElementById('dashProductsTable');
-  if (!dashProducts.length) { tbody.innerHTML = `<tr><td colspan="5" class="sd-empty">עדיין לא העליתם מוצרים. <a href="add-product.html">להעלאת מוצר ראשון</a></td></tr>`; return; }
+  if (!dashProducts.length) { tbody.innerHTML = `<tr><td colspan="6" class="sd-empty">עדיין לא העליתם מוצרים. <a href="add-product.html">להעלאת מוצר ראשון</a></td></tr>`; return; }
   tbody.innerHTML = dashProducts.map(p => {
     const [label, icon] = PROD_STATUS[p.status] || PROD_STATUS.pending;
     const low = p.status === 'approved' && p.quantity != null && p.quantity <= LOW_STOCK;
     const thumb = /^data:image\//.test(p.image || '') ? `<img src="${esc(p.image)}" alt="">` : esc(p.emoji || '📦');
+    const vis = p.visibility || 'visible';
     return `<tr>
       <td><span class="sd-row-thumb">${thumb}</span><strong>${esc(p.name)}</strong></td>
       <td><input type="number" class="sd-inv-input price" value="${Number(p.price)}" min="1" step="0.5" onchange="updateInventory('${esc(p.documentId)}','price',this.value,this)"></td>
@@ -309,6 +311,12 @@ function renderProductsTable() {
         ${low ? '<span class="sd-low-stock"><i class="fas fa-triangle-exclamation"></i> מלאי נמוך</span>' : ''}
       </td>
       <td>${unitsSold(p.documentId)}</td>
+      <td>
+        <select class="sd-inv-input" style="width:130px" onchange="updateInventory('${esc(p.documentId)}','visibility',this.value,this)">
+          ${Object.entries(VIS_LABELS).map(([v, l]) => `<option value="${v}"${vis === v ? ' selected' : ''}>${l}</option>`).join('')}
+        </select>
+        ${vis === 'neighborhoods' ? `<input type="text" class="sd-inv-input" style="width:130px;margin-top:6px" placeholder="שכונות, מופרדות בפסיק" value="${esc(p.neighborhoods || '')}" onchange="updateInventory('${esc(p.documentId)}','neighborhoods',this.value,this)">` : ''}
+      </td>
       <td><span class="status-pill ${p.status}"><i class="fas ${icon}"></i> ${label}</span>${p.status === 'rejected' && p.rejection_reason ? `<div style="color:var(--text-muted);font-size:11px;margin-top:3px">${esc(p.rejection_reason)}</div>` : ''}</td>
     </tr>`;
   }).join('');
@@ -323,7 +331,8 @@ async function updateInventory(documentId, field, value, input) {
     if (idx >= 0) dashProducts[idx] = { ...dashProducts[idx], ...(json.item || {}) };
     renderStats();
     renderProductsTable();
-    toast(field === 'quantity' ? 'המלאי עודכן' : 'המחיר עודכן', 'fa-circle-check');
+    const MSG = { quantity: 'המלאי עודכן', price: 'המחיר עודכן', visibility: 'התצוגה עודכנה', neighborhoods: 'השכונות עודכנו' };
+    toast(MSG[field] || 'העדכון בוצע', 'fa-circle-check');
   } catch (e) {
     toast(e.message || 'העדכון נכשל', 'fa-circle-exclamation');
     renderProductsTable();
