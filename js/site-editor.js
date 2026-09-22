@@ -16,11 +16,11 @@
   const PAGE = (location.pathname.replace(/^\/+|\.html$/g, '') || 'index').toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 40);
   const API = '/api/site-content';
   const CACHE_KEY = 'noshop_overrides_' + PAGE;
-  const SKIP = 'script,style,noscript,template,.modal,#toast,#lightbox,.search-bar,#constructionBanner,#accountBtn,.se-ui,input,select,textarea,option,[data-noedit]';
+  const SKIP = 'script,style,noscript,template,.modal,#toast,#lightbox,.search-bar,#accountBtn,.se-ui,input,select,textarea,option,[data-noedit]';
   const TEXT_STYLE_KEYS = ['fontSize', 'lineHeight', 'fontWeight', 'textAlign', 'color', 'marginTop', 'marginBottom', 'letterSpacing'];
   const IMAGE_STYLE_KEYS = ['width', 'height', 'maxWidth', 'objectFit', 'objectPosition', 'borderRadius', 'marginTop', 'marginBottom', 'opacity'];
   // טקסטים שנוצרים ב-JS אחרי הטעינה (לא ב-HTML הקבוע) אבל זהים בכל הדפים
-  const LATE_STATIC = [{ sel: '#constructionBanner > span', key: 'global:banner' }];
+  const LATE_STATIC = [];
 
   // --- צילום ה-HTML הקבוע (בזמן טעינת הסקריפט, לפני רינדור דינמי) ---
   const STATIC = new WeakSet();

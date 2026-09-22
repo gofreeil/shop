@@ -630,21 +630,6 @@ function initSearch() {
   });
 }
 
-// === Construction Banner ===
-function injectConstructionBanner() {
-  if (document.getElementById('constructionBanner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'constructionBanner';
-  banner.className = 'construction-banner';
-  banner.innerHTML = `
-    <span><i class="fas fa-triangle-exclamation"></i> אתר זה בבנייה - חלק מהפיצ'רים עדיין לא פעילים. תודה על הסבלנות!</span>
-    <button class="construction-close" onclick="this.parentElement.remove()" aria-label="סגור"><i class="fas fa-times"></i></button>
-  `;
-  // מתחת להדר (ולא מעליו) - ההדר נשאר ראשון ודביק, הבאנר נגלל עם הדף
-  const header = document.querySelector('.header');
-  if (header) header.insertAdjacentElement('afterend', banner);
-  else document.body.insertBefore(banner, document.body.firstChild);
-}
 
 // === Auth ===
 // שם תצוגה: לעולם לא מזהה-מכונה של ספק ההזדהות (google_1164…) - כמו בשאר האתרים
@@ -1088,7 +1073,6 @@ function handleNewsletter(e) {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initSearch();
-  injectConstructionBanner();
   injectAccountUI();
   injectCategoriesMenu();
   applyHeaderTooltips();
