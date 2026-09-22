@@ -159,6 +159,23 @@ module.exports = async (req, res) => {
 			if (['pending', 'approved', 'rejected'].includes(body.status)) data.status = body.status;
 			if (typeof body.rejection_reason === 'string') data.rejection_reason = body.rejection_reason.slice(0, 1000);
 			if (typeof body.admin_note === 'string') data.admin_note = body.admin_note.slice(0, 1000);
+			// עריכת המוצר עצמו מגלגל השיניים שבחלון המוצר (סופר-אדמין) - Strapi אוכף שהמבקש מנהל
+			const TEXT = { name: 120, category: 40, emoji: 8, description: 2000, link: 300 };
+			for (const [k, max] of Object.entries(TEXT)) {
+				if (typeof body[k] === 'string') data[k] = body[k].trim().slice(0, max);
+			}
+			if (data.link && !SAFE_LINK.test(data.link)) return res.status(400).json({ error: 'הקישור צריך להתחיל ב-http(s)://' });
+			if (data.name === '') return res.status(400).json({ error: 'שם המוצר חובה' });
+			const num = v => (v === '' || v == null ? null : Number(v));
+			if (body.price !== undefined) {
+				const price = num(body.price);
+				if (!price || !Number.isFinite(price) || price <= 0) return res.status(400).json({ error: 'מחיר לא תקין' });
+				data.price = Math.round(price * 100) / 100;
+			}
+			if (body.old_price !== undefined) data.old_price = num(body.old_price) > 0 ? Math.round(num(body.old_price) * 100) / 100 : null;
+			if (body.quantity !== undefined) data.quantity = num(body.quantity) > 0 ? Math.floor(num(body.quantity)) : null;
+			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null;
+			if (['visible', 'hidden', 'neighborhoods'].includes(body.visibility)) data.visibility = body.visibility;
 			const r = await strapi(`${ENDPOINT}/${encodeURIComponent(documentId)}`, {
 				method: 'PUT',
 				headers: authHeaders(req),

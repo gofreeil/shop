@@ -221,6 +221,7 @@ function openQuickView(productId) {
   qvGallery = { id: p.id, imgs, index: 0 };
   content.innerHTML = `
     <button class="modal-close" onclick="closeQuickView()"><i class="fas fa-times"></i></button>
+    ${adminGearHtml(p)}
     <div class="quick-view">
       <div class="quick-view-media">
         <div class="quick-view-image${imgs.length ? ' has-photo' : ''}" id="qvMain" style="background: linear-gradient(135deg, ${cat.color}22, ${cat.color}11)" ${imgs.length ? `onclick="openLightbox(${p.id}, qvGallery.index)" title="לחצו להגדלה"` : ''}>
@@ -309,6 +310,141 @@ function openQuickView(productId) {
   content.scrollTop = 0;
   attachSwipe(document.getElementById('qvMain'), d => qvStep(d));
   renderRecommendations(p);
+}
+
+// === גלגל שיניים לסופר-אדמין בחלון המוצר ===
+// כמו AdminGemachMenu בגמ"ח הארצי: כפתור ⚙️ קטן עם תפריט נפתח - עריכה במקום,
+// הסתרה/החזרה לתצוגה ומחיקה. רק למוצרי מוכרים (יש documentId ב-Strapi);
+// השרת (api/seller-products PUT/DELETE) ו-Strapi אוכפים שהמבקש מנהל.
+function adminGearHtml(p) {
+  if (!currentUser?.superAdmin || !p.documentId) return '';
+  const hidden = p.visibility && p.visibility !== 'visible';
+  return `
+    <div class="admin-gear" id="adminGear">
+      <button type="button" class="admin-gear-btn" onclick="event.stopPropagation();toggleAdminGear()" title="ניהול המוצר (אדמין)" aria-label="תפריט ניהול עבור המוצר">⚙️</button>
+      <div class="admin-gear-menu" role="menu" hidden>
+        <button type="button" role="menuitem" onclick="openAdminEdit(${p.id})">✏️ עריכה</button>
+        ${hidden
+          ? `<button type="button" role="menuitem" class="ok" onclick="adminProductAction(${p.id}, 'show')">👁️ החזר לתצוגה</button>`
+          : `<button type="button" role="menuitem" class="warn" onclick="adminProductAction(${p.id}, 'hide')">🙈 הסתר מהאתר</button>`}
+        <a role="menuitem" href="admin.html#stores">🛡️ לפאנל הניהול</a>
+        <hr>
+        <button type="button" role="menuitem" class="danger" onclick="adminProductAction(${p.id}, 'delete')">🗑️ מחק</button>
+      </div>
+    </div>`;
+}
+function toggleAdminGear(force) {
+  const menu = document.querySelector('#adminGear .admin-gear-menu');
+  if (menu) menu.hidden = force === undefined ? !menu.hidden : !force;
+}
+document.addEventListener('click', e => { if (!e.target.closest?.('#adminGear')) toggleAdminGear(false); });
+
+// הטקסט במוצר מגיע מהשרת מנוטרל-HTML (esc) - מפענחים לעריכה ומנטרלים שוב לתצוגה
+function htmlDecode(s) { const t = document.createElement('textarea'); t.innerHTML = s ?? ''; return t.value; }
+function htmlEsc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function adminPut(payload) {
+  const res = await fetch('/api/seller-products', {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(body?.error && body.error !== 'failed' ? body.error : 'הפעולה נכשלה - נסו שוב');
+  return body;
+}
+
+async function adminProductAction(id, action) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  toggleAdminGear(false);
+  if (action === 'delete' && !confirm(`למחוק את "${htmlDecode(p.name)}"? הפעולה בלתי הפיכה.`)) return;
+  try {
+    if (action === 'delete') {
+      const res = await fetch('/api/seller-products', {
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: p.documentId })
+      });
+      if (!res.ok) throw new Error('המחיקה נכשלה - נסו שוב');
+    } else {
+      await adminPut({ documentId: p.documentId, visibility: action === 'hide' ? 'hidden' : 'visible' });
+    }
+  } catch (err) { return toast(err.message, 'fa-circle-exclamation'); }
+  if (action === 'show') {
+    p.visibility = 'visible';
+    toast('המוצר חזר לתצוגה');
+    return openQuickView(id);
+  }
+  removeFromShelf(p, action === 'delete' ? 'המוצר נמחק' : 'המוצר הוסתר מהאתר');
+}
+// מוסתר או נמחק - יורד מהמדף בדף הנוכחי
+function removeFromShelf(p, msg) {
+  const i = products.indexOf(p);
+  if (i >= 0) products.splice(i, 1);
+  closeQuickView();
+  document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { removed: 1 } }));
+  toast(msg);
+}
+
+function openAdminEdit(id) {
+  const p = products.find(x => x.id === id);
+  const info = document.querySelector('#quickViewContent .quick-view-info');
+  if (!p || !info) return;
+  toggleAdminGear(false);
+  const v = k => htmlEsc(htmlDecode(p[k] ?? ''));
+  info.innerHTML = `
+    <form class="admin-edit-form" onsubmit="event.preventDefault();saveAdminEdit(${p.id}, this)">
+      <h3><span>⚙️</span> עריכת המוצר <small>(סופר-אדמין)</small></h3>
+      <label>שם המוצר<input name="name" required maxlength="120" value="${v('name')}"></label>
+      <div class="row">
+        <label>קטגוריה<select name="category">${categories.map(c => `<option value="${c.id}"${c.id === p.category ? ' selected' : ''}>${c.name}</option>`).join('')}</select></label>
+        <label>אימוג'י<input name="emoji" maxlength="8" value="${v('emoji')}"></label>
+      </div>
+      <div class="row">
+        <label>מחיר ₪<input name="price" type="number" min="0.01" step="0.01" required value="${p.price ?? ''}"></label>
+        <label>מחיר קודם ₪<input name="old_price" type="number" min="0" step="0.01" value="${p.oldPrice ?? ''}"></label>
+      </div>
+      <div class="row">
+        <label>מלאי (ריק = ללא הגבלה)<input name="quantity" type="number" min="0" step="1" value="${p.quantity ?? ''}"></label>
+        <label>ימי אספקה<input name="delivery_days" type="number" min="1" step="1" value="${p.deliveryDays ?? ''}"></label>
+      </div>
+      <label>תיאור<textarea name="description" rows="8" maxlength="2000">${v('desc')}</textarea></label>
+      <label>קישור חיצוני<input name="link" type="url" maxlength="300" placeholder="https://" value="${v('link')}"></label>
+      <label>תצוגה<select name="visibility">
+        <option value="visible"${(p.visibility || 'visible') === 'visible' ? ' selected' : ''}>מופיע באתר</option>
+        <option value="hidden"${p.visibility === 'hidden' ? ' selected' : ''}>לא מופיע</option>
+        <option value="neighborhoods"${p.visibility === 'neighborhoods' ? ' selected' : ''}>בשכונות בלבד</option>
+      </select></label>
+      <div class="actions">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> שמירה</button>
+        <button type="button" class="btn btn-ghost" onclick="openQuickView(${p.id})">ביטול</button>
+      </div>
+    </form>`;
+  info.querySelector('input[name="name"]').focus();
+}
+
+async function saveAdminEdit(id, form) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const f = Object.fromEntries(new FormData(form));
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  try {
+    await adminPut({ documentId: p.documentId, ...f });
+  } catch (err) {
+    btn.disabled = false;
+    return toast(err.message, 'fa-circle-exclamation');
+  }
+  const num = s => (s === '' ? null : Number(s));
+  Object.assign(p, {
+    name: htmlEsc(f.name.trim()), category: f.category, emoji: htmlEsc(f.emoji.trim() || '📦'),
+    price: Number(f.price), oldPrice: num(f.old_price) || null, quantity: num(f.quantity) || null,
+    deliveryDays: num(f.delivery_days) || null, desc: htmlEsc(f.description.trim()),
+    link: htmlEsc(f.link.trim()), visibility: f.visibility
+  });
+  if (f.visibility !== 'visible') return removeFromShelf(p, 'המוצר עודכן והוסתר מהמדף');
+  toast('המוצר עודכן');
+  document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { edited: 1 } }));
+  openQuickView(id);
 }
 
 // === גלריית המוצר בחלון המהיר ===
