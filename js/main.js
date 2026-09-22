@@ -677,6 +677,7 @@ function injectCategoriesMenu() {
   const menu = document.getElementById('navCategoriesMenu');
   if (!menu || typeof categories === 'undefined') return;
   menu.innerHTML = categories.map(c => `<a href="products.html?category=${c.id}"><i class="fas ${c.icon}" style="color:${c.color}"></i> ${c.name}</a>`).join('')
+    + '<a href="categories.html" class="all"><i class="fas fa-layer-group"></i> כל הקטגוריות</a>'
     + '<a href="products.html" class="all"><i class="fas fa-th-large"></i> כל המוצרים</a>';
 }
 // טולטיפ קצר לכל כפתור בסרגל הפעולות (מוצג ב-CSS דרך data-tip)

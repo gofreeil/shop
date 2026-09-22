@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הקטגוריות בקניון | חנות החירות | יוצאים לחירות</title>
+<meta name="description" content="כל הקטגוריות בקניון השיתופי חנות החירות - מה יש בכל קטגוריה, כמה מוצרים, אילו חנויות וטווח המחירים">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="חנות החירות">
+<meta property="og:title" content="הקטגוריות בקניון | חנות החירות | יוצאים לחירות">
+<meta property="og:description" content="כל הקטגוריות בקניון השיתופי חנות החירות">
+<meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
+<meta property="og:url" content="https://shop.gofreeil.com/categories">
+<meta property="og:locale" content="he_IL">
+<meta name="theme-color" content="#6366f1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
+     האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YTEG7S0H9N"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
+	gtag('config', 'G-YTEG7S0H9N');
+</script>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <nav class="main-nav">
+      <div class="nav-dropdown">
+        <a href="categories.html" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
+        <div class="nav-dropdown-menu" id="navCategoriesMenu"></div>
+      </div>
+      <a href="about.html">אודות</a>
+      <a href="sell.html">הוסף חנות</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="cart.html" class="icon-btn cart-btn"><span class="cart-emoji" aria-hidden="true">🛒</span><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / הקטגוריות</div>
+    <h1>הקטגוריות בקניון</h1>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מה יש בכל קטגוריה: כמה מוצרים, אילו חנויות מוכרות בה וטווח המחירים. <a href="stores.html" style="color:var(--primary);text-decoration:underline">לכל החנויות</a></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="cat-detail-grid" id="catDetailGrid"></div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a></p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="quickViewModal">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" id="quickViewContent"></div>
+</div>
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/site-editor.js"></script>
+<script>
+  // הפרטים של כל קטגוריה נגזרים מהמוצרים עצמם: מוצרי ההדגמה שב-data/products.js
+  // ומוצרי החנויות המאושרות שנטענים מהשרת אחרי הרינדור הראשון.
+  function catDetailCard(c) {
+    const list = products.filter(p => p.category === c.id);
+    const mall = list.filter(p => p.storeSlug || p.seller);
+    const stores = storesFromProducts().filter(s => s.products.some(p => p.category === c.id));
+    const prices = list.map(p => Number(p.price)).filter(n => n > 0).sort((a, b) => a - b);
+    const rated = list.filter(p => p.rating);
+    const avg = rated.length ? (rated.reduce((s, p) => s + p.rating, 0) / rated.length).toFixed(1) : '';
+    const top = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3);
+    const banner = c.image
+      ? `<div class="cat-detail-bg" style="background-image:url('${c.image}')"></div>`
+      : `<div class="cat-detail-bg cat-detail-bg-icon" style="background: linear-gradient(135deg, ${c.color}, ${c.color}bb)"><i class="fas ${c.icon}"></i></div>`;
+    return `
+      <article class="cat-detail" id="cat-${c.id}">
+        ${banner}
+        <div class="cat-detail-body">
+          <div class="cat-detail-head">
+            <span class="cat-detail-icon" style="background:${c.color}22;color:${c.color}"><i class="fas ${c.icon}"></i></span>
+            <div>
+              <h2>${c.name}</h2>
+              ${c.desc ? `<p>${c.desc}</p>` : ''}
+            </div>
+          </div>
+          <div class="cat-stats">
+            <div class="cat-stat"><strong>${list.length}</strong><span>מוצרים</span></div>
+            <div class="cat-stat"><strong>${mall.length}</strong><span>מחנויות הקניון</span></div>
+            <div class="cat-stat"><strong>${stores.length}</strong><span>חנויות</span></div>
+            <div class="cat-stat cat-stat-range"><strong>${prices.length ? '₪' + prices[0] + (prices.length > 1 ? '–₪' + prices[prices.length - 1] : '') : '—'}</strong><span>טווח מחירים</span></div>
+            ${avg ? `<div class="cat-stat"><strong>${avg}★</strong><span>דירוג ממוצע</span></div>` : ''}
+          </div>
+          ${stores.length ? `
+            <div class="cat-block">
+              <h4>חנויות שמוכרות בקטגוריה</h4>
+              <div class="cat-chips">
+                ${stores.map(s => `<a class="cat-chip" href="store.html?s=${encodeURIComponent(s.slug)}">${storeLogoHtml(s, 24)} ${s.name}</a>`).join('')}
+              </div>
+            </div>` : `
+            <div class="cat-block">
+              <h4>אין עוד חנויות בקטגוריה</h4>
+              <div class="cat-chips"><a class="cat-chip" href="sell.html"><i class="fas fa-plus"></i> פתחו כאן את הראשונה</a></div>
+            </div>`}
+          ${top.length ? `
+            <div class="cat-block">
+              <h4>מוצרים מובילים</h4>
+              <div class="cat-mini">
+                ${top.map(p => `
+                  <button class="cat-mini-row" onclick="openQuickView(${p.id})" title="צפייה במוצר">
+                    <span class="cat-mini-thumb">${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : (p.emoji || '📦')}</span>
+                    <span class="cat-mini-name">${p.name}</span>
+                    <span class="cat-mini-price">₪${p.price}</span>
+                  </button>`).join('')}
+              </div>
+            </div>` : ''}
+          <a class="btn btn-primary btn-block" href="products.html?category=${c.id}">
+            <i class="fas fa-arrow-left"></i> ${list.length ? `לכל ${list.length} המוצרים בקטגוריה` : `לצפייה בקטגוריה`}
+          </a>
+        </div>
+      </article>`;
+  }
+
+  function renderCategoryDetails() {
+    const el = document.getElementById('catDetailGrid');
+    if (!el) return;
+    el.innerHTML = categories.map(catDetailCard).join('');
+  }
+  renderCategoryDetails();
+  document.addEventListener('productsUpdated', renderCategoryDetails);
+
+  // ?c=<id> - גלילה ישר לקטגוריה המבוקשת, פעם אחת, אחרי שהתמונות תפסו מקום
+  const want = new URLSearchParams(location.search).get('c');
+  if (want) {
+    const go = () => document.getElementById('cat-' + want)?.scrollIntoView({ block: 'center', behavior: 'instant' });
+    window.addEventListener('load', () => requestAnimationFrame(go), { once: true });
+  }
+</script>
+</body>
+</html>

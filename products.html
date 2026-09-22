@@ -96,6 +96,7 @@
         <h4>סטטוס</h4>
         <label class="filter-option"><input type="checkbox" id="filterSale"> במבצע</label>
         <label class="filter-option"><input type="checkbox" id="filterNew"> חדש</label>
+        <label class="filter-option"><input type="checkbox" id="filterSellers"> מחנויות הקניון</label>
       </div>
       <button class="btn btn-ghost btn-block" onclick="resetFilters()" style="margin-top:16px">
         <i class="fas fa-rotate-left"></i> איפוס סינון
@@ -153,6 +154,8 @@ if (initCat) {
   const r = document.querySelector(`input[name="cat"][value="${initCat}"]`);
   if (r) r.checked = true;
 }
+// ?seller=1 - רק מוצרים של חנויות הקניון (כמו המונה בדף הבית), בלי מוצרי ההדגמה
+if (urlParams.get('seller')) document.getElementById('filterSellers').checked = true;
 
 function applyFilters() {
   const cat = document.querySelector('input[name="cat"]:checked').value;
@@ -160,6 +163,7 @@ function applyFilters() {
   const maxPrice = parseFloat(document.getElementById('priceRange').value);
   const onSale = document.getElementById('filterSale').checked;
   const onlyNew = document.getElementById('filterNew').checked;
+  const onlySellers = document.getElementById('filterSellers').checked;
   const sort = document.getElementById('sortSelect').value;
 
   let list = products.filter(p => {
@@ -168,6 +172,7 @@ function applyFilters() {
     if (p.price > maxPrice) return false;
     if (onSale && !p.oldPrice) return false;
     if (onlyNew && p.badge !== 'new') return false;
+    if (onlySellers && !(p.storeSlug || p.seller)) return false;
     return true;
   });
 
@@ -185,8 +190,9 @@ function applyFilters() {
     document.getElementById('pageTitle').textContent = c.name;
     document.getElementById('breadcrumbCat').textContent = c.name;
   } else {
-    document.getElementById('pageTitle').textContent = 'כל המוצרים';
-    document.getElementById('breadcrumbCat').textContent = 'כל המוצרים';
+    const title = onlySellers ? 'מוצרי החנויות בקניון' : 'כל המוצרים';
+    document.getElementById('pageTitle').textContent = title;
+    document.getElementById('breadcrumbCat').textContent = title;
   }
 }
 
@@ -197,6 +203,7 @@ function resetFilters() {
   document.getElementById('priceMax').textContent = '₪3000';
   document.getElementById('filterSale').checked = false;
   document.getElementById('filterNew').checked = false;
+  document.getElementById('filterSellers').checked = false;
   document.getElementById('sortSelect').value = 'featured';
   applyFilters();
 }
