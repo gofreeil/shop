@@ -1027,11 +1027,17 @@ function storesFromProducts() {
   }
   return [...map.values()].sort((a, b) => b.products.length - a.products.length);
 }
+// כל חנות בשורה בפני עצמה: לוגו, שם, תיאור, פרטי קשר, הצצה למוצרים - וכל
+// השורה היא קישור לדף החנות (פרופיל + כל המוצרים שלה).
 function storeCard(s) {
   const cats = [...new Set(s.products.map(p => (categories.find(c => c.id === p.category) || {}).name).filter(Boolean))].slice(0, 3);
+  const THUMBS = 5;
+  const thumbs = s.products.slice(0, THUMBS).map(p =>
+    `<span class="store-thumb">${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : (p.emoji || '📦')}</span>`).join('');
+  const more = s.products.length > THUMBS ? `<span class="store-thumb store-thumb-more" dir="ltr">+${s.products.length - THUMBS}</span>` : '';
   return `
     <a href="store.html?s=${encodeURIComponent(s.slug)}" class="store-card">
-      ${storeLogoHtml(s, 64)}
+      ${storeLogoHtml(s, 72)}
       <div class="store-card-body">
         <h3>${s.name}</h3>
         <p>${s.description || cats.join(' · ')}</p>
@@ -1039,18 +1045,25 @@ function storeCard(s) {
           <span><i class="fas fa-box"></i> ${s.products.length} מוצרים</span>
           ${s.city ? `<span><i class="fas fa-location-dot"></i> ${s.city}</span>` : ''}
           ${s.phone ? `<span><i class="fas fa-phone"></i> ${s.phone}</span>` : ''}
+          ${s.description && cats.length ? `<span><i class="fas fa-tags"></i> ${cats.join(' · ')}</span>` : ''}
         </div>
+      </div>
+      <div class="store-card-side">
+        ${thumbs ? `<div class="store-thumbs">${thumbs}${more}</div>` : ''}
+        <span class="store-card-go">לחנות ולכל המוצרים <i class="fas fa-arrow-left"></i></span>
       </div>
     </a>`;
 }
 function openStoreCard() {
   return `
     <a href="sell.html" class="store-card store-card-open">
-      <span class="store-logo store-logo-letter" style="width:64px;height:64px;font-size:28px"><i class="fas fa-plus"></i></span>
+      <span class="store-logo store-logo-letter" style="width:72px;height:72px;font-size:30px"><i class="fas fa-plus"></i></span>
       <div class="store-card-body">
         <h3>פתח חנות בקניון</h3>
         <p>לוגו, טלפון ומוצרים לפי קטגוריות. החנות לוקחת 10% ממכירה, השאר אליכם.</p>
-        <div class="store-card-meta"><span><i class="fas fa-arrow-left"></i> לפתיחת חנות</span></div>
+      </div>
+      <div class="store-card-side">
+        <span class="store-card-go">לפתיחת חנות <i class="fas fa-arrow-left"></i></span>
       </div>
     </a>`;
 }
