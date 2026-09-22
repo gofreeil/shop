@@ -307,7 +307,7 @@ function renderProductsTable() {
       <td><span class="sd-row-thumb">${thumb}</span><strong>${esc(p.name)}</strong></td>
       <td><input type="number" class="sd-inv-input price" value="${Number(p.price)}" min="1" step="0.5" onchange="updateInventory('${esc(p.documentId)}','price',this.value,this)"></td>
       <td>
-        <input type="number" class="sd-inv-input" value="${p.quantity ?? ''}" min="0" placeholder="-" onchange="updateInventory('${esc(p.documentId)}','quantity',this.value,this)">
+        <input type="number" class="sd-inv-input" value="${p.quantity ?? ''}" min="0" placeholder="ללא הגבלה" title="שדה ריק = מלאי ללא הגבלה" onchange="updateInventory('${esc(p.documentId)}','quantity',this.value,this)">
         ${low ? '<span class="sd-low-stock"><i class="fas fa-triangle-exclamation"></i> מלאי נמוך</span>' : ''}
       </td>
       <td>${unitsSold(p.documentId)}</td>
@@ -322,7 +322,8 @@ function renderProductsTable() {
   }).join('');
 }
 async function updateInventory(documentId, field, value, input) {
-  const body = { documentId, [field]: value };
+  // שדה מספרי שרוקן = ללא הגבלה, ולכן נשלח null ולא מחרוזת ריקה
+  const body = { documentId, [field]: value === '' ? null : value };
   try {
     const r = await fetch('/api/seller-products?mine=1', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const json = await r.json().catch(() => ({}));
