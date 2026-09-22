@@ -12,8 +12,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   body { background: var(--bg-alt); }
-  .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
-  .sidebar { background: var(--bg-card); border-left: 1px solid var(--border); padding: 24px; }
+  /* גובה ההדר של האתר - הפריסה והסייד-בר יושבים מתחתיו */
+  :root { --admin-header-h: 77px; }
+  .admin-layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - var(--admin-header-h)); }
+  .sidebar { background: var(--bg-card); border-left: 1px solid var(--border); padding: 24px; position: sticky; top: var(--admin-header-h); align-self: start; height: calc(100vh - var(--admin-header-h)); overflow-y: auto; }
   .sidebar-logo { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 800; padding: 8px 12px; margin-bottom: 32px; }
   .sidebar-nav { display: flex; flex-direction: column; gap: 4px; }
   .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: var(--transition); }
@@ -50,7 +52,7 @@
   .row-actions button { width: 32px; height: 32px; border-radius: 8px; color: var(--text-muted); transition: var(--transition); }
   .row-actions button:hover { background: var(--bg-alt); color: var(--primary); }
   .row-actions .del:hover { color: #ef4444; }
-  .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(135deg, #0a0e1a, #111827); }
+  .login-screen { min-height: calc(100vh - var(--admin-header-h)); display: flex; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(135deg, #0a0e1a, #111827); }
   .login-card { background: var(--bg-card); padding: 40px; border-radius: 20px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; }
   .login-card h1 { font-size: 24px; margin-bottom: 8px; text-align: center; }
   .login-card p { color: var(--text-muted); text-align: center; margin-bottom: 28px; }
@@ -134,6 +136,7 @@
     .stat-cards { grid-template-columns: repeat(2, 1fr); }
     .main { padding: 20px; }
   }
+  @media (max-width: 720px) { :root { --admin-header-h: 73px; } }
 </style>
 <!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
      האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
@@ -146,6 +149,36 @@
 </script>
 </head>
 <body>
+
+<!-- Header (זהה לשאר דפי האתר) -->
+<header class="header" id="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <nav class="main-nav">
+      <div class="nav-dropdown">
+        <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
+        <div class="nav-dropdown-menu" id="navCategoriesMenu"></div>
+      </div>
+      <a href="about.html">אודות</a>
+      <a href="sell.html">הוסף חנות</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="searchToggle" aria-label="חיפוש"><i class="fas fa-search"></i></button>
+      <button class="icon-btn" id="themeToggle" aria-label="מצב כהה"><i class="fas fa-moon"></i></button>
+      <a href="cart.html" class="icon-btn cart-btn" aria-label="עגלה"><span class="cart-emoji" aria-hidden="true">🛒</span><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+  <div class="search-bar" id="searchBar">
+    <div class="container">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="חפש מוצרים, קטגוריות, מותגים...">
+        <button class="search-close" id="searchClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="search-suggestions" id="searchSuggestions"></div>
+    </div>
+  </div>
+</header>
 
 <!-- Login -->
 <div class="login-screen" id="loginScreen">
@@ -187,7 +220,6 @@
         <p style="color:var(--text-muted);font-size:14px">ברוך הבא, מנהל</p>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
         <button class="btn btn-primary" onclick="openProductEditor()"><i class="fas fa-plus"></i> מוצר חדש</button>
       </div>
     </div>
@@ -396,6 +428,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="data/products.js"></script>
+<script src="js/main.js"></script>
 <script>
 // === Auth ===
 function login(e) {
