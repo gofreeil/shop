@@ -52,12 +52,13 @@
   <div class="container">
     <div class="breadcrumb"><a href="index.html">בית</a> / <a href="sell.html">פתח חנות</a> / העלאת מוצר</div>
     <h1>העלאת מוצר לחנות</h1>
-    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">שלב שני: מעלים מוצרים לחנות שפתחתם. לכל מוצר עד 6 תמונות, מחיר, קטגוריה ותיאור. המוצר הראשון בחנות חדשה עובר אישור של מנהל הקניון; אחרי שהחנות אושרה, כל מוצר שתעלו עולה למדף מיד. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מעלים מוצרים לחנות שפתחתם. לכל מוצר עד 6 תמונות, מחיר, קטגוריה ותיאור. המוצר הראשון בחנות חדשה עובר אישור של מנהל הקניון; אחרי שהחנות אושרה, כל מוצר שתעלו עולה למדף מיד. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
+    <div id="onbBar"></div>
     <div class="sell-layout">
       <div>
         <!-- אין חנות עדיין (לא בדפדפן ולא בחשבון) - מפנים לפתיחת חנות -->
@@ -89,16 +90,18 @@
           <p class="hint">כל השדות המסומנים ב-* הם חובה. התיאור והתמונה הם מה שהלקוח רואה - השקיעו בהם.</p>
 
           <div class="form-field"><label>שם המוצר *</label><input type="text" name="name" maxlength="120" required placeholder="למשל: שמן זית כתית מעולה 750 מ״ל"></div>
-          <div class="form-row">
-            <div class="form-field"><label>קטגוריה *</label><select name="category" id="categorySelect" required></select></div>
-            <div class="form-field"><label>אימוג'י (אם אין תמונה)</label><input type="text" name="emoji" maxlength="4" placeholder="📦"></div>
-          </div>
+          <div class="form-field"><label>קטגוריה *</label><select name="category" id="categorySelect" required></select></div>
           <div class="form-row">
             <div class="form-field"><label>מחיר לצרכן בש"ח (כולל מע"מ) *</label><input type="number" name="price" id="priceInput" min="1" max="1000000" step="0.5" required placeholder="100" oninput="updateCommission()"></div>
             <div class="form-field"><label>מחיר לפני הנחה (אופציונלי)</label><input type="number" name="old_price" min="1" step="0.5" placeholder="למשל 129"></div>
           </div>
           <div class="form-row">
-            <div class="form-field"><label>כמות במלאי</label><input type="number" name="quantity" min="0" step="1" placeholder="למשל 20"></div>
+            <div class="form-field">
+              <label>כמות במלאי</label>
+              <input type="number" name="quantity" id="quantityInput" min="0" step="1" placeholder="למשל 20">
+              <label class="inline-check"><input type="checkbox" id="unlimitedStock" onchange="toggleUnlimitedStock()"> ללא הגבלה</label>
+              <p class="hint" style="margin:6px 0 0">מספר יוצג ללקוח בדף המוצר ("5 יח' במלאי") ותקבלו התראת מלאי נמוך בלוח המכוונים. "ללא הגבלה" - לא מוצג מונה, מתאים למוצר שמיוצר או מוזמן לפי דרישה.</p>
+            </div>
             <div class="form-field"><label>זמן אספקה (ימי עסקים)</label><input type="number" name="delivery_days" min="1" max="60" step="1" placeholder="למשל 3"></div>
           </div>
           <div class="form-field"><label>קישור לאתר / קטלוג (אופציונלי)</label><input type="url" name="link" maxlength="300" placeholder="https://"></div>
@@ -115,11 +118,20 @@
             <p class="hint" style="margin-top:8px;margin-bottom:0"><i class="fas fa-wand-magic-sparkles" style="color:var(--primary)"></i> אחרי ההעלאה אפשר לזום, למרכז ולסובב כל תמונה, לגרור כדי לשנות סדר, ולבחור איזו תהיה הראשית. התמונה הראשית מופיעה בכרטיס המוצר ובשיתוף ברשתות החברתיות.</p>
           </div>
 
+          <div class="form-field emoji-fallback" id="emojiFallback">
+            <label>עוד לא העליתם תמונה - איזה סמל יוצג בינתיים?</label>
+            <p class="hint" style="margin-bottom:10px">כאן <strong>לא</strong> מעלים תמונה - התמונות נבחרות במסגרת שלמעלה. זהו סמל זמני בלבד: כל עוד אין למוצר תמונה, הוא יוצג ללקוחות עם הסמל הזה במקום צילום. מוצר עם תמונה אמיתית נמכר הרבה יותר, אז עדיף להעלות צילום למעלה לפני השליחה - גם צילום פשוט מהטלפון.</p>
+            <div class="emoji-picker" id="emojiPicker"></div>
+            <input type="text" name="emoji" id="emojiInput" maxlength="4" placeholder="או הדביקו כאן סמל משלכם" oninput="syncEmojiPicker()" class="emoji-input">
+          </div>
+
           <label class="consent">
             <input type="checkbox" name="accuracy_confirmed" id="consentAccuracy" required>
             <span><strong>אני מצהיר/ה שכל הפרטים נכונים</strong>
             המוצר חוקי למכירה בישראל, בבעלותי או ברשותי למכרו, התיאור והתמונה מדויקים, ויש לי את כל האישורים הנדרשים לפי דין. המוצר כפוף ל<a href="contract.html" target="_blank" style="color:var(--primary);text-decoration:underline">הסכם המוכר</a> שאישרתי בפתיחת החנות.</span>
           </label>
+
+          <div id="charterGate"></div>
 
           <div id="submitError" style="display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.1);color:#b91c1c;font-size:14px"></div>
           <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-paper-plane"></i> שליחת המוצר</button>
@@ -129,7 +141,7 @@
           <i class="fas fa-circle-check"></i>
           <h2 style="font-size:26px;margin-bottom:8px">המוצר נשלח לאישור</h2>
           <p style="color:var(--text-muted);margin-bottom:20px;max-width:520px;margin-inline:auto">תודה! מנהל החנות יבדוק את המוצר. מוצר מאושר עולה למדף אוטומטית, ותקבלו עדכון באימייל. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.</p>
-          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="successActions">
             <button class="btn btn-primary" onclick="resetProductForm()"><i class="fas fa-plus"></i> העלאת מוצר נוסף</button>
             <a href="#mine" class="btn btn-ghost"><i class="fas fa-list-check"></i> המוצרים שהגשתי</a>
             <a href="products.html" class="btn btn-ghost">לחנות</a>
@@ -213,7 +225,9 @@
 <script src="js/contract.js"></script>
 <script src="js/main.js"></script>
 <script src="js/site-editor.js"></script>
+<script src="js/charter.js"></script>
 <script src="js/seller-store.js"></script>
+<script src="js/seller-onboarding.js"></script>
 <script>
 // ---- קטגוריות ----
 document.getElementById('categorySelect').innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
@@ -339,6 +353,7 @@ function renderGallery() {
     </div>`).join('');
   const full = gallery.length >= MAX_IMAGES;
   document.getElementById('imageDrop').style.display = full ? 'none' : '';
+  updateEmojiFallback();
   document.getElementById('imageDropText').textContent = gallery.length
     ? `הוסיפו עוד תמונות (${gallery.length}/${MAX_IMAGES})`
     : 'לחצו לבחירת תמונות או גררו לכאן · JPG/PNG/WebP · עד 6 תמונות';
@@ -367,6 +382,30 @@ function moveImage(i, d) {
   renderGallery();
 }
 function removeImage(i) { gallery.splice(i, 1); renderGallery(); }
+const EMOJI_CHOICES = ['📦','👕','🍯','🫒','🧴','🕯️','☕','🍪','🎁','🧸','💍','🎨','🪴','🧼','📚','🔧','👟','🧢','🍷','🧿'];
+function renderEmojiPicker() {
+  const box = document.getElementById('emojiPicker');
+  const cur = document.getElementById('emojiInput').value.trim();
+  box.innerHTML = EMOJI_CHOICES.map(e => `<button type="button" class="emoji-opt${e === cur ? ' on' : ''}" onclick="pickEmoji('${e}')" aria-label="בחירת סמל ${e}">${e}</button>`).join('');
+}
+function pickEmoji(e) {
+  const input = document.getElementById('emojiInput');
+  input.value = input.value.trim() === e ? '' : e;
+  renderEmojiPicker();
+}
+function syncEmojiPicker() { renderEmojiPicker(); }
+// הסמל רלוונטי רק כשאין תמונה - אחרת הוא רק מבלבל
+function updateEmojiFallback() {
+  document.getElementById('emojiFallback').hidden = gallery.length > 0;
+}
+// מלאי ללא הגבלה - שולחים כמות ריקה, ואז לא מוצג מונה מלאי בכרטיס המוצר
+function toggleUnlimitedStock() {
+  const on = document.getElementById('unlimitedStock').checked;
+  const input = document.getElementById('quantityInput');
+  input.disabled = on;
+  if (on) input.value = '';
+  input.placeholder = on ? 'ללא הגבלה' : 'למשל 20';
+}
 function clearImages() {
   gallery = [];
   document.getElementById('imageInput').value = '';
@@ -481,6 +520,7 @@ let identityChecked = false; // האם /api/me כבר ענה (אחרת עוד ל
 function renderStore() {
   const store = getSavedStore();
   const has = !!store;
+  onbRenderBar('#onbBar', { here: 'product' });
   document.getElementById('storeSummary').hidden = !has;
   document.getElementById('productForm').hidden = !has;
   // "אין חנות" מוצג רק אחרי שידוע שגם בחשבון אין (או שאין חשבון)
@@ -522,6 +562,7 @@ async function loadMine() {
     const r = await fetch('/api/seller-products?mine=1');
     if (!r.ok) throw new Error();
     const { items } = await r.json();
+    onbSetProducts(items.length);
     if (!items.length) { el.innerHTML = '<p style="color:var(--text-muted)">עדיין לא הגשתם מוצרים.</p>'; return; }
     // מוכר ותיק (הגיש מוצרים לפני שהייתה רשומת חנות): משחזרים את החנות מההגשה
     // האחרונה ושומרים אותה בחשבון - כדי שלא יצטרך לפתוח חנות מחדש
@@ -565,6 +606,15 @@ async function submitProduct(e) {
   const store = getSavedStore();
   if (!store) { location.href = 'sell.html'; return; }
   if (!form.reportValidity()) return;
+  // תנאי סף: חתימה על אמנת המוסר העולמית. השרת דוחה הגשה בלי חתימה, ולכן
+  // אין טעם לשלוח - עוצרים כאן עם הסבר וקישור לחתימה.
+  if (!charterGate.signed) {
+    err.textContent = charterGate.blockMessage();
+    err.style.display = 'block';
+    document.getElementById('charterGate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    charterGate.refresh();
+    return;
+  }
   if (!store.contract_accepted || store.contract_version !== SELLER_CONTRACT_VERSION) {
     err.innerHTML = 'הסכם המוכר עודכן - יש לאשר אותו מחדש ב<a href="sell.html?edit=1" style="text-decoration:underline">פרטי החנות</a> לפני העלאת מוצר.';
     err.style.display = 'block';
@@ -591,15 +641,26 @@ async function submitProduct(e) {
     if (!r.ok) throw new Error(json.error || 'ההגשה נכשלה');
     // חנות שכבר אושרה מפרסמת מוצרים לבד - רק המוצר הראשון בחנות חדשה ממתין למנהל
     const live = json.item?.status === 'approved';
+    const wasFirst = !onbState().first_product_at && !(Number(onbState().products_count) || 0);
+    if (wasFirst) onbSave({ first_product_at: new Date().toISOString() });
     form.hidden = true;
     const box = document.getElementById('sellSuccess');
     box.querySelector('h2').textContent = live ? 'המוצר עלה למדף' : 'המוצר נשלח לאישור';
     box.querySelector('p').innerHTML = live
       ? 'החנות שלכם מאושרת, ולכן המוצר כבר על המדף וגלוי ללקוחות. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.'
       : 'תודה! זהו המוצר הראשון בחנות, ולכן מנהל הקניון יבדוק אותו. מוצר מאושר עולה למדף ותקבלו עדכון באימייל - ומכאן והלאה כל מוצר שתעלו יעלה למדף מיד. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.';
+    // אחרי המוצר הראשון ממשיכים ללוח הבקרה ולסיור שמלמד לנהל את החנות
+    if (wasFirst) {
+      box.querySelector('p').innerHTML += ' <br><strong>השלב האחרון במסלול:</strong> סיור קצר בלוח הבקרה - שם רואים מכירות והזמנות, משנים מחיר ומלאי, ומעלימים מוצר מהמדף.';
+      document.getElementById('successActions').innerHTML = `
+        <a href="seller-dashboard.html?tour=1" class="btn btn-primary btn-lg"><i class="fas fa-chart-line"></i> ללוח הבקרה - סיור קצר</a>
+        <button class="btn btn-ghost" onclick="resetProductForm()"><i class="fas fa-plus"></i> העלאת מוצר נוסף</button>
+        <a href="#mine" class="btn btn-ghost"><i class="fas fa-list-check"></i> המוצרים שהגשתי</a>`;
+    }
     box.hidden = false;
     box.scrollIntoView({ behavior: 'smooth', block: 'start' });
     toast(live ? 'המוצר עלה למדף' : 'המוצר נשלח לאישור', 'fa-circle-check');
+    renderStore();
     loadMine();
   } catch (ex) {
     err.textContent = ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message;
@@ -609,20 +670,35 @@ async function submitProduct(e) {
     btn.innerHTML = '<i class="fas fa-paper-plane"></i> שליחת המוצר';
   }
 }
+const DEFAULT_SUCCESS_ACTIONS = document.getElementById('successActions').innerHTML;
 function resetProductForm() {
   const form = document.getElementById('productForm');
   form.reset();
   clearImages();
+  renderEmojiPicker();
+  toggleUnlimitedStock();
   updateCommission();
   form.hidden = false;
   document.getElementById('sellSuccess').hidden = true;
+  document.getElementById('successActions').innerHTML = DEFAULT_SUCCESS_ACTIONS;
   form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+document.addEventListener('onboardingChanged', () => onbRenderBar('#onbBar', { here: 'product' }));
 
 updateCommission();
+renderEmojiPicker();
 renderStore();
 if (new URLSearchParams(location.search).get('new') === '1' && getSavedStore()) toast('החנות פתוחה - עכשיו מעלים את המוצר הראשון', 'fa-store');
 applyUser();
+// בלי חתימה על אמנת המוסר העולמית השרת דוחה את ההגשה - מראים את זה מראש
+charterGate.mount('charterGate', {
+  onChange: signed => {
+    const btn = document.getElementById('submitBtn');
+    if (!btn) return;
+    btn.classList.toggle('btn-disabled', !signed);
+    btn.title = signed ? '' : 'קודם חותמים על אמנת המוסר העולמית';
+  }
+});
 </script>
 </body>
 </html>

@@ -744,6 +744,7 @@ function sellerCardHtml(s) {
           <div><span>אימייל</span><a href="mailto:${escHtml(s.seller_email)}">${escHtml(s.seller_email)}</a></div>
           <div><span>כתובת</span>${escHtml(s.seller_address || '-')}</div>
           <div><span>הסכם המוכר</span>${s.contract_accepted ? `גרסה ${escHtml(s.contract_version)} · ${fmtDate(s.contract_accepted_at)} · IP ${escHtml(s.contract_ip || '-')}` : '<b style="color:#b91c1c">לא אושר!</b>'}</div>
+          <div><span>אמנת המוסר העולמית</span>${s.charter_signed_at ? `<b style="color:#047857">חתום</b> · ${escHtml(s.charter_signer || '')} · ${fmtDate(s.charter_signed_at)}` : '<span style="color:var(--text-muted)">הוגש לפני שהחתימה נדרשה</span>'}</div>
         </div>
         <div class="seller-money">
           <span>מחיר לצרכן: <strong>${ils(s.price)}</strong></span>
