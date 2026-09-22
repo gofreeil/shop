@@ -694,8 +694,9 @@ function applyHeaderTooltips() {
     if (tip) { btn.setAttribute('data-tip', tip); btn.setAttribute('aria-label', tip); btn.removeAttribute('title'); }
   });
 }
-// התראת מנהל: תג אדום על האווטאר בכותרת עם מספר ההגשות שממתינות לאישור, כדי
-// שהגשה חדשה של מוכר תיראה מכל דף באתר בלי להיכנס לפאנל הניהול.
+// התראת מנהל: תג אדום על האווטאר בכותרת עם מספר החנויות שממתינות לאישור, כדי
+// שחנות חדשה תיראה מכל דף באתר בלי להיכנס לפאנל הניהול. מאשרים חנות ולא מוצר -
+// אישור החנות מעלה למדף אוטומטית את כל מוצריה.
 let adminPending = 0;
 let adminPendingLoaded = false;
 async function refreshAdminPending() {
@@ -703,7 +704,7 @@ async function refreshAdminPending() {
   if (adminPendingLoaded) return;
   adminPendingLoaded = true;
   try {
-    const r = await fetch('/api/seller-products?count=1');
+    const r = await fetch('/api/store?count=1');
     if (!r.ok) return;
     const { pending } = await r.json();
     adminPending = Number(pending) || 0;
@@ -904,7 +905,7 @@ function renderAccountMenu() {
     </div>
     <div style="display:grid;gap:6px">
       ${currentUser.superAdmin ? `
-      <a href="admin.html#sellers" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול החנות${adminPending ? ` <span style="margin-right:auto;background:#ef4444;color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px">${adminPending} ממתינים לאישור</span>` : ''}</a>
+      <a href="admin.html#stores" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול החנות${adminPending ? ` <span style="margin-right:auto;background:#ef4444;color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px">${adminPending === 1 ? 'חנות ממתינה לאישור' : `${adminPending} חנויות ממתינות`}</span>` : ''}</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();document.getElementById('seToggle')?.click()" style="justify-content:flex-start"><i class="fas fa-pen-to-square" style="color:#f59e0b"></i> עריכת תוכן האתר</button>` : ''}
       <a href="account.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-user-circle" style="color:var(--primary)"></i> החשבון שלי - הזמנות, מועדפים ועדכונים</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>

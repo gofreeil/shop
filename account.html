@@ -250,8 +250,7 @@ function renderSellerZone() {
   document.getElementById('sellerStoreSummary').innerHTML = `
     ${storeLogoHtml({ logo: store.store_logo, name: store.store_name }, 64)}
     <div class="store-summary-body">
-      <h2><span>${esc(store.store_name)}</span> <span class="store-open-pill${store.synced ? '' : ' local'}">
-        <i class="fas ${store.synced ? 'fa-circle-check' : 'fa-mobile-screen'}"></i> ${store.synced ? 'החנות פתוחה' : 'שמורה בדפדפן זה'}</span></h2>
+      <h2><span>${esc(store.store_name)}</span> ${storeStatusPillHtml(store)}</h2>
       <div class="store-summary-meta">
         ${store.store_city ? `<span><i class="fas fa-location-dot"></i>${esc(store.store_city)}</span>` : ''}
         ${store.store_phone ? `<span><i class="fas fa-phone"></i>${esc(store.store_phone)}</span>` : ''}

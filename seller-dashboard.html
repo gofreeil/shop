@@ -129,7 +129,7 @@
       <div class="store-summary" id="dashStoreSummary">
         <div id="dashStoreLogo"></div>
         <div class="store-summary-body">
-          <h2><span id="dashStoreName"></span></h2>
+          <h2><span id="dashStoreName"></span> <span id="dashStorePill"></span></h2>
           <div class="store-summary-meta" id="dashStoreMeta"></div>
         </div>
         <div class="sd-summary-actions">
@@ -279,6 +279,8 @@ function renderStoreSummary() {
   if (!s) return;
   document.getElementById('dashStoreLogo').innerHTML = storeLogoHtml({ logo: s.store_logo, name: s.store_name }, 64);
   document.getElementById('dashStoreName').textContent = s.store_name;
+  // החנות היא מה שעובר אישור; כל עוד היא ממתינה, מוצריה שמורים אך לא על המדף
+  document.getElementById('dashStorePill').innerHTML = storeStatusPillHtml(s);
   document.getElementById('dashStoreMeta').innerHTML = [
     s.store_city ? `<span><i class="fas fa-location-dot"></i> ${esc(s.store_city)}</span>` : '',
     s.store_phone ? `<span><i class="fas fa-phone"></i> ${esc(s.store_phone)}</span>` : '',
@@ -328,7 +330,7 @@ function renderChart() {
     </div>`).join('');
 }
 
-const PROD_STATUS = { pending: ['ממתין', 'fa-clock'], approved: ['מאושר', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
+const PROD_STATUS = { pending: ['ממתין לאישור החנות', 'fa-clock'], approved: ['על המדף', 'fa-circle-check'], rejected: ['הורד מהמדף', 'fa-circle-xmark'] };
 const VIS_LABELS = { visible: 'מופיע', hidden: 'לא מופיע', neighborhoods: 'בשכונות בלבד' };
 function unitsSold(documentId) {
   let n = 0;

@@ -33,13 +33,30 @@ function clearStoreDraft() {
   try { localStorage.removeItem(STORE_DRAFT_KEY); } catch { /* ignore */ }
 }
 
+// תג מצב החנות - מוצג בכל מקום שבו המוכר רואה את החנות שלו (פתיחת חנות,
+// העלאת מוצר, האזור האישי, לוח הבקרה). זה הסטטוס היחיד שקובע: מנהל הקניון
+// מאשר חנות, לא מוצר, ואישורה מעלה למדף את כל מוצריה.
+function storeStatusPill(store) {
+  if (!store) return { cls: '', icon: 'fa-circle-check', label: 'החנות פתוחה', title: '' };
+  if (!store.synced) return { cls: 'local', icon: 'fa-mobile-screen', label: 'שמורה בדפדפן זה', title: 'התחברו כדי לשמור את החנות בחשבון ולשלוח אותה לאישור' };
+  if (store.status === 'rejected') return { cls: 'rejected', icon: 'fa-circle-xmark', label: 'לא אושרה', title: store.rejection_reason || 'תקנו את פרטי החנות ושלחו שוב לאישור' };
+  if (store.status === 'approved') return { cls: '', icon: 'fa-circle-check', label: 'החנות פתוחה', title: 'מאושרת - כל מוצר שתעלו עולה למדף מיד' };
+  return { cls: 'pending', icon: 'fa-clock', label: 'ממתינה לאישור', title: 'ברגע שהחנות תאושר כל המוצרים שהעליתם יעלו למדף יחד' };
+}
+function storeStatusPillHtml(store) {
+  const p = storeStatusPill(store);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return `<span class="store-open-pill${p.cls ? ' ' + p.cls : ''}" title="${esc(p.title)}"><i class="fas ${p.icon}"></i> ${esc(p.label)}</span>`;
+}
+
 function pickStoreFields(src) {
   const out = {};
   [...STORE_PUBLIC_FIELDS, ...STORE_SELLER_FIELDS].forEach(k => { out[k] = src?.[k] || ''; });
   out.store_logo = src?.store_logo || '';
   return out;
 }
-// רשומת שרת -> רשומה מקומית
+// רשומת שרת -> רשומה מקומית. status הוא לב העניין: מנהל הקניון מאשר חנות
+// (ולא מוצר), ואישורה מעלה למדף אוטומטית את כל מוצריה.
 function storeFromServer(row) {
   if (!row) return null;
   return {
@@ -50,6 +67,9 @@ function storeFromServer(row) {
     opened_at: row.opened_at || row.createdAt || null,
     slug: row.slug || '',
     documentId: row.documentId || null,
+    status: row.status || 'pending',
+    rejection_reason: row.rejection_reason || '',
+    decided_at: row.decided_at || null,
     synced: true,
   };
 }
@@ -62,6 +82,10 @@ function storeFromSubmission(item) {
     contract_version: item.contract_version || '',
     contract_accepted_at: item.contract_accepted_at || null,
     opened_at: item.submitted_at || item.createdAt || null,
+    // מוכר ותיק בלי רשומת חנות: מוצר מאושר שלו מעיד שהחנות מאושרת
+    status: item.status === 'approved' ? 'approved' : 'pending',
+    rejection_reason: '',
+    decided_at: item.decided_at || null,
     synced: false,
   };
 }

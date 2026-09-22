@@ -108,6 +108,12 @@
   .adm-store-toggle { font-size: 13px; padding: 8px; }
   .adm-store-toggle i { transition: transform .2s; }
   .adm-store-toggle.open i { transform: rotate(180deg); }
+  /* החנות היא מה שמאשרים - חנות ממתינה בולטת בכתום, ופעולות ההכרעה בשורה */
+  .adm-store-card.pending { border-color: rgba(245,158,11,0.55); background: rgba(245,158,11,0.04); }
+  .adm-store-card.approved { border-color: rgba(16,185,129,0.4); }
+  .adm-store-card.rejected { opacity: 0.8; }
+  .adm-store-card .seller-actions { flex-direction: row; flex-wrap: wrap; min-width: 0; }
+  .adm-store-card .seller-actions .btn { flex: 1 1 auto; }
   .adm-store-products { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
   .adm-store-product-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: var(--transition); }
   .adm-store-product-row:hover { background: var(--bg-alt); border-color: var(--primary); }
@@ -300,19 +306,20 @@
       </div>
       <div class="panel">
         <div class="panel-header">
-          <h2>מוצרים שהקהל הגיש <span id="sellersSummary" style="font-weight:400;color:var(--text-muted);font-size:13px"></span></h2>
+          <h2>מוצרי המוכרים <span id="sellersSummary" style="font-weight:400;color:var(--text-muted);font-size:13px"></span></h2>
           <div style="display:flex;gap:8px;align-items:center">
             <select id="sellersFilter" onchange="renderSellerSubs()" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)">
-              <option value="pending">ממתינים לאישור</option>
-              <option value="approved">מאושרים (על המדף)</option>
-              <option value="rejected">נדחו</option>
+              <option value="pending">ממתינים (החנות טרם אושרה)</option>
+              <option value="approved">על המדף</option>
+              <option value="rejected">הורדו מהמדף</option>
               <option value="">הכל</option>
             </select>
             <button class="btn btn-ghost" onclick="loadSellerSubmissions()" style="padding:8px 14px"><i class="fas fa-rotate"></i> רענן</button>
           </div>
         </div>
         <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px">
-          מוצר מאושר עולה לאתר תוך דקה (מטמון 60 שניות). החנות גובה 10% ממחיר המכירה; הסכום למוכר מוצג בכל כרטיס.
+          <strong>האישור בקניון הוא על החנות, לא על המוצר</strong> - מאשרים חנות בטאב "חנויות", וכל מוצריה עולים למדף אוטומטית. כאן רואים את התוצאה, ואפשר להוריד מהמדף מוצר בודד שחורג מהכללים.
+          מוצר עולה לאתר תוך דקה (מטמון 60 שניות). החנות גובה 10% ממחיר המכירה; הסכום למוכר מוצג בכל כרטיס.
           כל הגשה נושאת תיעוד של קבלת <a href="contract.html" target="_blank" style="color:var(--primary);text-decoration:underline">הסכם המוכר</a> (גרסה, מועד, IP).
         </p>
         <div id="sellersList"></div>
@@ -683,6 +690,7 @@ function fmtDate(d) { return d ? new Date(d).toLocaleString('he-IL', { dateStyle
 // מזהה חנות לכתובת (store.html?s=...) - זהה ל-storeSlug ב-js/main.js
 function storeSlug(name) { return String(name || '').trim().toLowerCase().replace(/["'`]/g, '').replace(/[\s/]+/g, '-'); }
 const SELLER_STATUS = { pending: ['ממתין', 'fa-clock'], approved: ['מאושר', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
+const STORE_STATUS = { pending: ['ממתינה לאישור', 'fa-clock'], approved: ['מאושרת', 'fa-circle-check'], rejected: ['נדחתה', 'fa-circle-xmark'] };
 
 function updateSellersPendingCount() {
   const n = sellerSubs.filter(s => s.status === 'pending').length;
@@ -754,8 +762,8 @@ function sellerCardHtml(s) {
         ${s.status !== 'pending' ? `<div class="seller-decision ${s.status}">${label} ב-${fmtDate(s.decided_at)}${s.decided_by ? ` על ידי ${escHtml(s.decided_by)}` : ''}${s.rejection_reason ? ` · סיבה: ${escHtml(s.rejection_reason)}` : ''}</div>` : ''}
       </div>
       <div class="seller-actions">
-        ${s.status !== 'approved' ? `<button class="btn btn-approve" onclick="decideSeller('${escHtml(s.documentId)}','approved')"><i class="fas fa-check"></i> אשר ופרסם</button>` : ''}
-        ${s.status !== 'rejected' ? `<button class="btn btn-reject" onclick="decideSeller('${escHtml(s.documentId)}','rejected')"><i class="fas fa-ban"></i> דחה</button>` : ''}
+        ${s.status !== 'approved' ? `<button class="btn btn-approve" onclick="decideSeller('${escHtml(s.documentId)}','approved')"><i class="fas fa-check"></i> העלה למדף</button>` : ''}
+        ${s.status !== 'rejected' ? `<button class="btn btn-reject" onclick="decideSeller('${escHtml(s.documentId)}','rejected')"><i class="fas fa-ban"></i> הורד מהמדף</button>` : ''}
         ${s.status !== 'pending' ? `<button class="btn btn-ghost" onclick="decideSeller('${escHtml(s.documentId)}','pending')"><i class="fas fa-clock"></i> החזר להמתנה</button>` : ''}
         <button class="btn btn-ghost" style="color:#ef4444" onclick="deleteSeller('${escHtml(s.documentId)}')"><i class="fas fa-trash"></i> מחק</button>
       </div>
@@ -823,16 +831,23 @@ function storeProductRow(it) {
     <i class="fas fa-chevron-left" style="color:var(--text-muted);font-size:12px"></i>
   </div>`;
 }
+// כרטיס חנות בטאב "חנויות" - כאן נעשית ההכרעה היחידה בקניון: אישור או דחייה
+// של *חנות*. אישור מעלה למדף אוטומטית (ב-Strapi) את כל מוצריה שממתינים, ומכאן
+// והלאה כל מוצר שלה עולה ישירות. אין אישור למוצר בודד.
 function storeCardHtml(st, g, idx) {
   const total = g.approved + g.pending + g.rejected;
   const logo = /^data:image\//.test(st.store_logo || '') ? `<img src="${escHtml(st.store_logo)}" alt="">` : '<i class="fas fa-store"></i>';
   const slug = st.slug || storeSlug(st.store_name || '');
   const phone = st.seller_phone || st.store_phone;
-  return `<div class="adm-store-card">
+  const status = st.status || (g.approved ? 'approved' : 'pending');
+  const [label, icon] = STORE_STATUS[status] || STORE_STATUS.pending;
+  // חנות ותיקה שאין לה רשומת "פתיחת חנות" (documentId) אינה ניתנת להכרעה כאן
+  const decidable = !!st.documentId;
+  return `<div class="adm-store-card ${status}">
     <div class="adm-store-head">
       <div class="adm-store-logo">${logo}</div>
       <div>
-        <strong>${escHtml(st.store_name || 'ללא שם')}</strong>
+        <strong>${escHtml(st.store_name || 'ללא שם')}</strong> <span class="status-pill ${status}"><i class="fas ${icon}"></i> ${label}</span>
         <div class="adm-store-meta">${st.seller_name ? escHtml(st.seller_name) + ' · ' : ''}${st.store_city ? escHtml(st.store_city) + ' · ' : ''}${st.opened_at ? 'נפתחה ' + fmtDate(st.opened_at) : ''}</div>
       </div>
       <a href="store.html?s=${encodeURIComponent(slug)}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;white-space:nowrap"><i class="fas fa-arrow-up-right-from-square"></i> לדף החנות</a>
@@ -842,8 +857,15 @@ function storeCardHtml(st, g, idx) {
       ${st.seller_email ? `<a href="mailto:${escHtml(st.seller_email)}"><i class="fas fa-envelope"></i> ${escHtml(st.seller_email)}</a>` : ''}
       ${st.contract_accepted === false ? `<span style="color:#b91c1c"><i class="fas fa-triangle-exclamation"></i> הסכם לא אושר</span>` : ''}
     </div>
+    ${st.store_description ? `<p style="color:var(--text-muted);font-size:13px;margin-bottom:12px">${escHtml(String(st.store_description).slice(0, 300))}</p>` : ''}
+    ${status !== 'pending' && st.decided_at ? `<div class="seller-decision ${status}" style="margin-bottom:12px">${label} ב-${fmtDate(st.decided_at)}${st.decided_by ? ` על ידי ${escHtml(st.decided_by)}` : ''}${st.rejection_reason ? ` · סיבה: ${escHtml(st.rejection_reason)}` : ''}</div>` : ''}
+    ${decidable ? `<div class="seller-actions" style="margin-bottom:12px">
+      ${status !== 'approved' ? `<button class="btn btn-approve" onclick="decideStore('${escHtml(st.documentId)}','approved')"><i class="fas fa-check"></i> אשר את החנות${g.pending ? ` (${g.pending} מוצרים יעלו למדף)` : ''}</button>` : ''}
+      ${status !== 'rejected' ? `<button class="btn btn-reject" onclick="decideStore('${escHtml(st.documentId)}','rejected')"><i class="fas fa-ban"></i> דחה</button>` : ''}
+      ${status !== 'pending' ? `<button class="btn btn-ghost" onclick="decideStore('${escHtml(st.documentId)}','pending')"><i class="fas fa-clock"></i> החזר להמתנה</button>` : ''}
+    </div>` : ''}
     <div class="adm-store-stats">
-      <span class="approved">${g.approved} מאושרים</span>
+      <span class="approved">${g.approved} על המדף</span>
       <span class="pending">${g.pending} ממתינים</span>
       <span class="rejected">${g.rejected} נדחו</span>
     </div>
@@ -880,20 +902,50 @@ function renderStores() {
       store_logo: sample.store_logo, seller_user_id: sample.seller_user_id,
     }, g]);
   });
-  document.getElementById('storesSummary').textContent = cards.length ? `· ${cards.length} חנויות · ${sellerSubs.filter(s => s.status === 'approved').length} מוצרים על המדף` : '';
+  // חנות ממתינה קודם - היא מה שדורש פעולה מהמנהל
+  const rank = st => (st.status === 'pending' || (!st.status && !st.documentId) ? 0 : st.status === 'rejected' ? 2 : 1);
+  cards.sort((a, b) => rank(a[0]) - rank(b[0]));
+  const waiting = cards.filter(([st]) => (st.status || 'pending') === 'pending' && st.documentId).length;
+  document.getElementById('storesSummary').textContent = cards.length
+    ? `· ${cards.length} חנויות${waiting ? ` · ${waiting} ממתינות לאישור` : ''} · ${sellerSubs.filter(s => s.status === 'approved').length} מוצרים על המדף`
+    : '';
   const badge = document.getElementById('storesCountBadge');
-  badge.textContent = cards.length;
+  badge.textContent = waiting || cards.length;
   badge.hidden = cards.length === 0;
   grid.innerHTML = cards.length ? cards.map(([st, g], idx) => storeCardHtml(st, g, idx)).join('') : '<p style="color:var(--text-muted);padding:20px;text-align:center">אין עדיין חנויות.</p>';
+}
+
+// אישור / דחייה של חנות - ההכרעה היחידה בקניון. אישור מעלה למדף בשרת את כל
+// מוצרי החנות שממתינים, ולכן מרעננים אחריו גם את רשימת המוצרים.
+async function decideStore(documentId, status) {
+  const body = { documentId, status };
+  if (status === 'rejected') {
+    const reason = prompt('סיבת הדחייה (תישלח למוכר):', '');
+    if (reason === null) return;
+    body.rejection_reason = reason.trim();
+  } else if (status === 'approved' && !confirm('לאשר את החנות? כל המוצרים שהמוכר העלה יעלו למדף, וכל מוצר שיעלה מכאן והלאה יעלה ישירות.')) return;
+  try {
+    const r = await fetch('/api/store', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (r.status === 403) { toast('אין הרשאה - נדרש חשבון מנהל חנות', 'fa-lock'); return; }
+    if (!r.ok) throw new Error();
+    const { store } = await r.json();
+    const idx = storesList.findIndex(s => s.documentId === documentId);
+    if (idx >= 0) storesList[idx] = { ...storesList[idx], ...(store || {}), status, rejection_reason: body.rejection_reason ?? storesList[idx].rejection_reason };
+    toast(status === 'approved' ? 'החנות אושרה - המוצרים עולים למדף' : status === 'rejected' ? 'החנות נדחתה' : 'הוחזרה להמתנה', status === 'rejected' ? 'fa-ban' : 'fa-check-circle');
+    await loadSellerSubmissions();
+    renderStores();
+  } catch {
+    toast('הפעולה נכשלה, נסה שוב', 'fa-circle-exclamation');
+  }
 }
 
 async function decideSeller(documentId, status) {
   const body = { documentId, status };
   if (status === 'rejected') {
-    const reason = prompt('סיבת הדחייה (תישלח למוכר ותוצג לו ב"המוצרים שלי"):', '');
+    const reason = prompt('סיבת ההורדה מהמדף (תוצג למוכר ב"המוצרים שלי"):', '');
     if (reason === null) return;
     body.rejection_reason = reason.trim();
-  } else if (status === 'approved' && !confirm('לאשר את המוצר? הוא יעלה למדף החנות תוך דקה.')) return;
+  } else if (status === 'approved' && !confirm('להעלות את המוצר למדף? הוא יופיע באתר תוך דקה.')) return;
   try {
     const r = await fetch('/api/seller-products', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (r.status === 403) { toast('אין הרשאה - נדרש חשבון מנהל חנות', 'fa-lock'); document.getElementById('sellersAuthPanel').hidden = false; return; }
@@ -905,7 +957,7 @@ async function decideSeller(documentId, status) {
     renderSellerSubs();
     renderStores();
     if (document.getElementById('productViewModal').classList.contains('active')) openProductView(documentId);
-    toast(status === 'approved' ? 'המוצר אושר ויעלה לאתר' : status === 'rejected' ? 'המוצר נדחה' : 'הוחזר להמתנה', status === 'rejected' ? 'fa-ban' : 'fa-check-circle');
+    toast(status === 'approved' ? 'המוצר עלה למדף' : status === 'rejected' ? 'המוצר הורד מהמדף' : 'הוחזר להמתנה', status === 'rejected' ? 'fa-ban' : 'fa-check-circle');
   } catch {
     toast('הפעולה נכשלה, נסה שוב', 'fa-circle-exclamation');
   }

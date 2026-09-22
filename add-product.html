@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>העלאת מוצר | חנות החירות</title>
-<meta name="description" content="העלו מוצר לחנות שלכם בקניון השיתופי של חנות החירות - אנחנו מאשרים, המוצר עולה למדף, החנות לוקחת 10% ממחיר המכירה">
+<meta name="description" content="העלו מוצר לחנות שלכם בקניון השיתופי של חנות החירות - החנות מאושרת פעם אחת, והמוצרים עולים למדף. החנות לוקחת 10% ממחיר המכירה">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/logo.png">
@@ -52,7 +52,7 @@
   <div class="container">
     <div class="breadcrumb"><a href="index.html">בית</a> / <a href="sell.html">פתח חנות</a> / העלאת מוצר</div>
     <h1>העלאת מוצר לחנות</h1>
-    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מעלים מוצרים לחנות שפתחתם. לכל מוצר עד 6 תמונות, מחיר, קטגוריה ותיאור. המוצר הראשון בחנות חדשה עובר אישור של מנהל הקניון; אחרי שהחנות אושרה, כל מוצר שתעלו עולה למדף מיד. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מעלים מוצרים לחנות שפתחתם. לכל מוצר עד 6 תמונות, מחיר, קטגוריה ותיאור. מנהל הקניון מאשר את <strong>החנות</strong> פעם אחת, לא כל מוצר בנפרד: כל עוד החנות ממתינה המוצרים נשמרים ועולים למדף יחד עם אישורה, ואחריה כל מוצר שתעלו עולה מיד. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
   </div>
 </section>
 
@@ -84,6 +84,9 @@
             <a href="#" class="btn btn-ghost" id="storePageLink" hidden><i class="fas fa-store"></i> לדף החנות</a>
           </div>
         </div>
+
+        <!-- מצב החנות: מה שקובע אם המוצר יעלה עכשיו למדף או ימתין איתה לאישור -->
+        <div class="sell-note" id="storeStatusNote" hidden></div>
 
         <form class="sell-form form-grid" id="productForm" onsubmit="submitProduct(event)" novalidate hidden>
           <h2 style="margin-top:0"><i class="fas fa-box" style="color:var(--primary)"></i> המוצר</h2>
@@ -134,13 +137,13 @@
           <div id="charterGate"></div>
 
           <div id="submitError" style="display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.1);color:#b91c1c;font-size:14px"></div>
-          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-paper-plane"></i> שליחת המוצר</button>
+          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn"><i class="fas fa-cloud-arrow-up"></i> העלאת המוצר למדף</button>
         </form>
 
         <div class="sell-success" id="sellSuccess" hidden>
           <i class="fas fa-circle-check"></i>
-          <h2 style="font-size:26px;margin-bottom:8px">המוצר נשלח לאישור</h2>
-          <p style="color:var(--text-muted);margin-bottom:20px;max-width:520px;margin-inline:auto">תודה! מנהל החנות יבדוק את המוצר. מוצר מאושר עולה למדף אוטומטית, ותקבלו עדכון באימייל. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.</p>
+          <h2 style="font-size:26px;margin-bottom:8px">המוצר עלה למדף</h2>
+          <p style="color:var(--text-muted);margin-bottom:20px;max-width:520px;margin-inline:auto">המוצר גלוי ללקוחות. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.</p>
           <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="successActions">
             <button class="btn btn-primary" onclick="resetProductForm()"><i class="fas fa-plus"></i> העלאת מוצר נוסף</button>
             <a href="#mine" class="btn btn-ghost"><i class="fas fa-list-check"></i> המוצרים שהגשתי</a>
@@ -530,13 +533,31 @@ function renderStore() {
   document.getElementById('storeSummaryLogo').innerHTML = storeLogoHtml({ logo: store.store_logo, name: store.store_name }, 64);
   document.getElementById('storeSummaryName').textContent = store.store_name;
   const pill = document.getElementById('storeSummaryPill');
-  if (store.synced) { pill.className = 'store-open-pill'; pill.innerHTML = '<i class="fas fa-circle-check"></i> החנות פתוחה'; pill.title = 'שמורה בחשבון שלך'; }
-  else { pill.className = 'store-open-pill local'; pill.innerHTML = '<i class="fas fa-mobile-screen"></i> שמורה בדפדפן זה'; pill.title = 'התחברו כדי לשמור את החנות בחשבון'; }
+  // סטטוס החנות הוא מה שקובע אם המוצר יעלה עכשיו למדף או ימתין איתה
+  const st = storeStatusPill(store);
+  pill.className = 'store-open-pill' + (st.cls ? ' ' + st.cls : '');
+  pill.innerHTML = `<i class="fas ${st.icon}"></i> ${st.label}`;
+  pill.title = st.title;
   document.getElementById('storeSummaryMeta').innerHTML = [
     store.store_city ? `<span><i class="fas fa-location-dot"></i>${esc(store.store_city)}</span>` : '',
     store.store_phone ? `<span><i class="fas fa-phone"></i>${esc(store.store_phone)}</span>` : '',
     `<span><i class="fas fa-file-signature"></i>הסכם המוכר אושר${store.contract_accepted_at ? ' ב-' + new Date(store.contract_accepted_at).toLocaleDateString('he-IL') : ''}</span>`,
   ].filter(Boolean).join('');
+  // חנות שנדחתה אינה יכולה להעלות מוצרים (השרת חוסם) - אומרים את זה מראש
+  const blocked = store.synced && store.status === 'rejected';
+  document.getElementById('productForm').hidden = blocked;
+  const note = document.getElementById('storeStatusNote');
+  if (blocked) {
+    note.className = 'sell-note rejected';
+    note.innerHTML = `<i class="fas fa-circle-exclamation"></i> <strong>החנות לא אושרה</strong>${store.rejection_reason ? ` - ${esc(store.rejection_reason)}` : ''}. תקנו את פרטי החנות ושלחו אותה שוב לאישור, ואז אפשר להעלות מוצרים. <a href="sell.html?edit=1">לעריכת החנות</a>`;
+    note.hidden = false;
+  } else if (store.synced && store.status !== 'approved') {
+    note.className = 'sell-note pending';
+    note.innerHTML = '<i class="fas fa-clock"></i> <strong>החנות ממתינה לאישור מנהל הקניון.</strong> אפשר להעלות מוצרים כבר עכשיו - הם יעלו למדף אוטומטית ברגע שהחנות תאושר. מאשרים חנות, לא מוצר.';
+    note.hidden = false;
+  } else {
+    note.hidden = true;
+  }
 }
 
 // ---- זהות: החנות מהחשבון + "המוצרים שלי" ----
@@ -553,7 +574,7 @@ async function applyUser() {
 }
 document.addEventListener('userChanged', applyUser);
 
-const STATUS_HE = { pending: ['ממתין לאישור', 'fa-clock'], approved: ['מאושר - על המדף', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
+const STATUS_HE = { pending: ['ממתין לאישור החנות', 'fa-clock'], approved: ['על המדף', 'fa-circle-check'], rejected: ['הורד מהמדף', 'fa-circle-xmark'] };
 async function loadMine() {
   const el = document.getElementById('mineList');
   if (!currentUser) { el.innerHTML = '<p style="color:var(--text-muted)">התחברו כדי לראות את סטטוס ההגשות שלכם. <button class="btn btn-ghost" onclick="openAuth(\'login\')" style="padding:6px 12px;font-size:13px">התחברות</button></p>'; return; }
@@ -639,16 +660,17 @@ async function submitProduct(e) {
     const r = await fetch('/api/seller-products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     const json = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(json.error || 'ההגשה נכשלה');
-    // חנות שכבר אושרה מפרסמת מוצרים לבד - רק המוצר הראשון בחנות חדשה ממתין למנהל
+    // מאשרים חנות, לא מוצר: מוצר של חנות מאושרת עולה למדף מיד, ומוצר של חנות
+    // שעדיין ממתינה יעלה אוטומטית ברגע שהחנות תאושר
     const live = json.item?.status === 'approved';
     const wasFirst = !onbState().first_product_at && !(Number(onbState().products_count) || 0);
     if (wasFirst) onbSave({ first_product_at: new Date().toISOString() });
     form.hidden = true;
     const box = document.getElementById('sellSuccess');
-    box.querySelector('h2').textContent = live ? 'המוצר עלה למדף' : 'המוצר נשלח לאישור';
+    box.querySelector('h2').textContent = live ? 'המוצר עלה למדף' : 'המוצר ממתין לאישור החנות';
     box.querySelector('p').innerHTML = live
       ? 'החנות שלכם מאושרת, ולכן המוצר כבר על המדף וגלוי ללקוחות. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.'
-      : 'תודה! זהו המוצר הראשון בחנות, ולכן מנהל הקניון יבדוק אותו. מוצר מאושר עולה למדף ותקבלו עדכון באימייל - ומכאן והלאה כל מוצר שתעלו יעלה למדף מיד. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.';
+      : 'המוצר נשמר וממתין ל<strong>אישור החנות</strong> - מנהל הקניון מאשר חנות אחת, לא מוצר אחר מוצר. ברגע שהחנות תאושר המוצר הזה וכל השאר יעלו למדף יחד, ותקבלו עדכון באימייל. מכאן והלאה כל מוצר שתעלו יעלה למדף מיד. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.';
     // אחרי המוצר הראשון ממשיכים ללוח הבקרה ולסיור שמלמד לנהל את החנות
     if (wasFirst) {
       box.querySelector('p').innerHTML += ' <br><strong>השלב האחרון במסלול:</strong> סיור קצר בלוח הבקרה - שם רואים מכירות והזמנות, משנים מחיר ומלאי, ומעלימים מוצר מהמדף.';
@@ -659,7 +681,7 @@ async function submitProduct(e) {
     }
     box.hidden = false;
     box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    toast(live ? 'המוצר עלה למדף' : 'המוצר נשלח לאישור', 'fa-circle-check');
+    toast(live ? 'המוצר עלה למדף' : 'המוצר ממתין לאישור החנות', 'fa-circle-check');
     renderStore();
     loadMine();
   } catch (ex) {
@@ -667,7 +689,7 @@ async function submitProduct(e) {
     err.style.display = 'block';
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-paper-plane"></i> שליחת המוצר';
+    btn.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> העלאת המוצר למדף';
   }
 }
 const DEFAULT_SUCCESS_ACTIONS = document.getElementById('successActions').innerHTML;

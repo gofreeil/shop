@@ -1186,6 +1186,15 @@ a.product-seller:hover { color: var(--primary); }
 .store-summary .store-summary-actions .btn { padding: 9px 14px; font-size: 13px; }
 .store-open-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 100px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: #047857; }
 .store-open-pill.local { background: rgba(245,158,11,0.15); color: #b45309; }
+/* החנות היא מה שעובר אישור מנהל: ממתינה / נדחתה */
+.store-open-pill.pending { background: rgba(245,158,11,0.15); color: #b45309; }
+.store-open-pill.rejected { background: rgba(239,68,68,0.15); color: #b91c1c; }
+/* הודעת מצב מעל טופס העלאת המוצר */
+.sell-note { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; margin-bottom: 18px; border: 1px solid transparent; }
+.sell-note[hidden] { display: none; }
+.sell-note.pending { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.4); color: #b45309; }
+.sell-note.rejected { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); color: #b91c1c; }
+.sell-note a { color: inherit; text-decoration: underline; font-weight: 700; }
 .no-store-panel { text-align: center; padding: 40px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
 .no-store-panel i { font-size: 48px; color: var(--primary); margin-bottom: 12px; }
 .sell-success { text-align: center; padding: 48px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
