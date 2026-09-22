@@ -1014,12 +1014,12 @@ function storesFromProducts() {
     const slug = p.storeSlug || storeSlug(p.seller);
     let s = map.get(slug);
     if (!s) {
-      s = { slug, name: p.store || p.seller, logo: p.storeLogo || '', phone: p.storePhone || '', whatsapp: p.storeWhatsapp || p.storePhone || '', city: p.storeCity || '', website: p.storeWebsite || '', description: p.storeDescription || '', products: [] };
+      s = { slug, name: p.store || p.seller, logo: p.storeLogo || '', phone: p.storePhone || '', whatsapp: p.storeWhatsapp || p.storePhone || '', city: p.storeCity || '', website: p.storeWebsite || '', description: p.storeDescription || '', design: p.storeDesign || '', products: [] };
       map.set(slug, s);
     } else {
       // מילוי חוסרים ממוצרים ישנים יותר
-      for (const k of ['logo', 'phone', 'whatsapp', 'city', 'website', 'description']) {
-        const src = { logo: p.storeLogo, phone: p.storePhone, whatsapp: p.storeWhatsapp, city: p.storeCity, website: p.storeWebsite, description: p.storeDescription }[k];
+      for (const k of ['logo', 'phone', 'whatsapp', 'city', 'website', 'description', 'design']) {
+        const src = { logo: p.storeLogo, phone: p.storePhone, whatsapp: p.storeWhatsapp, city: p.storeCity, website: p.storeWebsite, description: p.storeDescription, design: p.storeDesign }[k];
         if (!s[k] && src) s[k] = src;
       }
     }

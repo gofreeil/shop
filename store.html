@@ -51,7 +51,14 @@
   </div>
 </section>
 
-<section class="section">
+<!-- דף החנות המעוצב (הסטודיו של המוכר). כשאין עיצוב - נשארת התצוגה הרגילה שמתחת. -->
+<section class="section" id="designedSection" hidden>
+  <div class="container">
+    <div id="storeDesigned"></div>
+  </div>
+</section>
+
+<section class="section" id="defaultSection">
   <div class="container">
     <div class="section-header">
       <div>
@@ -79,6 +86,8 @@
 </div>
 <script src="data/products.js"></script>
 <script src="js/main.js"></script>
+<script src="js/seller-store.js"></script>
+<script src="js/store-design.js"></script>
 <script src="js/site-editor.js"></script>
 <script>
 const slug = new URLSearchParams(location.search).get('s') || '';
@@ -95,6 +104,11 @@ function renderStorePage() {
     return;
   }
   document.title = `${s.name} | חנות החירות`;
+  // זו החנות שלי? מציגים פס קצר עם קישור לסטודיו העיצוב
+  const mine = getSavedStore();
+  const mineSlug = mine ? (mine.slug || storeSlug(mine.store_name)) : '';
+  const isMine = !!mineSlug && mineSlug === s.slug;
+  const design = designForStore(s);
   document.getElementById('crumbName').textContent = s.name;
   document.getElementById('storeProductsTitle').textContent = `המוצרים של ${s.name}`;
   const wa = waLink(s.whatsapp || s.phone);
@@ -113,7 +127,23 @@ function renderStorePage() {
         </div>
       </div>
     </div>`;
-  renderProducts('storeProducts', s.products);
+  // עיצוב מהסטודיו - הדף נבנה כאתר של המוכר, במקום התצוגה הרגילה
+  document.getElementById('designedSection').hidden = !design;
+  document.getElementById('defaultSection').hidden = !!design;
+  if (design) {
+    head.innerHTML = (isMine ? ownerBar(true) : '') + `<h1 class="sr-head">${s.name}</h1>`;
+    renderStoreDesign('storeDesigned', s, design, {});
+  } else {
+    if (isMine) head.insertAdjacentHTML('afterbegin', ownerBar(false));
+    renderProducts('storeProducts', s.products);
+  }
+}
+// פס שרק בעל החנות רואה: מכאן נכנסים לעצב את הדף
+function ownerBar(hasDesign) {
+  return `<div class="store-mine-bar">
+    <span><i class="fas fa-wand-magic-sparkles"></i> ${hasDesign ? 'זה הדף שעיצבתם' : 'זה הדף שלכם - ואפשר לעצב אותו'}</span>
+    <a href="store-designer.html" class="btn btn-primary"><i class="fas fa-palette"></i> ${hasDesign ? 'לעריכת העיצוב' : 'לסטודיו העיצוב'}</a>
+  </div>`;
 }
 renderStorePage();
 document.addEventListener('productsUpdated', () => { loaded = true; renderStorePage(); });
