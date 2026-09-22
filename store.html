@@ -92,6 +92,13 @@
 <script>
 const slug = new URLSearchParams(location.search).get('s') || '';
 let loaded = false;
+// העיצוב שהמוכר פרסם - נטען מהשרת לכל מבקר, במקביל לטעינת המוצרים
+let publishedDesign = null;
+fetchStoreDesign(slug).then(dsg => {
+  if (!dsg) return;
+  publishedDesign = dsg;
+  renderStorePage();
+});
 function renderStorePage() {
   const s = storesFromProducts().find(x => x.slug === slug);
   const head = document.getElementById('storeHeader');
@@ -108,7 +115,9 @@ function renderStorePage() {
   const mine = getSavedStore();
   const mineSlug = mine ? (mine.slug || storeSlug(mine.store_name)) : '';
   const isMine = !!mineSlug && mineSlug === s.slug;
-  const design = designForStore(s);
+  // מה שפורסם הוא מה שכולם רואים; העיצוב המקומי הוא רק גשר בשביל המוכר
+  // (ובזמן שהחנות עוד ממתינה לאישור) עד שהפרסום מגיע מהשרת.
+  const design = publishedDesign || designForStore(s);
   document.getElementById('crumbName').textContent = s.name;
   document.getElementById('storeProductsTitle').textContent = `המוצרים של ${s.name}`;
   const wa = waLink(s.whatsapp || s.phone);

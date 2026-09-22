@@ -5,9 +5,10 @@
 // שהוא רואה בסטודיו יהיה בדיוק מה שהלקוח יראה.
 //
 // העיצוב הוא אובייקט אחד (design): סגנון, מקום הלוגו, ורשימת מקטעים עם
-// התוכן שלהם והסדר ביניהם. הוא נשמר תמיד בדפדפן (localStorage), ובנוסף
-// מנסים לשמור אותו בחשבון דרך /api/store (שדה store_design). אם השרת עוד
-// לא מכיר את השדה - העיצוב נשאר מקומי ואומרים זאת למוכר במקום להיכשל.
+// התוכן שלהם והסדר ביניהם. הוא נשמר תמיד בדפדפן (localStorage) וגם בחשבון
+// דרך /api/store (שדה store_design ברשומת החנות). משם הוא ציבורי: כל מי
+// שנכנס לדף החנות טוען אותו מ-/api/store-design ורואה בדיוק את מה שהמוכר
+// עיצב. עד שהחנות מאושרת השרת אינו מחזיר אותו לציבור - בדיוק כמו המוצרים.
 //
 // נטען אחרי js/main.js (משתמש ב-categories, storeLogoHtml, waLink).
 
@@ -98,7 +99,8 @@ function designStyle(id) {
 
 /** עיצוב ברירת מחדל למוכר שנכנס לסטודיו בפעם הראשונה - מתמלא מפרטי החנות. */
 function defaultDesign(store = {}) {
-  const name = store.store_name || store.name || 'החנות שלי';
+  // בלי שם (נרמול עיצוב שהגיע מהשרת בלי רשומת חנות) - הבאנר נופל לשם החנות
+  const name = store.store_name || store.name || '';
   return {
     v: DESIGN_VERSION,
     style: 'aurora',
@@ -172,13 +174,23 @@ async function saveDesignToAccount(store, design) {
   }
 }
 
-/** העיצוב של חנות לפי slug: מה שהגיע מהשרת עם החנות, ואם אין - העיצוב
- *  המקומי של מי שזו החנות שלו (כך המוכר רואה את הדף שלו מיד). */
-function designForStore(storeRow) {
-  const fromServer = storeRow?.design;
-  if (fromServer) {
-    try { return normalizeDesign(typeof fromServer === 'string' ? JSON.parse(fromServer) : fromServer, storeRow); } catch { /* ממשיכים למקומי */ }
+/** העיצוב הציבורי של חנות מאושרת - מה שכל מבקר רואה. מחזיר null כשאין. */
+async function fetchStoreDesign(slug, storeRow) {
+  if (!slug) return null;
+  try {
+    const r = await fetch('/api/store-design?s=' + encodeURIComponent(slug));
+    if (!r.ok) return null;
+    const { design } = await r.json();
+    if (!design) return null;
+    return normalizeDesign(typeof design === 'string' ? JSON.parse(design) : design, storeRow);
+  } catch {
+    return null;
   }
+}
+
+/** העיצוב המקומי, כשהחנות שמוצגת היא החנות של מי שצופה: כך המוכר רואה את
+ *  הדף שלו מיד (וגם לפני שהחנות אושרה). מה שפורסם נטען מהשרת בנפרד. */
+function designForStore(storeRow) {
   const mine = typeof getSavedStore === 'function' ? getSavedStore() : null;
   const slug = mine ? (mine.slug || (typeof storeSlug === 'function' ? storeSlug(mine.store_name) : '')) : '';
   if (storeRow && slug && slug === storeRow.slug) {

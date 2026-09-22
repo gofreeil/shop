@@ -187,7 +187,7 @@
       <div class="studio-save" id="studioSave">
         <button type="button" class="btn btn-primary btn-lg btn-block" id="saveBtn"><i class="fas fa-floppy-disk"></i> שמירה ופרסום</button>
         <a class="btn btn-ghost btn-block" id="viewBtn" href="#"><i class="fas fa-up-right-from-square"></i> לצפייה בדף החנות</a>
-        <p class="studio-save-note" id="saveNote">כל שינוי נשמר כאן בדפדפן מיד. "שמירה ופרסום" שולח את העיצוב לחשבון שלכם.</p>
+        <p class="studio-save-note" id="saveNote">כל שינוי נשמר כאן בדפדפן מיד. "שמירה ופרסום" מעלה את העיצוב לחשבון - ומשם כל מי שנכנס לדף החנות שלכם רואה אותו.</p>
         <button type="button" class="btn btn-ghost" id="resetBtn" style="align-self:flex-start;color:#ef4444">איפוס לעיצוב ברירת המחדל</button>
       </div>
     </div>
@@ -493,10 +493,12 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
   saveNote.textContent = 'שומר...';
   const res = await saveDesignToAccount(store, design);
   if (res.saved) {
-    saveNote.textContent = 'העיצוב נשמר בחשבון - דף החנות שלכם מעוצב כך לכל מי שנכנס אליו.';
+    saveNote.textContent = store.status === 'approved'
+      ? 'העיצוב פורסם. מעכשיו כל מי שנכנס לדף החנות שלכם - מכל מכשיר - רואה אותו.'
+      : 'העיצוב נשמר בחשבון. ברגע שהחנות תאושר, כל מי שייכנס לדף שלכם יראה אותו.';
     toast('העיצוב פורסם');
   } else {
-    saveNote.textContent = 'העיצוב שמור בדפדפן הזה ואתם רואים אותו בדף החנות שלכם. השמירה בחשבון (כדי שגם הלקוחות יראו אותו מכל מכשיר) עוד לא זמינה בשרת - נסו שוב מאוחר יותר.';
+    saveNote.textContent = 'העיצוב שמור בדפדפן הזה ואתם רואים אותו בדף החנות שלכם, אבל השמירה בחשבון נכשלה - ולכן הלקוחות עדיין רואים את הדף הקודם. בדקו שאתם מחוברים ונסו שוב.';
     toast('נשמר בדפדפן. השמירה בחשבון נכשלה', 'fa-triangle-exclamation');
   }
   onbRenderBar('#onbBar', { here: 'design' });
