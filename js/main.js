@@ -901,6 +901,7 @@ function renderAccountMenu() {
       <a href="account.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-user-circle" style="color:var(--primary)"></i> החשבון שלי - הזמנות, מועדפים ועדכונים</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>
       <a href="cart.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shopping-bag"></i> העגלה שלי</a>
+      <a href="seller-dashboard.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-chart-line" style="color:var(--accent-2)"></i> לוח בקרה למוכר</a>
       <a href="sell.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
       <button class="btn btn-ghost btn-block" onclick="logoutUser()" style="justify-content:flex-start;color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
     </div>
