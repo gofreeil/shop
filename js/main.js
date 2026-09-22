@@ -709,15 +709,36 @@ function applyHeaderTooltips() {
     if (tip) { btn.setAttribute('data-tip', tip); btn.setAttribute('aria-label', tip); btn.removeAttribute('title'); }
   });
 }
+// התראת מנהל: תג אדום על האווטאר בכותרת עם מספר ההגשות שממתינות לאישור, כדי
+// שהגשה חדשה של מוכר תיראה מכל דף באתר בלי להיכנס לפאנל הניהול.
+let adminPending = 0;
+let adminPendingLoaded = false;
+async function refreshAdminPending() {
+  if (!currentUser?.superAdmin) { adminPending = 0; adminPendingLoaded = false; return; }
+  if (adminPendingLoaded) return;
+  adminPendingLoaded = true;
+  try {
+    const r = await fetch('/api/seller-products?count=1');
+    if (!r.ok) return;
+    const { pending } = await r.json();
+    adminPending = Number(pending) || 0;
+    paintAccountBtn();
+    renderAccountMenu();
+  } catch { /* ignore */ }
+}
+function paintAccountBtn(btn) {
+  btn = btn || document.getElementById('accountBtn');
+  if (!btn) return;
+  btn.innerHTML = (currentUser ? avatarHtml(32, 15) : '<i class="fas fa-user"></i>')
+    + (adminPending ? `<span class="badge" style="background:#ef4444">${adminPending}</span>` : '');
+}
 function updateAccountBtn(btn) {
   btn = btn || document.getElementById('accountBtn');
   applyHeaderTooltips();
   // דפים שתלויים בזהות (למשל "המוצרים שלי" ב-add-product.html) מאזינים לאירוע הזה
   document.dispatchEvent(new CustomEvent('userChanged', { detail: { user: currentUser } }));
-  if (!btn) return;
-  btn.innerHTML = currentUser
-    ? avatarHtml(32, 15)
-    : '<i class="fas fa-user"></i>';
+  paintAccountBtn(btn);
+  refreshAdminPending();
 }
 
 function openAuth(tab = 'login') {
@@ -898,7 +919,7 @@ function renderAccountMenu() {
     </div>
     <div style="display:grid;gap:6px">
       ${currentUser.superAdmin ? `
-      <a href="admin.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול החנות</a>
+      <a href="admin.html#sellers" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול החנות${adminPending ? ` <span style="margin-right:auto;background:#ef4444;color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px">${adminPending} ממתינים לאישור</span>` : ''}</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();document.getElementById('seToggle')?.click()" style="justify-content:flex-start"><i class="fas fa-pen-to-square" style="color:#f59e0b"></i> עריכת תוכן האתר</button>` : ''}
       <a href="account.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-user-circle" style="color:var(--primary)"></i> החשבון שלי - הזמנות, מועדפים ועדכונים</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>

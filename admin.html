@@ -943,6 +943,9 @@ async function sellerLogin(e) {
 
 // === Init ===
 function init() {
+  // כניסה ישירה לטאב מהכתובת (admin.html#sellers מתג ההתראה בכותרת האתר)
+  const hash = location.hash.replace('#', '');
+  if (hash && document.getElementById('tab-' + hash)) switchTab(hash);
   renderProducts();
   renderCategories2();
   renderChart();

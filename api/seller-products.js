@@ -5,6 +5,7 @@ const { STRAPI_URL, readCookie, parseBody, authHeaders, isShopAdmin, strapiFetch
 //
 //   GET  /api/seller-products            רשימת המוצרים המאושרים, בצורת מוצר-חנות (ציבורי, ממוטמן)
 //   GET  /api/seller-products?all=1      כל ההגשות לפאנל הניהול (דורש עוגייה של מנהל חנות)
+//   GET  /api/seller-products?count=1    כמה הגשות ממתינות לאישור (מנהל חנות) - לתג ההתראה בכותרת
 //   GET  /api/seller-products?mine=1     ההגשות של המשתמש המחובר
 //   POST /api/seller-products            הגשת מוצר (אנונימי או מחובר) + תיעוד קבלת ההסכם
 //   PUT  /api/seller-products            אישור / דחייה / הערה (מנהל חנות בלבד - Strapi אוכף)
@@ -92,6 +93,15 @@ module.exports = async (req, res) => {
 			if (q.mine) {
 				const r = await strapi(ENDPOINT + '/mine', { headers: authHeaders(req) });
 				return res.status(r.ok ? 200 : r.status).json(r.ok ? { items: r.json?.data ?? [] } : { error: 'forbidden' });
+			}
+			if (q.count) {
+				// רק המספר: כמה הגשות ממתינות לאישור - לתג ההתראה בכותרת האתר.
+				// בלי גוף הרשומות (התמונות כבדות), רק meta.pagination.total.
+				if (!(await isShopAdmin(req))) return res.status(403).json({ error: 'forbidden' });
+				const url = ENDPOINT + '?filters[status][$eq]=pending&fields[0]=id&pagination[pageSize]=1';
+				const r = await strapi(url, { headers: authHeaders(req) });
+				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 403 : 502).json({ error: 'forbidden' });
+				return res.status(200).json({ pending: r.json?.meta?.pagination?.total ?? 0 });
 			}
 			if (q.all) {
 				// מנהל חנות בלבד: מאמתים את התפקיד מול Strapi לפני שמחזירים משהו, כדי
