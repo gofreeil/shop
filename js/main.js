@@ -121,7 +121,9 @@ function renderCategories() {
   // rendered twice: inside the hero (desktop) and in its own section (mobile/tablet); CSS shows one at a time
   const targets = ['categoriesGrid', 'heroCategoriesGrid'].map(id => document.getElementById(id)).filter(Boolean);
   if (!targets.length) return;
-  const html = categories.map(c => {
+  // "ידע וקורסים" ממשיכה להתקיים כקטגוריה מלאה (ניווט, פוטר, סינון) - רק
+  // קיצור הדרך הזה בדף הבית הוסר.
+  const html = categories.filter(c => c.id !== 'courses').map(c => {
     return `
       <a href="products.html?category=${c.id}" class="category-card has-image">
         <h3>${c.name}</h3>
