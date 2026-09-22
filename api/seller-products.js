@@ -80,6 +80,7 @@ function toShopProduct(row) {
 		quantity: row.quantity,
 		deliveryDays: row.delivery_days,
 		seller: storeName || esc(row.seller_display || ''),
+		visibility: esc(row.visibility || 'visible'),
 		badge: 'new',
 		featured: false,
 		approvedAt: row.decided_at || row.createdAt,
