@@ -123,10 +123,9 @@ function renderCategories() {
   if (!targets.length) return;
   const html = categories.map(c => {
     return `
-      <a href="products.html?category=${c.id}" class="category-card${c.image ? ' has-image' : ''}">
-        ${c.image ? `<h3>${c.name}</h3><div class="category-bg" style="background-image:url('${c.image}')"></div>` : `<div class="category-icon" style="background: linear-gradient(135deg, ${c.color}, ${c.color}dd)">
-          <i class="fas ${c.icon}"></i>
-        </div><h3>${c.name}</h3>`}
+      <a href="products.html?category=${c.id}" class="category-card has-image">
+        <h3>${c.name}</h3>
+        ${c.image ? `<div class="category-bg" style="background-image:url('${c.image}')"></div>` : `<div class="category-bg category-bg-icon" style="background: linear-gradient(135deg, ${c.color}, ${c.color}bb)"><i class="fas ${c.icon}"></i></div>`}
         <p>${c.desc}</p>
       </a>
     `;
