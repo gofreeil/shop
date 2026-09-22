@@ -58,30 +58,32 @@
   <div class="container">
     <div class="breadcrumb"><a href="index.html">בית</a> / פתח חנות</div>
     <h1>פתח חנות בקניון השיתופי</h1>
-    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">שלב ראשון: פותחים חנות - שם, לוגו, טלפון ותיאור, פרטי המוכר והסכם המוכר, פעם אחת. שלב שני: מעלים מוצרים לפי הקטגוריות של הקניון. אנחנו בודקים, מאשרים ומפרסמים. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מתקדמים שלב-שלב, בלי למלא הכל בבת אחת: כאן פותחים את החנות. אחר כך נרשמים לאתר, מכירים את האזור האישי, מעלים את המוצר הראשון ולומדים את לוח הבקרה. החנות לוקחת <strong>10% ממחיר המכירה</strong> - השאר אליכם.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
+    <div id="onbBar"></div>
+
     <div class="steps-grid">
       <div class="step-card">
         <span class="step-num">1</span>
         <i class="fas fa-store step-icon"></i>
-        <h3>פותחים חנות</h3>
+        <h3>פותחים חנות (כאן)</h3>
         <p>שם החנות, לוגו, טלפון ותיאור - מוצגים על כל מוצר ובדף החנות שלכם. פרטי המוכר וההסכם נשמרים פעם אחת.</p>
       </div>
       <div class="step-card">
         <span class="step-num">2</span>
-        <i class="fas fa-upload step-icon"></i>
-        <h3>מעלים מוצרים</h3>
-        <p>מיד אחרי פתיחת החנות נפתח חלון העלאת מוצרים: עד 6 תמונות, מחיר, קטגוריה ותיאור לכל מוצר. אפשר לחזור ולהוסיף בכל עת.</p>
+        <i class="fas fa-user-plus step-icon"></i>
+        <h3>נרשמים ומכירים את האזור האישי</h3>
+        <p>החשבון שומר את החנות אצלכם ולא רק בדפדפן הזה. מהאזור האישי מנהלים הכל - ונעשה שם סיור קצר שילמד איפה כל דבר נמצא.</p>
       </div>
       <div class="step-card">
         <span class="step-num">3</span>
-        <i class="fas fa-hand-holding-dollar step-icon"></i>
-        <h3>אנחנו מאשרים, אתם מקבלים 90%</h3>
-        <p>החנות עוברת אישור ידני פעם אחת, ומכאן כל מוצר שתעלו עולה למדף מיד. החנות גובה מהלקוח, מנכה 10% עמלה ומעבירה לכם את היתרה.</p>
+        <i class="fas fa-box-open step-icon"></i>
+        <h3>מעלים מוצר ומנהלים</h3>
+        <p>רק אז מעלים את המוצר הראשון - ואחריו סיור בלוח הבקרה: מכירות, הזמנות, שינוי מחיר ומלאי. על כל הזמנה יישלח אליכם SMS.</p>
       </div>
     </div>
 
@@ -95,11 +97,14 @@
             <div class="store-summary-meta" id="storeSummaryMeta"></div>
           </div>
           <div class="store-summary-actions">
-            <a href="add-product.html" class="btn btn-primary"><i class="fas fa-plus"></i> העלאת מוצר</a>
-            <a href="add-product.html#mine" class="btn btn-ghost"><i class="fas fa-list-check"></i> המוצרים שהגשתי</a>
+            <a href="account.html" class="btn btn-primary"><i class="fas fa-compass"></i> לאזור האישי</a>
+            <a href="add-product.html" class="btn btn-ghost"><i class="fas fa-plus"></i> העלאת מוצר</a>
             <button type="button" class="btn btn-ghost" onclick="toggleEdit()" id="editStoreBtn"><i class="fas fa-pen"></i> עריכת פרטי החנות</button>
           </div>
         </div>
+
+        <!-- השלב הבא במסלול (הרשמה / אזור אישי / מוצר ראשון / לוח בקרה) -->
+        <div id="onbNext"></div>
 
         <form class="sell-form form-grid" id="storeForm" onsubmit="submitStore(event)" novalidate>
           <h2 style="margin-top:0"><i class="fas fa-store" style="color:var(--primary)"></i> החנות שלכם בקניון</h2>
@@ -140,10 +145,14 @@
             <div class="form-field"><label>מספר ת"ז / ח.פ / עוסק *</label><input type="text" name="seller_id_number" inputmode="numeric" maxlength="20" required></div>
           </div>
           <div class="form-row">
-            <div class="form-field"><label>טלפון אישי (לא מוצג) *</label><input type="tel" name="seller_phone" maxlength="40" required></div>
+            <div class="form-field"><label>טלפון אישי (לא מוצג — לכאן יישלחו התראות SMS על כל רכישה) *</label><input type="tel" name="seller_phone" maxlength="40" required><span class="hint" style="display:block;margin-top:4px"><i class="fas fa-comment-sms" style="color:var(--primary)"></i> לנייד הזה יישלח SMS עם הפרטים על כל הזמנה שתיכנס לחנות</span></div>
             <div class="form-field"><label>אימייל *</label><input type="email" name="seller_email" maxlength="160" required></div>
           </div>
           <div class="form-field"><label>כתובת *</label><input type="text" name="seller_address" maxlength="200" required placeholder="רחוב, מספר, עיר"></div>
+
+          <h2><i class="fas fa-scale-balanced" style="color:var(--primary)"></i> אמנת המוסר העולמית</h2>
+          <p class="hint">תנאי סף לפתיחת חנות בקניון: כל בעל חנות חתום על אמנת המוסר העולמית (UECC) של חכמי העדה. החתימה נעשית פעם אחת, באתר חכמי העדה, עם אותו אימייל של החשבון כאן.</p>
+          <div id="charterGate"></div>
 
           <h2><i class="fas fa-file-contract" style="color:var(--primary)"></i> הסכם המוכר</h2>
           <p class="hint">גללו עד סוף ההסכם כדי לאפשר את אישורו. ההסכם נחתם פעם אחת עם פתיחת החנות וחל על כל המוצרים שתעלו. <a href="contract.html" target="_blank" style="color:var(--primary);text-decoration:underline">פתיחה בדף מלא / הדפסה</a></p>
@@ -171,11 +180,9 @@
         <div class="sell-success" id="storeSuccess" hidden>
           <i class="fas fa-store"></i>
           <h2 style="font-size:26px;margin-bottom:8px">החנות נפתחה!</h2>
-          <p style="color:var(--text-muted);margin-bottom:20px;max-width:520px;margin-inline:auto" id="storeSuccessText">פרטי החנות נשמרו. עכשיו נעבור לחלון העלאת המוצרים - שם תעלו את המוצר הראשון שלכם.</p>
-          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-            <a href="add-product.html?new=1" class="btn btn-primary btn-lg" id="goProductsBtn"><i class="fas fa-plus"></i> להעלאת מוצרים</a>
-            <button class="btn btn-ghost" onclick="toggleEdit(true)"><i class="fas fa-pen"></i> עריכת פרטי החנות</button>
-          </div>
+          <p style="color:var(--text-muted);margin-bottom:20px;max-width:560px;margin-inline:auto" id="storeSuccessText"></p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="storeSuccessActions"></div>
+          <p style="color:var(--text-muted);font-size:13px;margin-top:18px">מוצרים מעלים בשלב הבא - אחרי שתכירו את האזור האישי. אין מה למהר, הכל שמור.</p>
         </div>
       </div>
 
@@ -214,7 +221,9 @@
 <script src="js/contract.js"></script>
 <script src="js/main.js"></script>
 <script src="js/site-editor.js"></script>
+<script src="js/charter.js"></script>
 <script src="js/seller-store.js"></script>
+<script src="js/seller-onboarding.js"></script>
 <script>
 // ---- הסכם ----
 document.getElementById('contractScroll').innerHTML = SELLER_CONTRACT_HTML;
@@ -340,9 +349,39 @@ function toggleEdit(on) {
   document.getElementById('editStoreBtn').innerHTML = editing ? '<i class="fas fa-chevron-up"></i> סגירת העריכה' : '<i class="fas fa-pen"></i> עריכת פרטי החנות';
   if (editing) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+// ---- מסלול הפתיחה: פס ההתקדמות + כרטיס השלב הבא ----
+function renderOnboarding() {
+  onbRenderBar('#onbBar', { here: 'store' });
+  const next = document.getElementById('onbNext');
+  // הכרטיס מוצג רק כשהחנות כבר נפתחה (אחרת השלב הנוכחי הוא הטופס שבדף הזה),
+  // ולא כשמסך "החנות נפתחה" כבר מציג את אותו המשך בעצמו
+  if (!getSavedStore() || !document.getElementById('storeSuccess').hidden) { next.innerHTML = ''; renderSuccessActions(); return; }
+  onbRenderNextCard(next, { skip: ['store'] });
+  renderSuccessActions();
+}
+document.addEventListener('onboardingChanged', renderOnboarding);
+
+// מסך "החנות נפתחה" - ההמשך תלוי במצב: קודם הרשמה, ורק אחריה האזור האישי
+function renderSuccessActions() {
+  const box = document.getElementById('storeSuccess');
+  if (box.hidden) return;
+  const text = document.getElementById('storeSuccessText');
+  const actions = document.getElementById('storeSuccessActions');
+  if (currentUser) {
+    text.textContent = `פרטי החנות נשמרו בחשבון של ${currentUser.name}. השלב הבא: נכנסים לאזור האישי - משם מנהלים את החנות, ושם נראה לכם איפה כל דבר נמצא.`;
+    actions.innerHTML = `<a href="account.html?tour=1" class="btn btn-primary btn-lg"><i class="fas fa-compass"></i> לאזור האישי שלי</a>
+      <button class="btn btn-ghost" onclick="toggleEdit(true)"><i class="fas fa-pen"></i> עריכת פרטי החנות</button>`;
+  } else {
+    text.innerHTML = 'פרטי החנות נשמרו <strong>בדפדפן הזה בלבד</strong>. השלב הבא הוא הרשמה קצרה לאתר - כך החנות תישמר בחשבון שלכם, תהיה זמינה מכל מכשיר, ותוכלו לקבל הזמנות, לעקוב אחריהן ולנהל הכל מהאזור האישי.';
+    actions.innerHTML = `<button class="btn btn-primary btn-lg" onclick="openAuth('register')"><i class="fas fa-user-plus"></i> הרשמה מהירה</button>
+      <button class="btn btn-ghost" onclick="openAuth('login')"><i class="fas fa-sign-in-alt"></i> כבר יש לי חשבון</button>`;
+  }
+}
+
 function renderState() {
   const store = getSavedStore();
   renderSummary(store);
+  renderOnboarding();
   if (store) {
     fillForm(store, { overwrite: true });
     applySignedContract(store);
@@ -365,7 +404,9 @@ async function applyUser() {
     document.getElementById('loginHintBtn').hidden = true;
     const changed = await syncStoreWithAccount();
     if (changed) renderState();
+    else renderOnboarding();
   } else {
+    renderOnboarding();
     document.getElementById('loginHintText').textContent = 'מומלץ להתחבר לפני פתיחת החנות - כך החנות נשמרת בחשבון שלכם, זמינה מכל מכשיר, ותוכלו לעקוב אחרי סטטוס האישור של המוצרים.';
     document.getElementById('loginHintBtn').hidden = false;
   }
@@ -378,6 +419,15 @@ async function submitStore(e) {
   const err = document.getElementById('submitError');
   err.style.display = 'none';
   if (!form.reportValidity()) return;
+  // תנאי סף: חתימה על אמנת המוסר העולמית. בלעדיה גם השרת דוחה את המוצר הראשון,
+  // ולכן עוצרים כבר כאן ולא נותנים לפתוח חנות שלא תוכל להגיש דבר.
+  if (!charterGate.signed) {
+    err.textContent = charterGate.blockMessage();
+    err.style.display = 'block';
+    document.getElementById('charterGate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    charterGate.refresh();
+    return;
+  }
   if (!document.getElementById('consentContract').checked) {
     err.textContent = 'יש לגלול עד סוף ההסכם ולאשר אותו.';
     err.style.display = 'block';
@@ -412,15 +462,14 @@ async function submitStore(e) {
     document.getElementById('cancelEditBtn').hidden = true;
     editing = false;
     if (isNew) {
-      // חנות חדשה - עוברים לחלון העלאת המוצרים
+      // חנות חדשה - עוצרים כאן. המוצרים מגיעים רק בשלב הרביעי במסלול, אחרי
+      // ההרשמה והיכרות עם האזור האישי; הכל בבת אחת היה מציף את המוכר.
       const success = document.getElementById('storeSuccess');
-      document.getElementById('storeSuccessText').textContent = currentUser
-        ? 'פרטי החנות נשמרו בחשבון שלך. עכשיו נעבור לחלון העלאת המוצרים - שם תעלו את המוצר הראשון.'
-        : 'פרטי החנות נשמרו בדפדפן זה. עכשיו נעבור לחלון העלאת המוצרים - שם תעלו את המוצר הראשון. מומלץ להתחבר כדי שהחנות תישמר גם בחשבון.';
       success.hidden = false;
+      renderSuccessActions();
+      renderOnboarding();
       success.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      toast('החנות נפתחה! עוברים להעלאת מוצרים...', 'fa-store');
-      setTimeout(() => { location.href = 'add-product.html?new=1'; }, 2200);
+      toast('החנות נפתחה!', 'fa-store');
     } else {
       toast('פרטי החנות עודכנו', 'fa-circle-check');
       document.getElementById('storeSummary').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -437,6 +486,15 @@ async function submitStore(e) {
 
 renderState();
 applyUser();
+// כפתור פתיחת החנות נעול עד שהחתימה על האמנה מאומתת מול חכמי העדה
+charterGate.mount('charterGate', {
+  onChange: signed => {
+    const btn = document.getElementById('submitBtn');
+    if (!btn) return;
+    btn.classList.toggle('btn-disabled', !signed);
+    btn.title = signed ? '' : 'קודם חותמים על אמנת המוסר העולמית';
+  }
+});
 </script>
 </body>
 </html>
