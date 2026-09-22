@@ -8,6 +8,7 @@ const { STRAPI_URL, readCookie, parseBody, authHeaders, isShopAdmin, strapiFetch
 //   GET  /api/seller-products?mine=1     ההגשות של המשתמש המחובר
 //   POST /api/seller-products            הגשת מוצר (אנונימי או מחובר) + תיעוד קבלת ההסכם
 //   PUT  /api/seller-products            אישור / דחייה / הערה (מנהל חנות בלבד - Strapi אוכף)
+//   PUT  /api/seller-products?mine=1     ניהול מלאי עצמי - כמות/מחיר/אספקה/תיאור/קישור על מוצר של המשתמש בלבד
 //
 // הזהות עוברת ב-JWT מהעוגייה המשותפת gofreeil-auth; Strapi מחליט מי מנהל.
 const ENDPOINT = STRAPI_URL + '/api/shop-seller-products';
@@ -127,6 +128,22 @@ module.exports = async (req, res) => {
 			const body = parseBody(req);
 			const documentId = String(body.documentId || '').trim();
 			if (!documentId) return res.status(400).json({ error: 'missing id' });
+
+			// ניהול מלאי עצמי (לוח המכוונים של המוכר): רק שדות המלאי/מחיר, ורק על המוצר שלו - Strapi אוכף בעלות
+			if (req.query?.mine) {
+				const data = {};
+				for (const k of ['quantity', 'price', 'old_price', 'delivery_days', 'description', 'link']) {
+					if (body[k] !== undefined) data[k] = body[k];
+				}
+				const r = await strapi(`${ENDPOINT}/mine/${encodeURIComponent(documentId)}`, {
+					method: 'PUT',
+					headers: authHeaders(req),
+					body: JSON.stringify({ data })
+				});
+				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 403 : r.status === 400 ? 400 : 502).json({ error: r.json?.error?.message || 'failed' });
+				return res.status(200).json({ item: r.json?.data ?? null });
+			}
+
 			const data = {};
 			if (['pending', 'approved', 'rejected'].includes(body.status)) data.status = body.status;
 			if (typeof body.rejection_reason === 'string') data.rejection_reason = body.rejection_reason.slice(0, 1000);

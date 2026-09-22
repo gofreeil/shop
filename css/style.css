@@ -1185,6 +1185,17 @@ a.product-seller:hover { color: var(--primary); }
 .mine-item .thumb img { width: 100%; height: 100%; object-fit: cover; }
 .mine-item .thumb-count { position: absolute; bottom: 4px; left: 4px; padding: 1px 6px; border-radius: 100px; background: rgba(12,74,110,0.75); color: #fff; font-size: 10px; font-weight: 700; }
 .mine-item .reason { font-size: 13px; color: #b91c1c; margin-top: 4px; }
+.store-summary { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 20px 24px; margin-bottom: 20px; }
+.store-summary .store-summary-body { flex: 1; min-width: 200px; }
+.store-summary h2 { font-size: 22px; margin: 0 0 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.store-summary .store-summary-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--text-muted); }
+.store-summary .store-summary-meta i { color: var(--primary); margin-left: 4px; }
+.store-summary .store-summary-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.store-summary .store-summary-actions .btn { padding: 9px 14px; font-size: 13px; }
+.store-open-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 100px; font-size: 12px; font-weight: 700; background: rgba(16,185,129,0.15); color: #047857; }
+.store-open-pill.local { background: rgba(245,158,11,0.15); color: #b45309; }
+.no-store-panel { text-align: center; padding: 40px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
+.no-store-panel i { font-size: 48px; color: var(--primary); margin-bottom: 12px; }
 .sell-success { text-align: center; padding: 48px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
 .sell-success i { font-size: 64px; color: var(--accent-2); margin-bottom: 16px; }
 
@@ -1225,6 +1236,8 @@ a.product-seller:hover { color: var(--primary); }
   .store-header { flex-direction: column; align-items: flex-start; gap: 12px; }
   .store-form-row { grid-template-columns: 1fr; }
   .logo-drop { margin: 0 auto; }
+  .store-summary { padding: 16px; }
+  .store-summary .store-summary-actions { width: 100%; }
   .mine-item { grid-template-columns: 56px 1fr; }
   .mine-item .thumb { width: 56px; height: 56px; }
   .mine-item > :last-child { grid-column: 1 / -1; }

@@ -6,6 +6,7 @@ const { STRAPI_URL, parseBody, authHeaders, isShopAdmin, strapiFetch } = require
 //
 //   POST /api/orders           יצירת הזמנה מהצ'קאאוט (ציבורי)
 //   GET  /api/orders?mine=1    ההזמנות של המשתמש המחובר (דף החשבון)
+//   GET  /api/orders?seller=1  ההזמנות שכוללות מוצר של המשתמש המחובר (לוח המכוונים של המוכר)
 //   GET  /api/orders?all=1     כל ההזמנות לפאנל (מנהל חנות בלבד)
 //   PUT  /api/orders           עדכון סטטוס / הערה (מנהל חנות בלבד)
 const ENDPOINT = STRAPI_URL + '/api/shop-orders';
@@ -43,6 +44,12 @@ module.exports = async (req, res) => {
 			// היסטוריית ההזמנות של המשתמש המחובר (לפי המשתמש או האימייל; ה-controller מסנן)
 			if (req.query?.mine) {
 				const r = await strapiFetch(ENDPOINT + '/mine', { headers: authHeaders(req) });
+				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 401 : 502).json({ error: r.status === 401 || r.status === 403 ? 'נדרשת התחברות' : 'failed' });
+				return res.status(200).json({ items: r.json?.data ?? [] });
+			}
+			// ההזמנות שכוללות מוצר של המוכר המחובר (לוח המכוונים שלו) - הפריטים שלא שלו כבר סוננו בשרת
+			if (req.query?.seller) {
+				const r = await strapiFetch(ENDPOINT + '/mine-seller', { headers: authHeaders(req) });
 				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 401 : 502).json({ error: r.status === 401 || r.status === 403 ? 'נדרשת התחברות' : 'failed' });
 				return res.status(200).json({ items: r.json?.data ?? [] });
 			}

@@ -88,6 +88,34 @@
   .seller-actions .btn { justify-content: center; padding: 9px 14px; font-size: 13px; }
   .btn-approve { background: var(--accent-2); color: white; }
   .btn-reject { background: rgba(239,68,68,0.12); color: #b91c1c; }
+  /* חנויות */
+  .adm-stores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .adm-store-card { min-width: 0; border: 1px solid var(--border); border-radius: 16px; padding: 18px; background: var(--bg); }
+  .adm-store-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .adm-store-logo { width: 46px; height: 46px; border-radius: 50%; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--primary); overflow: hidden; flex-shrink: 0; }
+  .adm-store-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .adm-store-head strong { display: block; font-size: 16px; overflow-wrap: anywhere; }
+  .adm-store-head > div:nth-child(2) { flex: 1; min-width: 0; }
+  .adm-store-meta { color: var(--text-muted); font-size: 12px; overflow-wrap: anywhere; }
+  .adm-store-contact { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: var(--text-muted); margin-bottom: 12px; min-width: 0; }
+  .adm-store-contact a { color: var(--text-muted); overflow-wrap: anywhere; }
+  .adm-store-contact a:hover { color: var(--primary); }
+  .adm-store-stats { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; font-weight: 700; }
+  .adm-store-stats span { padding: 4px 10px; border-radius: 100px; }
+  .adm-store-stats .approved { background: rgba(16,185,129,0.15); color: #047857; }
+  .adm-store-stats .pending { background: rgba(245,158,11,0.15); color: #b45309; }
+  .adm-store-stats .rejected { background: rgba(239,68,68,0.15); color: #b91c1c; }
+  .adm-store-toggle { font-size: 13px; padding: 8px; }
+  .adm-store-toggle i { transition: transform .2s; }
+  .adm-store-toggle.open i { transform: rotate(180deg); }
+  .adm-store-products { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .adm-store-product-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: var(--transition); }
+  .adm-store-product-row:hover { background: var(--bg-alt); border-color: var(--primary); }
+  .adm-store-product-thumb { width: 34px; height: 34px; border-radius: 8px; background: var(--bg-alt); display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; flex-shrink: 0; }
+  .adm-store-product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .adm-store-product-info { flex: 1; min-width: 0; }
+  .adm-store-product-info strong { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .adm-store-product-info span { color: var(--text-muted); font-size: 12px; }
   @media (max-width: 900px) {
     .seller-card { grid-template-columns: 1fr; }
     .seller-thumb { width: 100%; height: 160px; }
@@ -138,6 +166,7 @@
       <a data-tab="orders"><i class="fas fa-shopping-bag"></i> הזמנות</a>
       <a data-tab="customers"><i class="fas fa-users"></i> לקוחות</a>
       <a data-tab="categories"><i class="fas fa-tags"></i> קטגוריות</a>
+      <a data-tab="stores"><i class="fas fa-shop"></i> חנויות <span class="nav-count" id="storesCountBadge" hidden></span></a>
       <a data-tab="sellers"><i class="fas fa-handshake"></i> מוצרי מוכרים <span class="nav-count" id="sellersPendingCount" hidden></span></a>
       <a data-tab="settings"><i class="fas fa-gear"></i> הגדרות</a>
       <a onclick="logout()" style="margin-top:24px;color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתק</a>
@@ -244,6 +273,17 @@
       </div>
     </div>
 
+    <!-- Stores: כל החנויות שנפתחו בקניון השיתופי - כמות מוצרים, קישור ישיר לכל מוצר -->
+    <div class="tab-section" id="tab-stores">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>חנויות בקניון <span style="font-weight:400;color:var(--text-muted);font-size:13px" id="storesSummary"></span></h2>
+          <button class="btn btn-ghost" onclick="loadStores()" style="padding:8px 14px"><i class="fas fa-rotate"></i> רענן</button>
+        </div>
+        <div id="storesGrid" class="adm-stores-grid"><p style="color:var(--text-muted)">טוען...</p></div>
+      </div>
+    </div>
+
     <!-- Sellers: מוצרים שהקהל הגיש למכירה (נשמרים ב-Strapi המשותף) -->
     <div class="tab-section" id="tab-sellers">
       <div class="panel" id="sellersAuthPanel" hidden>
@@ -337,6 +377,15 @@
   </div>
 </div>
 
+<!-- Product View Modal - "עיין" מהיר על מוצר מכרטיס חנות (אותו כרטיס כמו בטאב מוצרי מוכרים, כולל פעולות אישור/דחייה) -->
+<div class="modal" id="productViewModal">
+  <div class="modal-overlay" onclick="closeProductView()"></div>
+  <div class="modal-content" style="max-width:700px">
+    <button class="modal-close" onclick="closeProductView()"><i class="fas fa-times"></i></button>
+    <div id="productViewBody"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script src="data/products.js"></script>
@@ -386,7 +435,7 @@ function switchTab(tab) {
   document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
-  const titles = { dashboard:'דשבורד', products:'מוצרים', orders:'הזמנות', customers:'לקוחות', categories:'קטגוריות', sellers:'מוצרי מוכרים', settings:'הגדרות' };
+  const titles = { dashboard:'דשבורד', products:'מוצרים', orders:'הזמנות', customers:'לקוחות', categories:'קטגוריות', stores:'חנויות', sellers:'מוצרי מוכרים', settings:'הגדרות' };
   document.getElementById('pageTitle').textContent = titles[tab];
 }
 
@@ -631,6 +680,8 @@ let sellerSubs = [];
 function escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function ils(n) { return '₪' + (Math.round(Number(n) * 100) / 100).toLocaleString('he-IL'); }
 function fmtDate(d) { return d ? new Date(d).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' }) : '-'; }
+// מזהה חנות לכתובת (store.html?s=...) - זהה ל-storeSlug ב-js/main.js
+function storeSlug(name) { return String(name || '').trim().toLowerCase().replace(/["'`]/g, '').replace(/[\s/]+/g, '-'); }
 const SELLER_STATUS = { pending: ['ממתין', 'fa-clock'], approved: ['מאושר', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
 
 function updateSellersPendingCount() {
@@ -657,26 +708,21 @@ async function loadSellerSubmissions() {
     sellerSubs = items;
     updateSellersPendingCount();
     renderSellerSubs();
+    renderStores();
   } catch {
     list.innerHTML = '<p style="color:#ef4444">לא ניתן לטעון את ההגשות. הפאנל עובד מול השרת רק בפריסה (Vercel), לא ב-http-server מקומי.</p>';
   }
 }
 
-function renderSellerSubs() {
-  const filter = document.getElementById('sellersFilter').value;
-  const list = document.getElementById('sellersList');
-  const items = sellerSubs.filter(s => !filter || s.status === filter);
-  const counts = { pending: 0, approved: 0, rejected: 0 };
-  sellerSubs.forEach(s => { if (counts[s.status] != null) counts[s.status]++; });
-  document.getElementById('sellersSummary').textContent = `· ${counts.pending} ממתינים · ${counts.approved} מאושרים · ${counts.rejected} נדחו`;
-  if (!items.length) { list.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">אין הגשות בקטגוריה זו.</p>'; return; }
-  list.innerHTML = items.map(s => {
-    const [label, icon] = SELLER_STATUS[s.status] || SELLER_STATUS.pending;
-    const cat = categories.find(c => c.id === s.category);
-    const fee = Number(s.price) * (Number(s.commission_percent) || COMMISSION) / 100;
-    const safeLink = /^https?:\/\//.test(s.link || '') ? escHtml(s.link) : '';
-    const imgs = (Array.isArray(s.images) && s.images.length ? s.images : [s.image]).filter(x => /^data:image\//.test(x || ''));
-    return `<div class="seller-card ${s.status}">
+// כרטיס מוצר מלא (תמונה, פרטי חנות/מוכר, הסכם, כלכלה, פעולות אישור/דחייה/מחיקה) -
+// משותף לרשימת "מוצרי מוכרים" ולחלון התצוגה המהירה מטאב "חנויות".
+function sellerCardHtml(s) {
+  const [label, icon] = SELLER_STATUS[s.status] || SELLER_STATUS.pending;
+  const cat = categories.find(c => c.id === s.category);
+  const fee = Number(s.price) * (Number(s.commission_percent) || COMMISSION) / 100;
+  const safeLink = /^https?:\/\//.test(s.link || '') ? escHtml(s.link) : '';
+  const imgs = (Array.isArray(s.images) && s.images.length ? s.images : [s.image]).filter(x => /^data:image\//.test(x || ''));
+  return `<div class="seller-card ${s.status}">
       <div>
         <div class="seller-thumb">${imgs.length ? `<img src="${escHtml(imgs[0])}" alt="">` : escHtml(s.emoji || '📦')}</div>
         ${imgs.length > 1 ? `<div class="seller-thumbs">${imgs.map((src, i) => `<img src="${escHtml(src)}" alt="" class="${i === 0 ? 'active' : ''}" title="תמונה ${i + 1} מתוך ${imgs.length}" onclick="const c=this.closest('.seller-card');c.querySelector('.seller-thumb img').src=this.src;c.querySelectorAll('.seller-thumbs img').forEach(x=>x.classList.toggle('active',x===this))">`).join('')}</div>` : ''}
@@ -713,7 +759,131 @@ function renderSellerSubs() {
         <button class="btn btn-ghost" style="color:#ef4444" onclick="deleteSeller('${escHtml(s.documentId)}')"><i class="fas fa-trash"></i> מחק</button>
       </div>
     </div>`;
-  }).join('');
+}
+
+function renderSellerSubs() {
+  const filter = document.getElementById('sellersFilter').value;
+  const list = document.getElementById('sellersList');
+  const items = sellerSubs.filter(s => !filter || s.status === filter);
+  const counts = { pending: 0, approved: 0, rejected: 0 };
+  sellerSubs.forEach(s => { if (counts[s.status] != null) counts[s.status]++; });
+  document.getElementById('sellersSummary').textContent = `· ${counts.pending} ממתינים · ${counts.approved} מאושרים · ${counts.rejected} נדחו`;
+  if (!items.length) { list.innerHTML = '<p style="color:var(--text-muted);padding:20px;text-align:center">אין הגשות בקטגוריה זו.</p>'; return; }
+  list.innerHTML = items.map(sellerCardHtml).join('');
+}
+
+// === Product view modal (מהטאב "חנויות") ===
+function openProductView(documentId) {
+  const s = sellerSubs.find(x => x.documentId === documentId);
+  if (!s) return;
+  document.getElementById('productViewBody').innerHTML = sellerCardHtml(s);
+  document.getElementById('productViewModal').classList.add('active');
+}
+function closeProductView() { document.getElementById('productViewModal').classList.remove('active'); }
+
+// === Stores: כל החנויות שנפתחו בקניון - כמות מוצרים לפי סטטוס, כניסה מהירה לכל מוצר ===
+let storesList = [];
+function groupSubsByStore() {
+  const map = new Map(); // key: seller_user_id (או שם החנות אם חסר) -> { approved, pending, rejected, items }
+  for (const s of sellerSubs) {
+    const key = s.seller_user_id || s.store_name || '—';
+    let g = map.get(key);
+    if (!g) { g = { approved: 0, pending: 0, rejected: 0, items: [] }; map.set(key, g); }
+    if (g[s.status] != null) g[s.status]++;
+    g.items.push(s);
+  }
+  return map;
+}
+async function loadStores() {
+  const grid = document.getElementById('storesGrid');
+  grid.innerHTML = '<p style="color:var(--text-muted)">טוען...</p>';
+  try {
+    const r = await fetch('/api/store?all=1');
+    if (r.status === 403) { grid.innerHTML = '<p style="color:var(--text-muted)">התחבר/י עם חשבון מנהל חנות כדי לראות את החנויות.</p>'; return; }
+    if (!r.ok) throw new Error();
+    const { stores } = await r.json();
+    storesList = stores || [];
+    renderStores();
+  } catch {
+    grid.innerHTML = '<p style="color:#ef4444">לא ניתן לטעון את החנויות. הפאנל עובד מול השרת רק בפריסה (Vercel), לא ב-http-server מקומי.</p>';
+  }
+}
+function storeProductRow(it) {
+  const [label, icon] = SELLER_STATUS[it.status] || SELLER_STATUS.pending;
+  const cat = categories.find(c => c.id === it.category);
+  const thumb = /^data:image\//.test(it.image || '') ? `<img src="${escHtml(it.image)}" alt="">` : `<span>${escHtml(it.emoji || '📦')}</span>`;
+  return `<div class="adm-store-product-row" onclick="openProductView('${escHtml(it.documentId)}')">
+    <div class="adm-store-product-thumb">${thumb}</div>
+    <div class="adm-store-product-info">
+      <strong>${escHtml(it.name)}</strong>
+      <span>${cat ? escHtml(cat.name) : ''} · ${ils(it.price)}${it.quantity != null ? ` · ${it.quantity} יח'` : ''}</span>
+    </div>
+    <span class="status-pill ${it.status}"><i class="fas ${icon}"></i> ${label}</span>
+    <i class="fas fa-chevron-left" style="color:var(--text-muted);font-size:12px"></i>
+  </div>`;
+}
+function storeCardHtml(st, g, idx) {
+  const total = g.approved + g.pending + g.rejected;
+  const logo = /^data:image\//.test(st.store_logo || '') ? `<img src="${escHtml(st.store_logo)}" alt="">` : '<i class="fas fa-store"></i>';
+  const slug = st.slug || storeSlug(st.store_name || '');
+  const phone = st.seller_phone || st.store_phone;
+  return `<div class="adm-store-card">
+    <div class="adm-store-head">
+      <div class="adm-store-logo">${logo}</div>
+      <div>
+        <strong>${escHtml(st.store_name || 'ללא שם')}</strong>
+        <div class="adm-store-meta">${st.seller_name ? escHtml(st.seller_name) + ' · ' : ''}${st.store_city ? escHtml(st.store_city) + ' · ' : ''}${st.opened_at ? 'נפתחה ' + fmtDate(st.opened_at) : ''}</div>
+      </div>
+      <a href="store.html?s=${encodeURIComponent(slug)}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;white-space:nowrap"><i class="fas fa-arrow-up-right-from-square"></i> לדף החנות</a>
+    </div>
+    <div class="adm-store-contact">
+      ${phone ? `<a href="tel:${escHtml(phone)}"><i class="fas fa-phone"></i> ${escHtml(phone)}</a>` : ''}
+      ${st.seller_email ? `<a href="mailto:${escHtml(st.seller_email)}"><i class="fas fa-envelope"></i> ${escHtml(st.seller_email)}</a>` : ''}
+      ${st.contract_accepted === false ? `<span style="color:#b91c1c"><i class="fas fa-triangle-exclamation"></i> הסכם לא אושר</span>` : ''}
+    </div>
+    <div class="adm-store-stats">
+      <span class="approved">${g.approved} מאושרים</span>
+      <span class="pending">${g.pending} ממתינים</span>
+      <span class="rejected">${g.rejected} נדחו</span>
+    </div>
+    ${total ? `<button class="btn btn-ghost adm-store-toggle" onclick="toggleStoreProducts(${idx}, this)" style="width:100%;justify-content:center;margin-top:10px">
+      <i class="fas fa-chevron-down"></i> הצג ${total} מוצרים
+    </button>
+    <div class="adm-store-products" id="storeProducts-${idx}" hidden>${g.items.map(storeProductRow).join('')}</div>` : '<p style="color:var(--text-muted);font-size:13px;margin-top:10px">אין עדיין מוצרים.</p>'}
+  </div>`;
+}
+function toggleStoreProducts(idx, btn) {
+  const el = document.getElementById(`storeProducts-${idx}`);
+  if (!el) return;
+  el.hidden = !el.hidden;
+  btn.classList.toggle('open', !el.hidden);
+  btn.innerHTML = el.hidden ? btn.innerHTML.replace('הסתר', 'הצג') : btn.innerHTML.replace('הצג', 'הסתר');
+}
+function renderStores() {
+  const grid = document.getElementById('storesGrid');
+  const groups = groupSubsByStore();
+  const seen = new Set();
+  const cards = [];
+  storesList.forEach(st => {
+    const key = st.seller_user_id || st.store_name;
+    seen.add(key);
+    cards.push([st, groups.get(key) || groups.get(st.store_name) || { approved: 0, pending: 0, rejected: 0, items: [] }]);
+  });
+  // הגשות מוצר בלי רשומת "פתיחת חנות" תואמת (מוכר ותיק, לפני שהיה שלב פתיחת חנות)
+  groups.forEach((g, key) => {
+    if (seen.has(key)) return;
+    const sample = g.items[0];
+    cards.push([{
+      store_name: sample.store_name, seller_name: sample.seller_name, seller_email: sample.seller_email,
+      seller_phone: sample.seller_phone, store_phone: sample.store_phone, store_city: sample.store_city,
+      store_logo: sample.store_logo, seller_user_id: sample.seller_user_id,
+    }, g]);
+  });
+  document.getElementById('storesSummary').textContent = cards.length ? `· ${cards.length} חנויות · ${sellerSubs.filter(s => s.status === 'approved').length} מוצרים על המדף` : '';
+  const badge = document.getElementById('storesCountBadge');
+  badge.textContent = cards.length;
+  badge.hidden = cards.length === 0;
+  grid.innerHTML = cards.length ? cards.map(([st, g], idx) => storeCardHtml(st, g, idx)).join('') : '<p style="color:var(--text-muted);padding:20px;text-align:center">אין עדיין חנויות.</p>';
 }
 
 async function decideSeller(documentId, status) {
@@ -732,6 +902,8 @@ async function decideSeller(documentId, status) {
     if (idx >= 0) sellerSubs[idx] = { ...sellerSubs[idx], ...(item || {}), status, rejection_reason: body.rejection_reason ?? sellerSubs[idx].rejection_reason };
     updateSellersPendingCount();
     renderSellerSubs();
+    renderStores();
+    if (document.getElementById('productViewModal').classList.contains('active')) openProductView(documentId);
     toast(status === 'approved' ? 'המוצר אושר ויעלה לאתר' : status === 'rejected' ? 'המוצר נדחה' : 'הוחזר להמתנה', status === 'rejected' ? 'fa-ban' : 'fa-check-circle');
   } catch {
     toast('הפעולה נכשלה, נסה שוב', 'fa-circle-exclamation');
@@ -746,6 +918,8 @@ async function deleteSeller(documentId) {
     sellerSubs = sellerSubs.filter(s => s.documentId !== documentId);
     updateSellersPendingCount();
     renderSellerSubs();
+    renderStores();
+    closeProductView();
     toast('ההגשה נמחקה', 'fa-trash');
   } catch {
     toast('המחיקה נכשלה', 'fa-circle-exclamation');
@@ -774,6 +948,7 @@ function init() {
   renderChart();
   loadOrders();
   loadSellerSubmissions();
+  loadStores();
   document.querySelectorAll('.sidebar-nav a[data-tab]').forEach(a =>
     a.addEventListener('click', () => switchTab(a.dataset.tab))
   );

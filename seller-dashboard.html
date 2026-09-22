@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>לוח בקרה למוכר | חנות החירות</title>
+<meta name="description" content="לוח הבקרה של המוכר בחנות החירות - מכירות, הזמנות, המוצרים הנמכרים ביותר וניהול מלאי בזמן אמת">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+<meta name="theme-color" content="#6366f1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
+     האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YTEG7S0H9N"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
+	gtag('config', 'G-YTEG7S0H9N');
+</script>
+<style>
+  /* לוח המכוונים למוכר - קלפי סטטיסטיקה, פאנלים, טבלאות ותרשים; בסגנון פאנל הניהול (admin.html) אבל ממותג sd- כדי לא להתנגש בסגנונות המשותפים של האתר */
+  .sd-summary-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sd-stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0; }
+  .sd-stat-card { background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+  .sd-stat-card.warn { border-color: rgba(239,68,68,0.4); }
+  .sd-stat-card .icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; margin-bottom: 14px; }
+  .sd-stat-card .value { font-size: 26px; font-weight: 800; }
+  .sd-stat-card .label { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+  .sd-panel { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); padding: 22px; margin-bottom: 20px; }
+  .sd-panel-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .sd-panel-header h2 { font-size: 17px; font-weight: 700; }
+  .sd-grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
+  .sd-chart { height: 200px; display: flex; align-items: flex-end; gap: 8px; padding: 16px 4px 30px; }
+  .sd-bar { flex: 1; background: linear-gradient(180deg, var(--primary), var(--primary-light)); border-radius: 8px 8px 0 0; position: relative; min-height: 4px; transition: var(--transition); }
+  .sd-bar:hover { opacity: 0.8; }
+  .sd-bar-label { position: absolute; bottom: -24px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .sd-bar-value { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .sd-panel table { width: 100%; border-collapse: collapse; }
+  .sd-panel th, .sd-panel td { padding: 12px 10px; text-align: right; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .sd-panel th { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .sd-panel tr:last-child td { border-bottom: none; }
+  .sd-row-thumb { width: 38px; height: 38px; border-radius: 10px; background: var(--bg-alt); display: inline-flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; vertical-align: middle; margin-left: 10px; }
+  .sd-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .sd-inv-input { width: 72px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 13px; text-align: center; }
+  .sd-inv-input.price { width: 88px; }
+  .sd-low-stock { color: #b91c1c; font-size: 11px; font-weight: 700; display: block; margin-top: 3px; }
+  .sd-order-status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+  .sd-order-status.new { background: rgba(99,102,241,0.15); color: #4338ca; }
+  .sd-order-status.confirmed, .sd-order-status.shipped { background: rgba(245,158,11,0.15); color: #b45309; }
+  .sd-order-status.completed { background: rgba(16,185,129,0.15); color: #047857; }
+  .sd-order-status.cancelled { background: rgba(239,68,68,0.15); color: #b91c1c; }
+  .sd-best-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .sd-best-row:last-child { border-bottom: none; }
+  .sd-best-rank { width: 26px; height: 26px; border-radius: 50%; background: var(--bg-alt); color: var(--text-muted); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sd-best-info { flex: 1; min-width: 0; }
+  .sd-best-info strong { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sd-best-info span { font-size: 12px; color: var(--text-muted); }
+  .sd-empty { color: var(--text-muted); text-align: center; padding: 30px 10px; font-size: 14px; }
+  .sd-hint { color: var(--text-muted); font-size: 13px; margin-bottom: 14px; }
+  @media (max-width: 1024px) {
+    .sd-stat-cards { grid-template-columns: repeat(2, 1fr); }
+    .sd-grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .sd-stat-cards { grid-template-columns: 1fr; }
+    .sd-panel { padding: 16px; }
+    .sd-panel th, .sd-panel td { font-size: 12px; padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <nav class="main-nav">
+      <div class="nav-dropdown">
+        <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
+        <div class="nav-dropdown-menu" id="navCategoriesMenu"></div>
+      </div>
+      <a href="about.html">אודות</a>
+      <a href="sell.html">הוסף חנות</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="cart.html" class="icon-btn cart-btn"><span class="cart-emoji" aria-hidden="true">🛒</span><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">בית</a> / לוח בקרה למוכר</div>
+    <h1>לוח בקרה למוכר</h1>
+    <p style="color:var(--text-muted);font-size:17px;margin-top:8px;max-width:720px">מכירות, הזמנות, המוצרים הנמכרים ביותר וניהול מלאי - הכל במקום אחד, מתעדכן ישירות מהחנות שלכם.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    <!-- טוען זהות -->
+    <div id="dashLoading" style="text-align:center;padding:60px 20px;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> טוען...</div>
+
+    <!-- לא מחובר -->
+    <div class="no-store-panel" id="dashNoAuth" hidden>
+      <i class="fas fa-lock"></i>
+      <h2 style="font-size:24px;margin-bottom:8px">צריך להתחבר קודם</h2>
+      <p style="color:var(--text-muted);margin-bottom:20px;max-width:480px;margin-inline:auto">לוח הבקרה מציג את הנתונים של החנות שלכם - יש להתחבר לחשבון שפתח אותה.</p>
+      <button class="btn btn-primary btn-lg" onclick="openAuth('login')"><i class="fas fa-user"></i> התחברות</button>
+    </div>
+
+    <!-- מחובר, אין חנות -->
+    <div class="no-store-panel" id="dashNoStore" hidden>
+      <i class="fas fa-store"></i>
+      <h2 style="font-size:24px;margin-bottom:8px">עדיין אין לכם חנות</h2>
+      <p style="color:var(--text-muted);margin-bottom:20px;max-width:480px;margin-inline:auto">לוח הבקרה נפתח אחרי פתיחת חנות והעלאת מוצר ראשון.</p>
+      <a href="sell.html" class="btn btn-primary btn-lg"><i class="fas fa-store"></i> פתיחת חנות</a>
+    </div>
+
+    <!-- הלוח עצמו -->
+    <div id="dashApp" hidden>
+
+      <div class="store-summary" id="dashStoreSummary">
+        <div id="dashStoreLogo"></div>
+        <div class="store-summary-body">
+          <h2><span id="dashStoreName"></span></h2>
+          <div class="store-summary-meta" id="dashStoreMeta"></div>
+        </div>
+        <div class="sd-summary-actions">
+          <a href="add-product.html" class="btn btn-primary"><i class="fas fa-plus"></i> מוצר חדש</a>
+          <a href="#" id="dashStorePageLink" class="btn btn-ghost" hidden><i class="fas fa-arrow-up-right-from-square"></i> לדף החנות</a>
+          <a href="sell.html?edit=1" class="btn btn-ghost"><i class="fas fa-pen"></i> עריכת פרטי החנות</a>
+        </div>
+      </div>
+
+      <div class="sd-stat-cards" id="dashStats"></div>
+
+      <div class="sd-panel">
+        <div class="sd-panel-header"><h2><i class="fas fa-chart-line" style="color:var(--primary)"></i> מכירות - 7 ימים אחרונים</h2></div>
+        <div class="sd-chart" id="dashChart"></div>
+      </div>
+
+      <div class="sd-grid-2">
+        <div class="sd-panel">
+          <div class="sd-panel-header">
+            <h2><i class="fas fa-boxes-stacked" style="color:var(--primary)"></i> המוצרים שלי - ניהול מלאי</h2>
+            <button class="btn btn-ghost" onclick="loadDashboard()" style="padding:7px 12px;font-size:12px"><i class="fas fa-rotate"></i> רענן</button>
+          </div>
+          <p class="sd-hint">שנו כמות במלאי או מחיר ישירות כאן - השינוי נשמר מיד. עריכה מלאה (תמונות, תיאור) דרך "המוצרים שהגשתי".</p>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>מוצר</th><th>מחיר</th><th>מלאי</th><th>נמכרו</th><th>סטטוס</th></tr></thead>
+              <tbody id="dashProductsTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sd-panel">
+          <div class="sd-panel-header"><h2><i class="fas fa-trophy" style="color:#f59e0b"></i> הנמכרים ביותר</h2></div>
+          <div id="dashBestSellers"></div>
+        </div>
+      </div>
+
+      <div class="sd-panel">
+        <div class="sd-panel-header"><h2><i class="fas fa-truck-fast" style="color:var(--primary)"></i> ההזמנות שלי <span id="dashOrdersSummary" style="font-weight:400;color:var(--text-muted);font-size:13px"></span></h2></div>
+        <p class="sd-hint">הפריטים שלכם מתוך כל הזמנה, כולל פרטי הלקוח לאספקה. סטטוס ההזמנה מנוהל על ידי מנהל החנות.</p>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>הזמנה</th><th>לקוח</th><th>הפריטים שלי</th><th>הסכום שלי</th><th>סטטוס</th><th>תאריך</th></tr></thead>
+            <tbody id="dashOrdersTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a> · <a href="contract.html">הסכם המוכר</a></p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/site-editor.js"></script>
+<script src="js/seller-store.js"></script>
+<script>
+const LOW_STOCK = 3;
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function ils(n) { return '₪' + (Math.round(Number(n || 0) * 100) / 100).toLocaleString('he-IL'); }
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('he-IL') : '-'; }
+
+let dashStore = null;
+let dashProducts = [];
+let dashOrders = [];
+
+function showGate(which) {
+  ['dashLoading', 'dashNoAuth', 'dashNoStore', 'dashApp'].forEach(id => {
+    document.getElementById(id).hidden = id !== which;
+  });
+}
+
+// === טעינה ===
+async function loadDashboard() {
+  try {
+    const [prodRes, orderRes] = await Promise.all([
+      fetch('/api/seller-products?mine=1'),
+      fetch('/api/orders?seller=1'),
+    ]);
+    if (prodRes.ok) dashProducts = (await prodRes.json()).items || [];
+    if (orderRes.ok) dashOrders = (await orderRes.json()).items || [];
+    renderStoreSummary();
+    renderStats();
+    renderChart();
+    renderProductsTable();
+    renderBestSellers();
+    renderOrdersTable();
+  } catch {
+    toast('לא ניתן לטעון את הנתונים כרגע', 'fa-circle-exclamation');
+  }
+}
+
+function renderStoreSummary() {
+  const s = dashStore;
+  if (!s) return;
+  document.getElementById('dashStoreLogo').innerHTML = storeLogoHtml({ logo: s.store_logo, name: s.store_name }, 64);
+  document.getElementById('dashStoreName').textContent = s.store_name;
+  document.getElementById('dashStoreMeta').innerHTML = [
+    s.store_city ? `<span><i class="fas fa-location-dot"></i> ${esc(s.store_city)}</span>` : '',
+    s.store_phone ? `<span><i class="fas fa-phone"></i> ${esc(s.store_phone)}</span>` : '',
+    s.opened_at ? `<span><i class="fas fa-calendar"></i> נפתחה ${fmtDate(s.opened_at)}</span>` : '',
+  ].filter(Boolean).join('');
+  const approved = dashProducts.find(p => p.status === 'approved' && p.store_name);
+  const link = document.getElementById('dashStorePageLink');
+  if (approved) { link.href = `store.html?s=${encodeURIComponent(storeSlug(approved.store_name))}`; link.hidden = false; }
+}
+
+function inMonth(dateStr, ref = new Date()) {
+  const d = new Date(dateStr);
+  return d.getFullYear() === ref.getFullYear() && d.getMonth() === ref.getMonth();
+}
+
+function renderStats() {
+  const live = dashOrders.filter(o => o.status !== 'cancelled');
+  const thisMonth = live.filter(o => inMonth(o.createdAt));
+  const revenueMonth = thisMonth.reduce((s, o) => s + Number(o.my_subtotal || 0), 0);
+  const approvedProducts = dashProducts.filter(p => p.status === 'approved');
+  const lowStock = approvedProducts.filter(p => p.quantity != null && p.quantity <= LOW_STOCK);
+  const cards = [
+    { icon: 'fa-shekel-sign', color: 'linear-gradient(135deg,#10b981,#059669)', value: ils(revenueMonth), label: 'הכנסות החודש (אחרי עמלה: ' + ils(revenueMonth * 0.9) + ')' },
+    { icon: 'fa-shopping-bag', color: 'linear-gradient(135deg,#6366f1,#8b5cf6)', value: thisMonth.length, label: 'הזמנות החודש' },
+    { icon: 'fa-box', color: 'linear-gradient(135deg,#06b6d4,#3b82f6)', value: approvedProducts.length, label: 'מוצרים פעילים על המדף' },
+    { icon: 'fa-triangle-exclamation', color: 'linear-gradient(135deg,#f59e0b,#ef4444)', value: lowStock.length, label: 'מוצרים במלאי נמוך (≤ ' + LOW_STOCK + ')', warn: lowStock.length > 0 },
+  ];
+  document.getElementById('dashStats').innerHTML = cards.map(c => `
+    <div class="sd-stat-card${c.warn ? ' warn' : ''}">
+      <div class="icon" style="background:${c.color}"><i class="fas ${c.icon}"></i></div>
+      <div class="value">${c.value}</div>
+      <div class="label">${c.label}</div>
+    </div>`).join('');
+}
+
+function renderChart() {
+  const el = document.getElementById('dashChart');
+  const days = [...Array(7)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d; });
+  const live = dashOrders.filter(o => o.status !== 'cancelled');
+  const sums = days.map(d => live.filter(o => new Date(o.createdAt).toDateString() === d.toDateString())
+    .reduce((s, o) => s + Number(o.my_subtotal || 0), 0));
+  const max = Math.max(...sums, 1);
+  el.innerHTML = sums.map((v, i) => `
+    <div class="sd-bar" style="height:${Math.max(4, (v / max) * 100)}%">
+      ${v > 0 ? `<span class="sd-bar-value">${ils(v)}</span>` : ''}
+      <span class="sd-bar-label">${days[i].toLocaleDateString('he-IL', { weekday: 'short' })}</span>
+    </div>`).join('');
+}
+
+const PROD_STATUS = { pending: ['ממתין', 'fa-clock'], approved: ['מאושר', 'fa-circle-check'], rejected: ['נדחה', 'fa-circle-xmark'] };
+function unitsSold(documentId) {
+  let n = 0;
+  for (const o of dashOrders) {
+    if (o.status === 'cancelled') continue;
+    for (const it of (o.items || [])) if (it.seller_document_id === documentId) n += Number(it.qty) || 0;
+  }
+  return n;
+}
+function renderProductsTable() {
+  const tbody = document.getElementById('dashProductsTable');
+  if (!dashProducts.length) { tbody.innerHTML = `<tr><td colspan="5" class="sd-empty">עדיין לא העליתם מוצרים. <a href="add-product.html">להעלאת מוצר ראשון</a></td></tr>`; return; }
+  tbody.innerHTML = dashProducts.map(p => {
+    const [label, icon] = PROD_STATUS[p.status] || PROD_STATUS.pending;
+    const low = p.status === 'approved' && p.quantity != null && p.quantity <= LOW_STOCK;
+    const thumb = /^data:image\//.test(p.image || '') ? `<img src="${esc(p.image)}" alt="">` : esc(p.emoji || '📦');
+    return `<tr>
+      <td><span class="sd-row-thumb">${thumb}</span><strong>${esc(p.name)}</strong></td>
+      <td><input type="number" class="sd-inv-input price" value="${Number(p.price)}" min="1" step="0.5" onchange="updateInventory('${esc(p.documentId)}','price',this.value,this)"></td>
+      <td>
+        <input type="number" class="sd-inv-input" value="${p.quantity ?? ''}" min="0" placeholder="-" onchange="updateInventory('${esc(p.documentId)}','quantity',this.value,this)">
+        ${low ? '<span class="sd-low-stock"><i class="fas fa-triangle-exclamation"></i> מלאי נמוך</span>' : ''}
+      </td>
+      <td>${unitsSold(p.documentId)}</td>
+      <td><span class="status-pill ${p.status}"><i class="fas ${icon}"></i> ${label}</span>${p.status === 'rejected' && p.rejection_reason ? `<div style="color:var(--text-muted);font-size:11px;margin-top:3px">${esc(p.rejection_reason)}</div>` : ''}</td>
+    </tr>`;
+  }).join('');
+}
+async function updateInventory(documentId, field, value, input) {
+  const body = { documentId, [field]: value };
+  try {
+    const r = await fetch('/api/seller-products?mine=1', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(json.error || 'העדכון נכשל');
+    const idx = dashProducts.findIndex(p => p.documentId === documentId);
+    if (idx >= 0) dashProducts[idx] = { ...dashProducts[idx], ...(json.item || {}) };
+    renderStats();
+    renderProductsTable();
+    toast(field === 'quantity' ? 'המלאי עודכן' : 'המחיר עודכן', 'fa-circle-check');
+  } catch (e) {
+    toast(e.message || 'העדכון נכשל', 'fa-circle-exclamation');
+    renderProductsTable();
+  }
+}
+
+function renderBestSellers() {
+  const el = document.getElementById('dashBestSellers');
+  const map = new Map(); // seller_document_id -> { name, qty, revenue }
+  for (const o of dashOrders) {
+    if (o.status === 'cancelled') continue;
+    for (const it of (o.items || [])) {
+      const key = it.seller_document_id || it.name;
+      const cur = map.get(key) || { name: it.name, qty: 0, revenue: 0 };
+      cur.qty += Number(it.qty) || 0;
+      cur.revenue += (Number(it.price) || 0) * (Number(it.qty) || 0);
+      map.set(key, cur);
+    }
+  }
+  const top = [...map.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  if (!top.length) { el.innerHTML = `<p class="sd-empty">עוד אין מכירות להצגה כאן.</p>`; return; }
+  el.innerHTML = top.map((t, i) => `
+    <div class="sd-best-row">
+      <div class="sd-best-rank">${i + 1}</div>
+      <div class="sd-best-info"><strong>${esc(t.name)}</strong><span>${t.qty} יח' נמכרו</span></div>
+      <strong>${ils(t.revenue)}</strong>
+    </div>`).join('');
+}
+
+const ORDER_STATUS_HE = { new: 'חדשה', confirmed: 'אושרה', shipped: 'נשלחה', completed: 'הושלמה', cancelled: 'בוטלה' };
+function renderOrdersTable() {
+  const tbody = document.getElementById('dashOrdersTable');
+  const live = dashOrders.filter(o => o.status !== 'cancelled');
+  document.getElementById('dashOrdersSummary').textContent = dashOrders.length ? `· ${live.length} פעילות מתוך ${dashOrders.length}` : '';
+  if (!dashOrders.length) { tbody.innerHTML = `<tr><td colspan="6" class="sd-empty">עדיין אין הזמנות על מוצרים שלכם.</td></tr>`; return; }
+  const sorted = [...dashOrders].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  tbody.innerHTML = sorted.map(o => `
+    <tr>
+      <td><strong>${esc(o.order_number)}</strong></td>
+      <td>${esc(o.customer_name)}<div style="color:var(--text-muted);font-size:12px">${esc(o.customer_phone)}${o.customer_city ? ' · ' + esc(o.customer_city) : ''}${o.customer_address ? ' · ' + esc(o.customer_address) : ''}</div></td>
+      <td>${(o.items || []).map(it => `${esc(it.name)} × ${it.qty}`).join('<br>')}</td>
+      <td><strong>${ils(o.my_subtotal)}</strong></td>
+      <td><span class="sd-order-status ${o.status}">${ORDER_STATUS_HE[o.status] || o.status}</span></td>
+      <td>${fmtDate(o.createdAt)}</td>
+    </tr>`).join('');
+}
+
+// === זיהוי משתמש / חנות (אותו דפוס כמו ב-add-product.html) ===
+let identityChecked = false;
+async function applyUser() {
+  identityChecked = true;
+  if (!currentUser) { dashStore = null; showGate('dashNoAuth'); return; }
+  try {
+    const { store, guest } = await fetchAccountStore();
+    dashStore = guest ? null : storeFromServer(store);
+  } catch { dashStore = getSavedStore(); }
+  if (!dashStore) { showGate('dashNoStore'); return; }
+  showGate('dashApp');
+  loadDashboard();
+}
+document.addEventListener('userChanged', applyUser);
+if (!identityChecked) applyUser();
+</script>
+</body>
+</html>
