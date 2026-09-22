@@ -57,6 +57,18 @@
   .order-foot .price { font-weight: 700; }
   .account-empty { text-align: center; padding: 24px 16px; color: var(--text-muted); background: var(--bg-alt); border-radius: var(--radius-lg); }
   .account-empty i { font-size: 28px; margin-bottom: 8px; display: block; }
+  /* אזור המוכר - הכניסה לחנות שלו מתוך האזור האישי */
+  .seller-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .seller-link {
+    display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: var(--radius-lg);
+    background: var(--bg-card); border: 1px solid var(--border); transition: var(--transition);
+  }
+  .seller-link:hover { border-color: var(--primary); transform: translateY(-2px); }
+  .seller-link i { font-size: 20px; color: var(--primary); margin-bottom: 4px; }
+  .seller-link strong { font-size: 15px; }
+  .seller-link span { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  @media (max-width: 900px) { .seller-links { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .seller-links { grid-template-columns: 1fr; } }
   @media (max-width: 768px) {
     .account-top { grid-template-columns: 1fr; }
     .account-card { flex-wrap: wrap; }
@@ -98,14 +110,32 @@
 
     <div class="account-card account-guest" id="accountGuest" hidden>
       <div style="width:100%">
-        <i class="fas fa-user-circle"></i>
-        <h2>התחברו כדי לראות את החשבון שלכם</h2>
-        <p>היסטוריית ההזמנות, המוצרים שאהבתם והרשמה לעדכונים ומבצעים.</p>
-        <button class="btn btn-primary" onclick="openAuth('login')"><i class="fas fa-sign-in-alt"></i> התחברות / הרשמה</button>
+        <i class="fas fa-user-circle" id="guestIcon"></i>
+        <h2 id="guestTitle">התחברו כדי לראות את החשבון שלכם</h2>
+        <p id="guestText">היסטוריית ההזמנות, המוצרים שאהבתם והרשמה לעדכונים ומבצעים.</p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="guestActions">
+          <button class="btn btn-primary" onclick="openAuth('login')"><i class="fas fa-sign-in-alt"></i> התחברות / הרשמה</button>
+        </div>
       </div>
     </div>
 
     <div id="accountMain" hidden>
+      <div id="onbBar"></div>
+
+      <!-- אזור המוכר: החנות שנפתחה, השלב הבא במסלול והכניסות לניהול -->
+      <div class="account-section" id="sellerZone" style="margin-top:0" hidden>
+        <div class="section-header">
+          <div>
+            <span class="section-eyebrow">המוכר שבי</span>
+            <h2 class="section-title">החנות שלי</h2>
+          </div>
+          <button class="btn btn-ghost" onclick="startAccountTour()" style="padding:8px 14px;font-size:13px"><i class="fas fa-compass"></i> סיור באזור האישי</button>
+        </div>
+        <div class="store-summary" id="sellerStoreSummary"></div>
+        <div id="onbNext"></div>
+        <div class="seller-links" id="sellerLinks"></div>
+      </div>
+
       <div class="account-top">
         <div class="account-card" id="accountCard"></div>
         <div class="newsletter account-news">
@@ -162,6 +192,8 @@
 <script src="data/products.js"></script>
 <script src="js/main.js"></script>
 <script src="js/site-editor.js"></script>
+<script src="js/seller-store.js"></script>
+<script src="js/seller-onboarding.js"></script>
 <script>
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 const ORDER_STATUS = { new: 'התקבלה', confirmed: 'אושרה', shipped: 'נשלחה', completed: 'הושלמה', cancelled: 'בוטלה' };
@@ -175,7 +207,7 @@ function renderAccount() {
   const main = document.getElementById('accountMain');
   guest.hidden = !!currentUser;
   main.hidden = !currentUser;
-  if (!currentUser) { ordersLoadedFor = null; return; }
+  if (!currentUser) { ordersLoadedFor = null; renderGuest(); return; }
   document.getElementById('accountCard').innerHTML = `
     ${avatarHtml(72, 28)}
     <div class="who">
@@ -193,6 +225,112 @@ function renderAccount() {
   if (emailInput && !emailInput.value) emailInput.value = currentUser.email || '';
   loadOrders();
   renderFavorites();
+  syncSeller();
+}
+
+// ---- אורח: אם כבר נפתחה חנות בדפדפן הזה, ההמשך הוא הרשמה ולא סתם "התחברו" ----
+function renderGuest() {
+  const store = getSavedStore();
+  if (!store) return;
+  document.getElementById('guestIcon').className = 'fas fa-store';
+  document.getElementById('guestTitle').textContent = `החנות "${store.store_name}" שמורה בדפדפן הזה`;
+  document.getElementById('guestText').innerHTML = 'השלב הבא במסלול: הרשמה קצרה לאתר. כך החנות תישמר בחשבון שלכם ולא רק במכשיר הזה, תוכלו להעלות מוצרים, לעקוב אחרי הזמנות ולקבל SMS על כל מכירה.';
+  document.getElementById('guestActions').innerHTML = `
+    <button class="btn btn-primary btn-lg" onclick="openAuth('register')"><i class="fas fa-user-plus"></i> הרשמה מהירה</button>
+    <button class="btn btn-ghost" onclick="openAuth('login')"><i class="fas fa-sign-in-alt"></i> כבר יש לי חשבון</button>`;
+}
+
+// ---- אזור המוכר: החנות שלו, השלב הבא במסלול והכניסות לניהול ----
+function renderSellerZone() {
+  const zone = document.getElementById('sellerZone');
+  const store = getSavedStore();
+  onbRenderBar('#onbBar', { here: 'area' });
+  zone.hidden = !store;
+  if (!store) return;
+  document.getElementById('sellerStoreSummary').innerHTML = `
+    ${storeLogoHtml({ logo: store.store_logo, name: store.store_name }, 64)}
+    <div class="store-summary-body">
+      <h2><span>${esc(store.store_name)}</span> <span class="store-open-pill${store.synced ? '' : ' local'}">
+        <i class="fas ${store.synced ? 'fa-circle-check' : 'fa-mobile-screen'}"></i> ${store.synced ? 'החנות פתוחה' : 'שמורה בדפדפן זה'}</span></h2>
+      <div class="store-summary-meta">
+        ${store.store_city ? `<span><i class="fas fa-location-dot"></i>${esc(store.store_city)}</span>` : ''}
+        ${store.store_phone ? `<span><i class="fas fa-phone"></i>${esc(store.store_phone)}</span>` : ''}
+        ${store.opened_at ? `<span><i class="fas fa-calendar-check"></i>נפתחה ${fmtDate(store.opened_at)}</span>` : ''}
+      </div>
+    </div>
+    <div class="store-summary-actions">
+      <a href="sell.html?edit=1" class="btn btn-ghost"><i class="fas fa-pen"></i> עריכת פרטי החנות</a>
+    </div>`;
+  const count = Number(onbState().products_count) || 0;
+  document.getElementById('sellerLinks').innerHTML = [
+    { href: 'add-product.html', icon: 'fa-plus', title: 'העלאת מוצר', text: 'תמונות, מחיר ותיאור. פרטי החנות כבר שמורים.' },
+    { href: 'seller-dashboard.html', icon: 'fa-chart-line', title: 'לוח הבקרה', text: 'מכירות, הזמנות, מלאי ומחירים.' },
+    { href: 'add-product.html#mine', icon: 'fa-list-check', title: 'המוצרים שהגשתי', text: count ? `${count} מוצרים - כולל סטטוס האישור.` : 'סטטוס האישור של כל מוצר.' },
+    { href: 'store.html?s=' + encodeURIComponent(storeSlug(store.store_name)), icon: 'fa-store', title: 'דף החנות שלי', text: 'איך הלקוחות רואים את החנות.' },
+  ].map(l => `<a class="seller-link" href="${l.href}"><i class="fas ${l.icon}"></i><strong>${l.title}</strong><span>${l.text}</span></a>`).join('');
+
+  onbRenderNextCard('#onbNext');
+  // "היכרות עם האזור האישי" הוא הסיור שבדף הזה - הכפתור מפעיל אותו במקום לנווט
+  const areaLink = document.querySelector('#onbNext a[href^="account.html"]');
+  if (areaLink) {
+    areaLink.innerHTML = '<i class="fas fa-compass"></i> להתחלת הסיור';
+    areaLink.onclick = e => { e.preventDefault(); startAccountTour(); };
+  }
+}
+
+// כמה מוצרים כבר הוגשו - קובע אם השלב הבא הוא "מוצר ראשון" או "לוח הבקרה"
+async function loadSellerProducts() {
+  if (!currentUser) return;
+  try {
+    const r = await fetch('/api/seller-products?mine=1');
+    if (!r.ok) return;
+    const { items } = await r.json();
+    onbSetProducts((items || []).length);
+  } catch { /* לא קריטי - המסלול ימשיך לפי מה שידוע */ }
+}
+
+async function syncSeller() {
+  renderSellerZone();
+  await Promise.all([syncStoreWithAccount().then(changed => { if (changed) renderSellerZone(); }), loadSellerProducts()]);
+  renderSellerZone();
+  maybeAutoTour();
+}
+document.addEventListener('onboardingChanged', renderSellerZone);
+
+// ---- סיור באזור האישי ----
+function startAccountTour() {
+  const markSeen = () => { onbMark('tour_account'); renderSellerZone(); };
+  const seller = !!getSavedStore();
+  startTour([
+    { title: 'ברוכים הבאים לאזור האישי שלכם',
+      text: 'זה הבית שלכם באתר: מכאן מגיעים לחנות, למוצרים ולהזמנות. סיור של חצי דקה, ואפשר לצאת ממנו בכל רגע.' },
+    { el: '#accountBtn', title: 'מכאן חוזרים לכאן - מכל דף', pad: 6,
+      text: 'התמונה העגולה בראש הדף פותחת את התפריט האישי: החשבון שלי, לוח הבקרה למוכר, המוצרים שהגשתי והעגלה. זה הכפתור שתשתמשו בו הכי הרבה.' },
+    { el: '#sellerStoreSummary', title: 'החנות שפתחתם',
+      text: 'השם, הלוגו והטלפון שהלקוחות רואים. "עריכת פרטי החנות" משנה אותם בכל המוצרים שלכם בבת אחת.' },
+    { el: '#sellerLinks', title: 'ארבע הכניסות לניהול החנות',
+      text: 'העלאת מוצר חדש · לוח הבקרה (מכירות, הזמנות, מלאי) · המוצרים שהגשתי וסטטוס האישור שלהם · ודף החנות כפי שהלקוחות רואים אותו.' },
+    { el: '#orders', title: 'ההזמנות שלי',
+      text: 'כאן מופיעות הזמנות ש<strong>אתם</strong> ביצעתם כלקוחות. הזמנות שלקוחות מבצעים <strong>אצלכם</strong> מופיעות בלוח הבקרה - ועל כל אחת מהן יישלח אליכם SMS.' },
+    { el: '#favorites', title: 'המוצרים שאהבתי',
+      text: 'כל מוצר שסימנתם בלב נשמר כאן, מכל מכשיר שתתחברו ממנו.' },
+    { title: 'זהו, אתם בבית',
+      text: seller
+        ? 'אפשר לחזור לסיור בכל עת מהכפתור "סיור באזור האישי". <strong>השלב הבא במסלול: העלאת המוצר הראשון.</strong>'
+        : 'אפשר לחזור לסיור בכל עת מהאזור האישי.' },
+  ], { onDone: markSeen, onSkip: markSeen });
+}
+
+// פתיחה אוטומטית: בכניסה הראשונה של מוכר לאזור האישי, או ב-?tour=1
+let autoTourDone = false;
+function maybeAutoTour() {
+  if (autoTourDone || !currentUser) return;
+  const params = new URLSearchParams(location.search);
+  const asked = params.get('tour') === '1';
+  if (!asked && (!getSavedStore() || onbState().tour_account)) return;
+  autoTourDone = true;
+  onbStripParam('tour');
+  setTimeout(startAccountTour, 600);
 }
 
 async function loadOrders(force = false) {

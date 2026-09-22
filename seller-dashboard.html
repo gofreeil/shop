@@ -124,6 +124,8 @@
     <!-- הלוח עצמו -->
     <div id="dashApp" hidden>
 
+      <div id="onbBar"></div>
+
       <div class="store-summary" id="dashStoreSummary">
         <div id="dashStoreLogo"></div>
         <div class="store-summary-body">
@@ -134,6 +136,7 @@
           <a href="add-product.html" class="btn btn-primary"><i class="fas fa-plus"></i> מוצר חדש</a>
           <a href="#" id="dashStorePageLink" class="btn btn-ghost" hidden><i class="fas fa-arrow-up-right-from-square"></i> לדף החנות</a>
           <a href="sell.html?edit=1" class="btn btn-ghost"><i class="fas fa-pen"></i> עריכת פרטי החנות</a>
+          <button type="button" class="btn btn-ghost" onclick="startDashboardTour()"><i class="fas fa-compass"></i> סיור בלוח</button>
         </div>
       </div>
 
@@ -145,7 +148,7 @@
       </div>
 
       <div class="sd-grid-2">
-        <div class="sd-panel">
+        <div class="sd-panel" id="dashProductsPanel">
           <div class="sd-panel-header">
             <h2><i class="fas fa-boxes-stacked" style="color:var(--primary)"></i> המוצרים שלי - ניהול מלאי</h2>
             <button class="btn btn-ghost" onclick="loadDashboard()" style="padding:7px 12px;font-size:12px"><i class="fas fa-rotate"></i> רענן</button>
@@ -165,9 +168,9 @@
         </div>
       </div>
 
-      <div class="sd-panel">
+      <div class="sd-panel" id="dashOrdersPanel">
         <div class="sd-panel-header"><h2><i class="fas fa-truck-fast" style="color:var(--primary)"></i> ההזמנות שלי <span id="dashOrdersSummary" style="font-weight:400;color:var(--text-muted);font-size:13px"></span></h2></div>
-        <p class="sd-hint">הפריטים שלכם מתוך כל הזמנה, כולל פרטי הלקוח לאספקה. סטטוס ההזמנה מנוהל על ידי מנהל החנות.</p>
+        <p class="sd-hint">הפריטים שלכם מתוך כל הזמנה, כולל פרטי הלקוח לאספקה. סטטוס ההזמנה מנוהל על ידי מנהל החנות. על כל הזמנה חדשה נשלח אליכם SMS עם הפרטים, לנייד שרשום בפרטי המוכר.</p>
         <div style="overflow-x:auto">
           <table>
             <thead><tr><th>הזמנה</th><th>לקוח</th><th>הפריטים שלי</th><th>הסכום שלי</th><th>סטטוס</th><th>תאריך</th></tr></thead>
@@ -195,6 +198,7 @@
 <script src="js/main.js"></script>
 <script src="js/site-editor.js"></script>
 <script src="js/seller-store.js"></script>
+<script src="js/seller-onboarding.js"></script>
 <script>
 const LOW_STOCK = 3;
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -218,17 +222,56 @@ async function loadDashboard() {
       fetch('/api/seller-products?mine=1'),
       fetch('/api/orders?seller=1'),
     ]);
-    if (prodRes.ok) dashProducts = (await prodRes.json()).items || [];
+    if (prodRes.ok) { dashProducts = (await prodRes.json()).items || []; onbSetProducts(dashProducts.length); }
     if (orderRes.ok) dashOrders = (await orderRes.json()).items || [];
+    onbRenderBar('#onbBar', { here: 'dashboard' });
     renderStoreSummary();
     renderStats();
     renderChart();
     renderProductsTable();
     renderBestSellers();
     renderOrdersTable();
+    maybeAutoTour();
   } catch {
     toast('לא ניתן לטעון את הנתונים כרגע', 'fa-circle-exclamation');
   }
+}
+
+// === סיור בלוח הבקרה - השלב האחרון במסלול פתיחת החנות ===
+function startDashboardTour() {
+  const finish = (celebrate) => {
+    const first = !onbState().tour_dashboard;
+    onbMark('tour_dashboard');
+    onbRenderBar('#onbBar', { here: 'dashboard' });
+    if (celebrate && first) toast('סיימתם את מסלול פתיחת החנות - החנות שלכם באוויר! 🎉', 'fa-flag-checkered');
+  };
+  startTour([
+    { title: 'לוח הבקרה - מכאן מנהלים את החנות',
+      text: 'כל מה שקורה בחנות שלכם נמצא בדף אחד: כמה נכנס, מה נמכר, מה במלאי ומה צריך לספק. סיור של דקה.' },
+    { el: '#dashStoreSummary', title: 'החנות והכפתורים המהירים',
+      text: 'מוצר חדש · דף החנות כפי שהלקוחות רואים · ועריכת פרטי החנות (שם, לוגו, טלפון) - שינוי כאן חל על כל המוצרים שלכם.' },
+    { el: '#dashStats', title: 'ארבעה מספרים שכדאי להכיר',
+      text: 'הכנסות החודש (ומה נשאר אחרי עמלת 10%), מספר ההזמנות, כמה מוצרים באמת על המדף, וכמה מוצרים עומדים להיגמר במלאי.' },
+    { el: '#dashChart', title: 'המכירות בשבוע האחרון',
+      text: 'עמודה ליום. כך רואים מיד אם מבצע, תמונה חדשה או שינוי מחיר עשו את שלהם.' },
+    { el: '#dashProductsPanel', title: 'כאן עורכים - בלי טפסים',
+      text: 'המחיר והמלאי נערכים ישירות בטבלה והשינוי נשמר מיד. בעמודת "תצוגה" אפשר להעלים מוצר מהמדף זמנית או להגבילו לשכונות. עריכת תמונות ותיאור - דרך "המוצרים שהגשתי".' },
+    { el: '#dashOrdersPanel', title: 'ההזמנות שאתם מספקים',
+      text: 'כל הזמנה עם הפריטים שלכם ופרטי הלקוח לאספקה. <strong>על כל הזמנה חדשה יישלח אליכם SMS</strong> עם הפרטים, לנייד שרשום בפרטי המוכר - כדי שלא תפספסו מכירה.' },
+    { title: 'זהו - סיימתם את המסלול',
+      text: 'חנות פתוחה, חשבון, מוצר על המדף ולוח בקרה שאתם יודעים לתפעל. אפשר לחזור לסיור בכל עת מכפתור "סיור בלוח".' },
+  ], { onDone: () => finish(true), onSkip: () => finish(false) });
+}
+
+let autoTourDone = false;
+function maybeAutoTour() {
+  if (autoTourDone) return;
+  const asked = new URLSearchParams(location.search).get('tour') === '1';
+  if (!asked && onbState().tour_dashboard) return;
+  if (!asked && !dashProducts.length) return; // מוכר שעוד לא העלה מוצר - אין מה להראות
+  autoTourDone = true;
+  onbStripParam('tour');
+  setTimeout(startDashboardTour, 500);
 }
 
 function renderStoreSummary() {
