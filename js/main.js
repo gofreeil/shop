@@ -712,7 +712,7 @@ function applyHeaderTooltips() {
 function updateAccountBtn(btn) {
   btn = btn || document.getElementById('accountBtn');
   applyHeaderTooltips();
-  // דפים שתלויים בזהות (למשל "המוצרים שלי" ב-sell.html) מאזינים לאירוע הזה
+  // דפים שתלויים בזהות (למשל "המוצרים שלי" ב-add-product.html) מאזינים לאירוע הזה
   document.dispatchEvent(new CustomEvent('userChanged', { detail: { user: currentUser } }));
   if (!btn) return;
   btn.innerHTML = currentUser
@@ -904,7 +904,7 @@ function renderAccountMenu() {
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>
       <a href="cart.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shopping-bag"></i> העגלה שלי</a>
       <a href="seller-dashboard.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-chart-line" style="color:var(--accent-2)"></i> לוח בקרה למוכר</a>
-      <a href="sell.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
+      <a href="add-product.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
       <button class="btn btn-ghost btn-block" onclick="logoutUser()" style="justify-content:flex-start;color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
     </div>
   `;
@@ -994,6 +994,11 @@ function storeLogoHtml(s, size = 56) {
     ? `<img src="${logo}" alt="${name}" class="store-logo" style="width:${size}px;height:${size}px">`
     : `<span class="store-logo store-logo-letter" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.45)}px">${name.charAt(0)}</span>`;
 }
+// מוצרים אמיתיים = מוצרים של מוכרים שאושרו (לא מוצרי ההדגמה הקבועים ב-data/products.js)
+function realProducts() {
+  return products.filter(p => p.storeSlug || p.seller);
+}
+
 function storesFromProducts() {
   const map = new Map();
   const sorted = [...products].filter(p => p.storeSlug || p.seller).sort((a, b) => Date.parse(b.approvedAt || 0) - Date.parse(a.approvedAt || 0));
@@ -1037,7 +1042,7 @@ function openStoreCard() {
       <div class="store-card-body">
         <h3>פתח חנות בקניון</h3>
         <p>לוגו, טלפון ומוצרים לפי קטגוריות. החנות לוקחת 10% ממכירה, השאר אליכם.</p>
-        <div class="store-card-meta"><span><i class="fas fa-arrow-left"></i> להגשת מוצר ראשון</span></div>
+        <div class="store-card-meta"><span><i class="fas fa-arrow-left"></i> לפתיחת חנות</span></div>
       </div>
     </a>`;
 }
