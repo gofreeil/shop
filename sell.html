@@ -432,7 +432,23 @@ async function submitStore(e) {
   e.preventDefault();
   const err = document.getElementById('submitError');
   err.style.display = 'none';
-  if (!form.reportValidity()) return;
+  // לא סומכים על בועת השגיאה של הדפדפן: בדפדפנים פנימיים (וואטסאפ/טלגרם) היא
+  // לא מופיעה, או מופיעה על שדה הרחק מעל המסך - והלחיצה נראית כאילו לא קרה כלום
+  const bad = [...form.elements].find(el => el.willValidate && !el.checkValidity());
+  if (bad) {
+    if (bad.name === 'store_website' && bad.value && !/^https?:\/\//i.test(bad.value)) {
+      bad.value = 'https://' + bad.value.trim();
+      if (bad.checkValidity()) return submitStore(e);
+    }
+    const label = bad.closest('.form-field, .consent')?.querySelector('label, strong')?.textContent.replace(/\s*\*\s*$/, '').trim() || 'שדה חובה';
+    const why = bad.validity.valueMissing ? (bad.type === 'checkbox' ? 'יש לסמן' : 'יש למלא') : 'הערך לא תקין';
+    err.textContent = `${why}: ${label}`;
+    err.style.display = 'block';
+    toast(err.textContent, 'fa-circle-exclamation');
+    bad.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => { try { bad.focus({ preventScroll: true }); } catch {} }, 400);
+    return;
+  }
   // תנאי סף: חתימה על אמנת המוסר העולמית. בלעדיה גם השרת דוחה את המוצר הראשון,
   // ולכן עוצרים כבר כאן ולא נותנים לפתוח חנות שלא תוכל להגיש דבר.
   if (!charterGate.signed) {
