@@ -1841,3 +1841,10 @@ a.product-seller:hover { color: var(--primary); }
 .admin-edit-form textarea { resize: vertical; line-height: 1.6; }
 .admin-edit-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .admin-edit-form .actions { display: flex; gap: 10px; margin-top: 4px; }
+/* נוסח אמנת המוסר בתוך תיבת החתימה (js/charter.js) */
+.charter-gate .charter-text {
+  max-height: 220px; overflow-y: auto; white-space: pre-line;
+  margin: 8px 0; padding: 12px 14px; border-radius: 10px;
+  background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); font-size: 13.5px; line-height: 1.8;
+}
