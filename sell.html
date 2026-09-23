@@ -137,7 +137,7 @@
           <p class="hint">הפרטים משמשים לזיהוי הצד להסכם ולתשלומים. אינם מוצגים ללקוחות (מלבד שם החנות).</p>
           <div id="loginHint" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-radius:12px;background:var(--bg-alt);border:1px solid var(--border);font-size:14px">
             <i class="fas fa-user-check" style="color:var(--primary)"></i>
-            <span id="loginHintText">מומלץ להתחבר לפני פתיחת החנות - כך החנות נשמרת בחשבון שלכם, זמינה מכל מכשיר, ותוכלו לעקוב אחרי סטטוס האישור של המוצרים.</span>
+            <span id="loginHintText">אין צורך בהרשמה נפרדת - שליחת הטופס פותחת לכם חשבון באתר, והחנות נשלחת ישר לאישור. כבר יש לכם חשבון? אפשר להתחבר.</span>
             <button type="button" class="btn btn-ghost" id="loginHintBtn" onclick="openAuth('login')" style="padding:8px 14px;font-size:13px">התחברות / הרשמה</button>
           </div>
           <div class="form-row">
@@ -149,6 +149,8 @@
             <div class="form-field"><label>אימייל *</label><input type="email" name="seller_email" maxlength="160" required></div>
           </div>
           <div class="form-field"><label>כתובת *</label><input type="text" name="seller_address" maxlength="200" required placeholder="רחוב, מספר, עיר"></div>
+          <!-- אורח: מילוי הטופס הוא ההרשמה - החשבון נפתח מהשם והאימייל שלמעלה + הסיסמה הזו -->
+          <div class="form-field" id="guestPasswordField"><label>בחרו סיסמה לחשבון *</label><input type="password" name="account_password" id="accountPassword" minlength="6" maxlength="100" autocomplete="new-password" required placeholder="לפחות 6 תווים"><span class="hint" style="display:block;margin-top:4px">שליחת הטופס פותחת לכם חשבון באתר עם האימייל שלמעלה - בו מנהלים את החנות. כבר יש לכם חשבון? הזינו את הסיסמה שלו.</span></div>
 
           <h2><i class="fas fa-scale-balanced" style="color:var(--primary)"></i> אמנת המוסר העולמית</h2>
           <p class="hint">תנאי סף לפתיחת חנות בקניון: כל בעל חנות חתום על אמנת המוסר העולמית (UECC) של חכמי העדה. החתימה נעשית פעם אחת, באתר חכמי העדה, עם אותו אימייל של החשבון כאן.</p>
@@ -409,8 +411,31 @@ function renderState() {
   }
 }
 
+// אורח ששולח חנות: פותחים חשבון מהשם, האימייל והסיסמה שבטופס; אם האימייל כבר
+// רשום - מנסים להתחבר איתו באותה סיסמה
+async function registerFromStoreForm() {
+  const email = form.seller_email.value.trim().toLowerCase();
+  const password = form.account_password.value;
+  const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  let res;
+  try {
+    res = await post('/api/register', { name: form.seller_name.value.trim(), email, password });
+    if (!res.ok) res = await post('/api/login', { email, password });
+  } catch { throw new Error('אין חיבור לשרת. בדקו את האינטרנט ונסו שוב - הפרטים שמורים.'); }
+  if (!res.ok) {
+    if (res.status === 401) throw new Error(`כבר קיים חשבון עם האימייל ${email}, והסיסמה לא תואמת. הזינו את הסיסמה של החשבון הקיים.`);
+    throw new Error('פתיחת החשבון נכשלה. נסו שוב בעוד רגע - הפרטים שמורים.');
+  }
+  const { user } = await res.json();
+  currentUser = { name: displayName(user), email: user.email, avatar: user.avatar || null, superAdmin: !!user.superAdmin };
+  localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
+  updateAccountBtn();
+}
 // ---- זהות: מילוי אוטומטי + טעינת/סנכרון החנות מהחשבון ----
 async function applyUser() {
+  // שדה הסיסמה רק לאורח; מוסתר ומנוטרל כדי שלא ייחשב שדה חובה למחובר
+  document.getElementById('guestPasswordField').hidden = !!currentUser;
+  document.getElementById('accountPassword').disabled = !!currentUser;
   if (currentUser) {
     if (!form.seller_name.value) form.seller_name.value = currentUser.name || '';
     if (!form.seller_email.value) form.seller_email.value = currentUser.email || '';
@@ -421,7 +446,7 @@ async function applyUser() {
     else renderOnboarding();
   } else {
     renderOnboarding();
-    document.getElementById('loginHintText').textContent = 'מומלץ להתחבר לפני פתיחת החנות - כך החנות נשמרת בחשבון שלכם, זמינה מכל מכשיר, ותוכלו לעקוב אחרי סטטוס האישור של המוצרים.';
+    document.getElementById('loginHintText').textContent = 'אין צורך בהרשמה נפרדת - שליחת הטופס פותחת לכם חשבון באתר, והחנות נשלחת ישר לאישור. כבר יש לכם חשבון? אפשר להתחבר.';
     document.getElementById('loginHintBtn').hidden = false;
   }
 }
@@ -464,6 +489,24 @@ async function submitStore(e) {
     err.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
+  const btn = document.getElementById('submitBtn');
+  // אורח: מילוי החנות הוא ההרשמה. חנות שנשמרת רק בדפדפן לא מגיעה אף פעם למנהל
+  // הקניון, לכן קודם פותחים חשבון (או מתחברים לקיים) ורק אז שולחים.
+  if (!currentUser) {
+    saveDraft();
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> פותח חשבון...';
+    try {
+      await registerFromStoreForm();
+    } catch (ex) {
+      err.innerHTML = esc(ex.message);
+      err.style.display = 'block';
+      err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> שלח חנות לאישור';
+      return;
+    }
+  }
   const prev = getSavedStore();
   const isNew = !prev;
   const record = {
@@ -474,7 +517,6 @@ async function submitStore(e) {
     contract_accepted_at: prev?.contract_version === SELLER_CONTRACT_VERSION && prev?.contract_accepted_at ? prev.contract_accepted_at : new Date().toISOString(),
     opened_at: prev?.opened_at || new Date().toISOString(),
   };
-  const btn = document.getElementById('submitBtn');
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
   try {
