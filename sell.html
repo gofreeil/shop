@@ -504,22 +504,11 @@ async function submitStore(e) {
     // בודקים שוב (אולי חתם הרגע בלשונית אחרת); ואם עדיין לא - ההסבר והקישור
     // לחתימה מופיעים כאן, צמוד לכפתור, ולא גוללים הרחק למעלה
     await charterGate.refresh();
-    if (!charterGate.signed) {
-      const email = currentUser?.email ? ` (${esc(currentUser.email)})` : '';
-      err.innerHTML = `<strong><i class="fas fa-scale-balanced"></i> החנות עוד לא נשלחה:</strong> ${esc(charterGate.blockMessage())}
-        ${charterGate.error ? '' : `<br>חשוב: החתימה צריכה להיות עם אותו אימייל של החשבון כאן${email}.`}
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-          ${charterGate.error ? '' : `<a href="${charterGate.signUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="padding:8px 14px;font-size:13px"><i class="fas fa-file-signature"></i> לחתימה על האמנה</a>`}
-          <button type="button" class="btn btn-ghost" style="padding:8px 14px;font-size:13px" onclick="document.getElementById('storeForm').requestSubmit()"><i class="fas fa-rotate"></i> חתמתי - שלחו שוב</button>
-        </div>`;
-      err.style.display = 'block';
-      toast('קודם חותמים על אמנת המוסר', 'fa-scale-balanced');
-      err.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      btn.disabled = false;
-      btn.innerHTML = getSavedStore() ? '<i class="fas fa-floppy-disk"></i> שמירת השינויים' : '<i class="fas fa-paper-plane"></i> שלח חנות לאישור';
-      return;
-    }
   }
+  // לא חוסמים: ההתאמה לחתימה היא לפי אימייל בלבד, וחותם שחתם בחכמי העדה בלי
+  // אימייל או עם אימייל אחר "לא נמצא" - ונחסם בלי שום סיבה אמיתית. החנות נשלחת
+  // בכל מקרה (מנהל הקניון מאשר ידנית), ורק מציגים לו אזהרה אחרי השליחה.
+  const charterMissing = !charterGate.signed;
   const prev = getSavedStore();
   const isNew = !prev;
   const record = {
@@ -559,6 +548,12 @@ async function submitStore(e) {
       toast('פרטי החנות עודכנו', 'fa-circle-check');
       document.getElementById('storeSummary').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    if (charterMissing && !charterGate.error) {
+      const note = document.getElementById('storeSuccessText');
+      const warn = `<span style="display:block;margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,0.12);color:#92400e;font-size:14px"><i class="fas fa-scale-balanced"></i> לא מצאנו חתימה על אמנת המוסר עם האימייל ${esc(currentUser?.email || '')}. אם חתמתם בחכמי העדה עם אימייל אחר או בלי אימייל - מנהל הקניון יבדוק זאת, ואפשר גם <a href="${charterGate.signUrl}" target="_blank" rel="noopener" style="text-decoration:underline">לחתום שוב עם האימייל הזה</a>.</span>`;
+      if (isNew && note) note.insertAdjacentHTML('beforeend', warn);
+      else toast('החנות נשמרה. לא נמצאה חתימה על האמנה עם האימייל הזה', 'fa-scale-balanced');
+    }
   } catch (ex) {
     err.textContent = ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message;
     err.style.display = 'block';
@@ -571,15 +566,8 @@ async function submitStore(e) {
 
 renderState();
 applyUser();
-// כפתור פתיחת החנות נעול עד שהחתימה על האמנה מאומתת מול חכמי העדה
-charterGate.mount('charterGate', {
-  onChange: signed => {
-    const btn = document.getElementById('submitBtn');
-    if (!btn) return;
-    btn.classList.toggle('btn-disabled', !signed);
-    btn.title = signed ? '' : 'קודם חותמים על אמנת המוסר העולמית';
-  }
-});
+// מצב החתימה על האמנה מוצג בתיבה שלה; הוא לא נועל את שליחת החנות (ראו submitStore)
+charterGate.mount('charterGate');
 </script>
 </body>
 </html>
