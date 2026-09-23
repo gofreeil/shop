@@ -1,7 +1,14 @@
-const { STRAPI_URL, setSharedCookie, parseBody, isSuperAdminUser, friendlyName, avatarUrl } = require('./_shared');
+const { STRAPI_URL, setSharedCookie, clearSharedCookie, parseBody, isSuperAdminUser, friendlyName, avatarUrl } = require('./_shared');
 
 // התחברות אימייל+סיסמה מול ה-Strapi המשותף; מצליח → שותל את העוגייה המשותפת.
 module.exports = async (req, res) => {
+	// התנתקות (/api/logout מופנה לכאן ב-vercel.json) - מוחק את העוגייה המשותפת
+	// ומתנתק מכל אתרי יוצאים לחירות. אוחד לכאן כי בתוכנית של Vercel מותרות עד
+	// 12 פונקציות שרת, ופונקציה שלוש-עשרה מפילה כל פריסה.
+	if (req.query?.logout) {
+		clearSharedCookie(res);
+		return res.status(200).json({ ok: true });
+	}
 	if (req.method !== 'POST') return res.status(405).json({ error: 'method' });
 	const body = parseBody(req);
 	const email = (body.email || '').trim().toLowerCase();

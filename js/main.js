@@ -1054,7 +1054,7 @@ function renderAccountMenu() {
   `;
 }
 async function logoutUser() {
-  try { await fetch('/api/logout', { method: 'POST' }); } catch { /* ignore */ }
+  try { await fetch('/api/login?logout=1', { method: 'POST' }); } catch { /* ignore */ }
   currentUser = null;
   localStorage.removeItem(STORAGE.USER);
   updateAccountBtn();
