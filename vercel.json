@@ -4,6 +4,7 @@
   "rewrites": [
     { "source": "/api/logout", "destination": "/api/login?logout=1" },
     { "source": "/img/:d/:i", "destination": "/api/product-image?d=:d&i=:i" },
+    { "source": "/store-logo/:d", "destination": "/api/product-image?d=:d&i=logo&k=store" },
     { "source": "/p/:id", "destination": "/api/product-page?id=:id" },
     { "source": "/site-img/:d", "destination": "/api/site-image?d=:d" }
   ],

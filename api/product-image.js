@@ -12,6 +12,18 @@ module.exports = async (req, res) => {
 	const i = String(req.query?.i || '0').trim();
 	if (!/^[A-Za-z0-9_-]{1,64}$/.test(d) || !/^(logo|\d{1,2})$/.test(i)) return res.status(400).end();
 	try {
+		// /store-logo/<documentId> - לוגו של חנות מאושרת (רשומת shop-store, לא מוצר)
+		if (req.query?.k === 'store') {
+			const r = await strapi(`${STRAPI_URL}/api/shop-stores/logo?d=${encodeURIComponent(d)}`, { headers: { 'Content-Type': 'application/json' } });
+			const m = DATA_IMAGE.exec((r.ok && r.json?.data?.logo) || '');
+			if (!m) return res.status(404).end();
+			const buf = Buffer.from(m[2], 'base64');
+			res.setHeader('Content-Type', m[1] === 'image/jpg' ? 'image/jpeg' : m[1]);
+			res.setHeader('Content-Length', buf.length);
+			// הלוגו יכול להשתנות בעריכת החנות - קאש קצר יותר
+			res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
+			return res.status(200).end(buf);
+		}
 		const r = await strapi(`${STRAPI_URL}/api/shop-seller-products/${encodeURIComponent(d)}`, { headers: { 'Content-Type': 'application/json' } });
 		const row = r.ok ? r.json?.data : null;
 		if (!row) return res.status(404).end();

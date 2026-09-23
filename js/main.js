@@ -1119,6 +1119,19 @@ async function loadSellerProducts() {
     if (added) document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { added } }));
   } catch { /* offline / dev ללא API */ }
 }
+// החנויות המאושרות עצמן (לא רק דרך המוצרים) - כך חנות מאושרת מופיעה בקניון
+// גם לפני שעלו לה מוצרים. נטען במקביל למוצרים, ומרנדר מחדש דרך productsUpdated.
+let approvedStores = [];
+async function loadApprovedStores() {
+  try {
+    const res = await fetch('/api/store?public=1');
+    if (!res.ok) return;
+    const { stores } = await res.json();
+    if (!Array.isArray(stores) || !stores.length) return;
+    approvedStores = stores;
+    document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { stores: stores.length } }));
+  } catch { /* offline / dev ללא API */ }
+}
 
 // === Stores (הקניון השיתופי) ===
 // חנות = קבוצת המוצרים המאושרים של אותו מוכר, לפי שם החנות. פרטי החנות (לוגו,
@@ -1160,6 +1173,12 @@ function storesFromProducts() {
       }
     }
     s.products.push(p);
+  }
+  // רשומת החנות המאושרת היא המקור העדכני לפרטי החנות; חנות בלי מוצרים נכנסת כמו שהיא
+  for (const st of approvedStores) {
+    const s = map.get(st.slug);
+    if (!s) { map.set(st.slug, { ...st, products: [] }); continue; }
+    for (const k of ['name', 'logo', 'phone', 'whatsapp', 'city', 'website', 'description']) if (st[k]) s[k] = st[k];
   }
   return [...map.values()].sort((a, b) => b.products.length - a.products.length);
 }
@@ -1229,6 +1248,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyHeaderTooltips();
   hydrateUser();
   loadSellerProducts();
+  loadApprovedStores();
   updateCartCount();
   updateWishlistCount();
   const wishBtn = document.getElementById('wishlistBtn');
