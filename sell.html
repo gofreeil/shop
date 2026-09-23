@@ -474,15 +474,6 @@ async function submitStore(e) {
     setTimeout(() => { try { bad.focus({ preventScroll: true }); } catch {} }, 400);
     return;
   }
-  // תנאי סף: חתימה על אמנת המוסר העולמית. בלעדיה גם השרת דוחה את המוצר הראשון,
-  // ולכן עוצרים כבר כאן ולא נותנים לפתוח חנות שלא תוכל להגיש דבר.
-  if (!charterGate.signed) {
-    err.textContent = charterGate.blockMessage();
-    err.style.display = 'block';
-    document.getElementById('charterGate').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    charterGate.refresh();
-    return;
-  }
   if (!document.getElementById('consentContract').checked) {
     err.textContent = 'יש לגלול עד סוף ההסכם ולאשר אותו.';
     err.style.display = 'block';
@@ -504,6 +495,28 @@ async function submitStore(e) {
       err.scrollIntoView({ behavior: 'smooth', block: 'center' });
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-paper-plane"></i> שלח חנות לאישור';
+      return;
+    }
+  }
+  // תנאי סף: חתימה על אמנת המוסר העולמית. בלעדיה גם השרת דוחה את המוצר הראשון,
+  // ולכן עוצרים כבר כאן ולא נותנים לפתוח חנות שלא תוכל להגיש דבר.
+  if (!charterGate.signed) {
+    // בודקים שוב (אולי חתם הרגע בלשונית אחרת); ואם עדיין לא - ההסבר והקישור
+    // לחתימה מופיעים כאן, צמוד לכפתור, ולא גוללים הרחק למעלה
+    await charterGate.refresh();
+    if (!charterGate.signed) {
+      const email = currentUser?.email ? ` (${esc(currentUser.email)})` : '';
+      err.innerHTML = `<strong><i class="fas fa-scale-balanced"></i> החנות עוד לא נשלחה:</strong> ${esc(charterGate.blockMessage())}
+        ${charterGate.error ? '' : `<br>חשוב: החתימה צריכה להיות עם אותו אימייל של החשבון כאן${email}.`}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+          ${charterGate.error ? '' : `<a href="${charterGate.signUrl}" target="_blank" rel="noopener" class="btn btn-primary" style="padding:8px 14px;font-size:13px"><i class="fas fa-file-signature"></i> לחתימה על האמנה</a>`}
+          <button type="button" class="btn btn-ghost" style="padding:8px 14px;font-size:13px" onclick="document.getElementById('storeForm').requestSubmit()"><i class="fas fa-rotate"></i> חתמתי - שלחו שוב</button>
+        </div>`;
+      err.style.display = 'block';
+      toast('קודם חותמים על אמנת המוסר', 'fa-scale-balanced');
+      err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      btn.disabled = false;
+      btn.innerHTML = getSavedStore() ? '<i class="fas fa-floppy-disk"></i> שמירת השינויים' : '<i class="fas fa-paper-plane"></i> שלח חנות לאישור';
       return;
     }
   }
