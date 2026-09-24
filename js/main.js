@@ -991,15 +991,34 @@ async function handleRegister(e) {
     toast('שגיאת הרשמה, נסה שוב', 'fa-circle-exclamation');
   }
 }
-// מזהה משתמש מחובר לפי העוגייה המשותפת (בטעינת הדף / חזרה מ-SSO)
+// חיבור-מחדש שקט דרך גשר ה-SSO של הקהילה (הסשן שם חי שנה ומתחדש בכל ביקור):
+// הגשר שותל עוגייה משותפת עם טוקן חי וחוזר בדיוק לדף הנוכחי. לכל היותר פעם
+// ב-6 שעות, כדי שתקלה בגשר לא תהפוך ללולאת הפניות.
+const SSO_RETRY_KEY = 'shop-sso-retry';
+function silentReconnect() {
+  let last = 0;
+  try { last = Number(localStorage.getItem(SSO_RETRY_KEY)) || 0; } catch { /* ignore */ }
+  if (Date.now() - last < 6 * 60 * 60 * 1000) return false;
+  try { localStorage.setItem(SSO_RETRY_KEY, String(Date.now())); } catch { /* ignore */ }
+  window.location.replace(`https://community.gofreeil.com/sso?callback=${encodeURIComponent(window.location.href)}`);
+  return true;
+}
+// מזהה משתמש מחובר לפי העוגייה המשותפת (בטעינת הדף / חזרה מ-SSO).
+// משתמש שהתחבר במכשיר הזה נשאר מחובר עד שהוא עצמו לוחץ "התנתקות": טוקן שפג או
+// עוגייה שנעלמה מחודשים דרך הקהילה, ותקלת שרת רגעית לא מנתקת אותו.
 async function hydrateUser() {
   try {
     const res = await fetch('/api/me');
-    const { user } = await res.json();
+    const { user, expired, transient, renew } = await res.json();
     if (user) {
       currentUser = { name: displayName(user), email: user.email, avatar: user.avatar || null, superAdmin: !!user.superAdmin };
       localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
-    } else if (currentUser) {
+      if (renew) silentReconnect();
+      else { try { localStorage.removeItem(SSO_RETRY_KEY); } catch { /* ignore */ } }
+    } else if (transient) {
+      return; // השרת לא ענה - נשארים במצב הקודם
+    } else if (currentUser || expired) {
+      if (silentReconnect()) return;
       currentUser = null;
       localStorage.removeItem(STORAGE.USER);
     }
