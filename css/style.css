@@ -478,8 +478,9 @@ input, textarea { font-family: inherit; font-size: inherit; }
 
 /* desktop & tablet (everything above mobile): category banners live inside the hero instead of the floating demo cards, and float like they did */
 .hero-categories { display: none; }
+/* the floating demo cards are retired everywhere - on mobile the category banners right below take their place */
+.hero-visual { display: none; }
 @media (min-width: 721px) {
-  .hero-visual { display: none; }
   .hero-categories { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 22px; }
   .hero-categories .category-bg { height: 190px; }
   .hero-categories .category-card { animation: cardFloatSoft 7s ease-in-out infinite; }
