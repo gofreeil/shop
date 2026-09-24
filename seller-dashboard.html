@@ -207,8 +207,9 @@
   <div class="modal-content" style="max-width:560px">
     <button type="button" class="modal-close" onclick="closeProductEdit()" aria-label="סגירה"><i class="fas fa-times"></i></button>
     <h3 style="margin-bottom:4px"><i class="fas fa-pen-to-square" style="color:var(--primary)"></i> עריכת <span id="editName"></span></h3>
-    <p class="sd-hint" style="margin-bottom:14px">השינויים מופיעים באתר תוך דקה. לשינוי שם המוצר פנו למנהל החנות.</p>
+    <p class="sd-hint" style="margin-bottom:14px">השינויים מופיעים באתר תוך דקה.</p>
     <form class="form-grid" id="editForm" onsubmit="saveProductEdit(event)" novalidate>
+      <div class="form-field"><label>שם המוצר *</label><input type="text" name="name" maxlength="120" required></div>
       <div class="form-field">
         <label>תמונות המוצר (עד 6 · הראשונה היא הראשית)</label>
         <div id="editImgs" class="sd-edit-imgs"></div>
@@ -442,7 +443,8 @@ function openProductEdit(documentId) {
   f.reset();
   document.getElementById('editName').textContent = '"' + p.name + '"';
   document.getElementById('editError').style.display = 'none';
-  for (const k of ['price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'short_description', 'description', 'link']) f[k].value = p[k] ?? '';
+  // f.elements ולא f[k]: אצל <form>, f.name הוא מאפיין שם הטופס ולא השדה
+  for (const k of ['name', 'price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'short_description', 'description', 'link']) f.elements[k].value = p[k] ?? '';
   f.delivery_by_carrier.checked = !!p.delivery_by_carrier;
   editImages = (Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : [])).filter(x => /^data:image\//.test(x || ''));
   editImagesDirty = false;
@@ -509,7 +511,7 @@ async function saveProductEdit(e) {
   if (btn.disabled) return;
   const n = v => (v === '' ? null : v);
   const body = {
-    documentId: editingId, price: f.price.value, old_price: n(f.old_price.value), shipping_price: n(f.shipping_price.value),
+    documentId: editingId, name: f.elements.name.value.trim(), price: f.price.value, old_price: n(f.old_price.value), shipping_price: n(f.shipping_price.value),
     quantity: n(f.quantity.value), delivery_days: n(f.delivery_days.value), delivery_by_carrier: f.delivery_by_carrier.checked,
     short_description: f.short_description.value.trim(), description: f.description.value, link: f.link.value.trim(),
   };
