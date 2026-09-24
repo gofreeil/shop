@@ -6,7 +6,7 @@
     { "source": "/img/:d/:i", "destination": "/api/product-image?d=:d&i=:i" },
     { "source": "/store-logo/:d", "destination": "/api/product-image?d=:d&i=logo&k=store" },
     { "source": "/p/:id", "destination": "/api/product-page?id=:id" },
-    { "source": "/site-img/:d", "destination": "/api/site-image?d=:d" }
+    { "source": "/site-img/:d", "destination": "/api/product-image?d=:d&k=site" }
   ],
   "functions": {
     "api/product-page.js": { "includeFiles": "data/products.js" }

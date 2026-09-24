@@ -9,7 +9,7 @@ const { STRAPI_URL, parseBody, authHeaders, strapiFetch: strapi } = require('./_
 //   DELETE /api/site-content?key=<key>     מחיקת דריסה = חזרה לתוכן המקורי (סופר-אדמין)
 //
 // תמונות נשמרות ב-Strapi כ-data URL; לרשימה הציבורית מחזירים כתובת
-// (/site-img/<documentId>?v=<updatedAt>, מוגש ע"י api/site-image.js עם קאש CDN).
+// (/site-img/<documentId>?v=<updatedAt>, מוגש ע"י api/product-image.js עם קאש CDN).
 const ENDPOINT = STRAPI_URL + '/api/shop-site-overrides';
 const DATA_IMAGE = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 
