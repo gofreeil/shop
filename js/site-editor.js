@@ -189,6 +189,15 @@
       const e = entityOf(key);
       const f = d.fields || {};
       if (e.type === 'product') {
+        // מוצר שנמחק מפאנל הניהול (style.hidden) - יורד מהרשימה בכל הדפים
+        if (d.style?.hidden) {
+          const i = prodList().findIndex(x => x.id === e.id);
+          if (i < 0) continue;
+          if (!entityOrig.has(key)) entityOrig.set(key, { removed: prodList()[i], index: i });
+          prodList().splice(i, 1);
+          changed = true;
+          continue;
+        }
         const p = prodList().find(x => x.id === e.id);
         if (!p) continue;
         if (!entityOrig.has(key)) entityOrig.set(key, { image: p.image, images: p.images, name: p.name, desc: p.desc });
@@ -211,6 +220,7 @@
   function restoreEntity(key) {
     const e = entityOf(key), o = entityOrig.get(key);
     if (!e || !o) return;
+    if (o.removed) { prodList().splice(Math.min(o.index, prodList().length), 0, o.removed); entityOrig.delete(key); return; }
     const item = (e.type === 'product' ? prodList() : catList()).find(x => x.id === e.id);
     if (item) Object.assign(item, o);
     entityOrig.delete(key);
@@ -306,7 +316,9 @@
   }
   async function load() {
     try {
-      const res = await fetch(`${API}?page=${encodeURIComponent(PAGE)}`);
+      let fresh = '';
+      try { if (JSON.parse(localStorage.getItem('noshop_user') || 'null')?.superAdmin) fresh = '&fresh=1'; } catch { /* ignore */ }
+      const res = await fetch(`${API}?page=${encodeURIComponent(PAGE)}${fresh}`);
       if (!res.ok) return;
       const { items } = await res.json();
       const list = Array.isArray(items) ? items : [];

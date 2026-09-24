@@ -118,7 +118,8 @@ module.exports = async (req, res) => {
 			const url = ENDPOINT + '?filters[status][$eq]=approved&sort=decided_at:desc&pagination[pageSize]=200';
 			const r = await strapi(url, { headers: { 'Content-Type': 'application/json' } });
 			if (!r.ok) return res.status(502).json({ items: [] });
-			res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+			// מנהל מבקש ?fresh=1 (בלי קאש) כדי לראות מיד מחיקה/הסתרה שעשה
+			res.setHeader('Cache-Control', q.fresh ? 'no-store' : 's-maxage=30, stale-while-revalidate=60');
 			return res.status(200).json({ items: (r.json?.data ?? []).map(toShopProduct) });
 		}
 

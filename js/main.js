@@ -1188,7 +1188,8 @@ function renderWishlistModal() {
 // ב-dev מקומי (http-server בלי API) הקריאה נכשלת בשקט.
 async function loadSellerProducts() {
   try {
-    const res = await fetch('/api/seller-products');
+    // מנהל עוקף את הקאש - אחרת מוצר שמחק/הסתיר חוזר אליו לכמה דקות אחרי רענון
+    const res = await fetch('/api/seller-products' + (currentUser?.superAdmin ? '?fresh=1' : ''));
     if (!res.ok) return;
     const { items } = await res.json();
     if (!Array.isArray(items) || !items.length) return;
