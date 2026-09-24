@@ -772,7 +772,7 @@ function sellerCardHtml(s) {
         <div class="seller-title"><strong>${escHtml(s.name)}</strong><span class="status-pill ${s.status}"><i class="fas ${icon}"></i> ${label}</span></div>
         <div class="seller-meta">
           ${cat ? escHtml(cat.name) : escHtml(s.category)} · מחיר לצרכן <strong>${ils(s.price)}</strong>${s.old_price ? ` <s>${ils(s.old_price)}</s>` : ''}
-          ${s.quantity != null ? ` · ${s.quantity} יח' במלאי` : ''}${s.delivery_days ? ` · אספקה ${s.delivery_days} ימי עסקים` : ''}
+          ${s.quantity != null ? ` · ${s.quantity} יח' במלאי` : ''}${s.delivery_days === 0 ? ' · אספקה בכפוף לחברת המשלוחים' : s.delivery_days ? ` · אספקה ${s.delivery_days} ימי עסקים` : ''}
           ${safeLink ? ` · <a href="${safeLink}" target="_blank" rel="noopener" style="color:var(--primary)">קישור <i class="fas fa-arrow-up-right-from-square"></i></a>` : ''}
           · הוגש ${fmtDate(s.submitted_at || s.createdAt)}
         </div>

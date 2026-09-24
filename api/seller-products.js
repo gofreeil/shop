@@ -174,7 +174,7 @@ module.exports = async (req, res) => {
 			}
 			if (body.old_price !== undefined) data.old_price = num(body.old_price) > 0 ? Math.round(num(body.old_price) * 100) / 100 : null;
 			if (body.quantity !== undefined) data.quantity = num(body.quantity) > 0 ? Math.floor(num(body.quantity)) : null;
-			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null;
+			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) === 0 ? 0 : num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null; // 0 = בכפוף לחברת המשלוחים
 			if (['visible', 'hidden', 'neighborhoods'].includes(body.visibility)) data.visibility = body.visibility;
 			const r = await strapi(`${ENDPOINT}/${encodeURIComponent(documentId)}`, {
 				method: 'PUT',

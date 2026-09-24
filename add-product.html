@@ -118,7 +118,11 @@
               <label class="inline-check"><input type="checkbox" id="unlimitedStock" onchange="toggleUnlimitedStock()"> ללא הגבלה</label>
               <p class="hint" style="margin:6px 0 0">מספר יוצג ללקוח בדף המוצר ("5 יח' במלאי") ותקבלו התראת מלאי נמוך בלוח המכוונים. "ללא הגבלה" - לא מוצג מונה, מתאים למוצר שמיוצר או מוזמן לפי דרישה.</p>
             </div>
-            <div class="form-field"><label>זמן אספקה (ימי עסקים)</label><input type="number" name="delivery_days" min="1" max="60" step="1" placeholder="למשל 3"></div>
+            <div class="form-field">
+              <label>זמן אספקה (ימי עסקים)</label>
+              <input type="number" name="delivery_days" id="deliveryInput" min="1" max="60" step="1" placeholder="למשל 3">
+              <label class="inline-check"><input type="checkbox" id="deliveryByCarrier" onchange="toggleDeliveryByCarrier()"> בכפוף לחברת המשלוחים</label>
+            </div>
           </div>
           <div class="form-field"><label>קישור לאתר / קטלוג (אופציונלי)</label><input type="url" name="link" maxlength="300" placeholder="https://"></div>
           <div class="form-field"><label>תיאור המוצר *</label><textarea name="description" rows="5" maxlength="2000" required placeholder="מה המוצר, למי הוא מתאים, מה כלול, מידות/משקל, הוראות שימוש. בלי הבטחות רפואיות או טענות שאינכם יכולים לגבות."></textarea></div>
@@ -429,6 +433,15 @@ function clearImages() {
   renderGallery();
 }
 
+// זמן אספקה בכפוף לחברת המשלוחים - נשמר כ-0 ומוצג ללקוח כטקסט במקום מספר ימים
+function toggleDeliveryByCarrier() {
+  const on = document.getElementById('deliveryByCarrier').checked;
+  const input = document.getElementById('deliveryInput');
+  input.disabled = on;
+  if (on) input.value = '';
+  input.placeholder = on ? 'בכפוף לחברת המשלוחים' : 'למשל 3';
+}
+
 // ---- טיוטת המוצר: כל מה שהוקלד והתמונות נשמרים במכשיר (IndexedDB) תוך כדי מילוי ----
 // כך שום דבר לא אובד: לא ביציאה להתחברות, לא ברענון ולא בשליחה שנכשלה. נמחקת רק
 // אחרי שהמוצר התקבל בשרת. IndexedDB ולא localStorage - התמונות שוקלות מגה-בייטים.
@@ -467,6 +480,7 @@ async function saveProductDraft() {
     else await draftStore('readwrite', s => s.put({
       fields,
       unlimited: document.getElementById('unlimitedStock').checked,
+      byCarrier: document.getElementById('deliveryByCarrier').checked,
       accuracy: document.getElementById('consentAccuracy').checked,
       gallery: gallery.map(it => ({ src: it.src, out: it.out, view: it.view })),
       savedAt: Date.now(),
@@ -485,9 +499,11 @@ async function restoreProductDraft() {
   draftRestoring = true;
   for (const k of DRAFT_FIELDS) if (form.elements[k] && d.fields?.[k] != null) form.elements[k].value = d.fields[k];
   document.getElementById('unlimitedStock').checked = !!d.unlimited;
+  document.getElementById('deliveryByCarrier').checked = !!d.byCarrier;
   document.getElementById('consentAccuracy').checked = !!d.accuracy;
   gallery = Array.isArray(d.gallery) ? d.gallery.filter(it => it?.out) : [];
   toggleUnlimitedStock();
+  toggleDeliveryByCarrier();
   updateCommission();
   renderEmojiPicker();
   renderGallery();
@@ -741,7 +757,7 @@ async function submitProduct(e) {
   const f = Object.fromEntries(new FormData(form));
   const data = {
     name: f.name, category: f.category, emoji: f.emoji, price: f.price, old_price: f.old_price || null,
-    quantity: f.quantity || null, delivery_days: f.delivery_days || null, link: f.link, description: f.description,
+    quantity: f.quantity || null, delivery_days: document.getElementById('deliveryByCarrier').checked ? 0 : (f.delivery_days || null), link: f.link, description: f.description,
     image: gallery[0]?.out || '',
     images: gallery.map(it => it.out),
     store_name: store.store_name, store_phone: store.store_phone, store_whatsapp: store.store_whatsapp, store_city: store.store_city,
@@ -798,6 +814,7 @@ function resetProductForm() {
   clearProductDraft();
   renderEmojiPicker();
   toggleUnlimitedStock();
+  toggleDeliveryByCarrier();
   updateCommission();
   form.hidden = false;
   document.getElementById('sellSuccess').hidden = true;

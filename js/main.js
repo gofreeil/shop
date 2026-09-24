@@ -245,7 +245,7 @@ function openQuickView(productId) {
           ? `<p style="color:var(--text-muted);margin:16px 0">${p.desc || ''}</p>
         <div class="seller-note">
           ${storeLogoHtml(p, 48)}
-          <div>נמכר ומסופק על ידי <a href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}"><strong>${p.seller}</strong></a>${p.storeCity ? ` · ${p.storeCity}` : ''}${p.deliveryDays ? ` · אספקה תוך ${p.deliveryDays} ימי עסקים` : ''}${p.quantity ? ` · ${p.quantity} יח' במלאי` : ''}
+          <div>נמכר ומסופק על ידי <a href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}"><strong>${p.seller}</strong></a>${p.storeCity ? ` · ${p.storeCity}` : ''}${p.deliveryDays === 0 ? ' · זמן אספקה בכפוף לחברת המשלוחים' : p.deliveryDays ? ` · אספקה תוך ${p.deliveryDays} ימי עסקים` : ''}${p.quantity ? ` · ${p.quantity} יח' במלאי` : ''}
             <div class="store-contact">
               ${p.storePhone ? `<a href="tel:${p.storePhone}"><i class="fas fa-phone"></i> ${p.storePhone}</a>` : ''}
               ${waLink(p.storeWhatsapp || p.storePhone) ? `<a href="${waLink(p.storeWhatsapp || p.storePhone)}" target="_blank" rel="noopener" class="wa"><i class="fab fa-whatsapp"></i> וואטסאפ</a>` : ''}
@@ -405,7 +405,7 @@ function openAdminEdit(id) {
       </div>
       <div class="row">
         <label>מלאי (ריק = ללא הגבלה)<input name="quantity" type="number" min="0" step="1" value="${p.quantity ?? ''}"></label>
-        <label>ימי אספקה<input name="delivery_days" type="number" min="1" step="1" value="${p.deliveryDays ?? ''}"></label>
+        <label>ימי אספקה (0 = בכפוף לחברת המשלוחים)<input name="delivery_days" type="number" min="0" step="1" value="${p.deliveryDays ?? ''}"></label>
       </div>
       <label>תיאור<textarea name="description" rows="8" maxlength="2000">${v('desc')}</textarea></label>
       <label>קישור חיצוני<input name="link" type="url" maxlength="300" placeholder="https://" value="${v('link')}"></label>
@@ -438,7 +438,7 @@ async function saveAdminEdit(id, form) {
   Object.assign(p, {
     name: htmlEsc(f.name.trim()), category: f.category, emoji: htmlEsc(f.emoji.trim() || '📦'),
     price: Number(f.price), oldPrice: num(f.old_price) || null, quantity: num(f.quantity) || null,
-    deliveryDays: num(f.delivery_days) || null, desc: htmlEsc(f.description.trim()),
+    deliveryDays: num(f.delivery_days) === 0 ? 0 : num(f.delivery_days) || null, desc: htmlEsc(f.description.trim()),
     link: htmlEsc(f.link.trim()), visibility: f.visibility
   });
   if (f.visibility !== 'visible') return removeFromShelf(p, 'המוצר עודכן והוסתר מהמדף');
