@@ -736,6 +736,23 @@ input, textarea { font-family: inherit; font-size: inherit; }
   color: var(--text-muted); font-size: 15px;
 }
 .payment-methods { display: flex; gap: 12px; font-size: 24px; }
+/* פוטר מצומצם (דף הבית): לוגו, שורת קישורים ורשתות בשורה אחת */
+.footer-slim-top {
+  display: flex; align-items: center; gap: 12px 24px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.footer--slim .footer-logo img { height: 48px; }
+.footer-links { display: flex; flex-wrap: wrap; gap: 4px 18px; flex: 1; }
+.footer-links a { color: var(--text-muted); font-size: 14px; transition: var(--transition); }
+.footer-links a:hover { color: var(--primary); }
+.footer--slim .social-links a { width: 34px; height: 34px; }
+@media (max-width: 720px) {
+  .footer-slim-top { justify-content: center; text-align: center; gap: 10px; }
+  .footer--slim .footer-logo { display: none; }
+  .footer-links { justify-content: center; gap: 4px 14px; flex-basis: 100%; }
+  .footer-links a { font-size: 13px; }
+  .footer--slim .payment-methods { font-size: 20px; }
+}
 
 /* === Toast === */
 .toast {
