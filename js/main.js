@@ -133,7 +133,6 @@ function updateWishlistCount() {
 // === Render ===
 function productCard(p) {
   const cat = categories.find(c => c.id === p.category) || categories[0];
-  const inWish = wishlist.includes(p.id);
   const badge = p.badge ? `<span class="product-badge ${p.badge}">${p.badge === 'sale' ? 'מבצע' : p.badge === 'new' ? 'חדש' : 'חם'}</span>` : '';
   const oldPrice = p.oldPrice ? `<span class="product-price-old">₪${p.oldPrice}</span>` : '';
   return `
@@ -141,12 +140,6 @@ function productCard(p) {
       <div class="product-image" style="background: linear-gradient(135deg, ${cat.color}22, ${cat.color}11)">
         ${p.image ? `<img class="product-photo" src="${p.image}" alt="${p.name}" loading="lazy">` : `<span style="font-size:80px">${p.emoji || '📦'}</span>`}
         <div class="product-badges">${badge}</div>
-        <div class="product-actions">
-          <button onclick="openQuickView(${p.id})"><i class="fas fa-eye"></i> צפייה</button>
-          <button class="icon-only" onclick="toggleWishlist(${p.id})" data-wishlist="${p.id}">
-            ${inWish ? '<i class="fas fa-heart" style="color:#ef4444"></i>' : '<i class="far fa-heart"></i>'}
-          </button>
-        </div>
       </div>
       <div class="product-info">
         <span class="product-category">${cat.name}</span>
@@ -165,6 +158,42 @@ function productCard(p) {
     </div>
   `;
 }
+// לחיצה בכל מקום בכרטיס מוצר פותחת את המוצר (חוץ מקישור החנות וכפתור ה-+).
+// לחיצה ימנית פותחת תפריט קטן: הוספה לסל / סימון אהבתי.
+document.addEventListener('click', e => {
+  if (document.body.classList.contains('se-editing')) return;
+  const card = e.target.closest('.product-card[data-id]');
+  if (!card || e.target.closest('a, button, .success-preview')) return;
+  openQuickView(Number(card.dataset.id));
+});
+function closeCardMenu() { document.getElementById('cardMenu')?.remove(); }
+document.addEventListener('contextmenu', e => {
+  closeCardMenu();
+  if (document.body.classList.contains('se-editing')) return;
+  const card = e.target.closest('.product-card[data-id]');
+  if (!card || card.closest('.success-preview')) return;
+  e.preventDefault();
+  const id = Number(card.dataset.id);
+  const inWish = wishlist.includes(id);
+  const menu = document.createElement('div');
+  menu.id = 'cardMenu';
+  menu.className = 'card-menu';
+  menu.innerHTML = `
+    <button data-act="cart"><i class="fas fa-cart-plus"></i> הוסף לסל</button>
+    <button data-act="wish">${inWish ? '<i class="fas fa-heart" style="color:#ef4444"></i> הסר מאהבתי' : '<i class="far fa-heart"></i> אהבתי'}</button>`;
+  menu.addEventListener('click', ev => {
+    const act = ev.target.closest('button')?.dataset.act;
+    if (act === 'cart') addToCart(id);
+    if (act === 'wish') toggleWishlist(id);
+    closeCardMenu();
+  });
+  document.body.appendChild(menu);
+  const r = menu.getBoundingClientRect();
+  menu.style.left = Math.max(8, Math.min(e.clientX, innerWidth - r.width - 8)) + 'px';
+  menu.style.top = Math.max(8, Math.min(e.clientY, innerHeight - r.height - 8)) + 'px';
+});
+['click', 'scroll', 'resize'].forEach(t => addEventListener(t, closeCardMenu, true));
+addEventListener('keydown', e => { if (e.key === 'Escape') closeCardMenu(); });
 function renderProducts(containerId, list) {
   const el = document.getElementById(containerId);
   if (!el) return;
