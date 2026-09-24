@@ -216,7 +216,7 @@ function renderCategories() {
   initTapHints(targets.flatMap(el => [...el.querySelectorAll('.category-card')]));
 }
 
-// === Tap hint ("לחץ לכניסה") - vanilla port of purchasing_groups TapHint.svelte ===
+// === Tap hint ("לחץ להיכרות") - vanilla port of purchasing_groups TapHint.svelte ===
 // One hint per page load: fires after scrolling settles, on the first card whose
 // centre sits in the middle of the screen. Phone shows a real hand tapping the
 // card, laptop shows a mouse cursor clicking. Skipped for prefers-reduced-motion
@@ -225,7 +225,7 @@ function initTapHints(cards) {
   if (!cards.length) return;
   const forced = new URLSearchParams(location.search).has('hand');
   if (!forced && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const label = 'לחץ לכניסה';
+  const label = 'לחץ להיכרות';
   const mq = window.matchMedia('(min-width: 769px)');
   const cursorSvg = '<span class="tap-cursor"><svg viewBox="0 0 24 24" width="34" height="34"><path d="M4.5 3.2 L4.5 19.6 L8.9 15.6 L11.6 21.4 L14.6 20 L11.9 14.4 L18 14.2 Z" fill="#ffffff" stroke="#0b1220" stroke-width="1.3" stroke-linejoin="round"/></svg></span>';
   const handImg = '<img class="tap-hand" src="images/finger.webp" alt="" width="500" height="802" decoding="async">';

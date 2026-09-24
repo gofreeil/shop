@@ -476,7 +476,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 }
 .category-card.has-image { overflow: visible; }
 
-/* === Tap hint ("לחץ לכניסה") - ported from purchasing_groups TapHint.svelte ===
+/* === Tap hint ("לחץ להיכרות") - ported from purchasing_groups TapHint.svelte ===
    Shown once per page load on the card the visitor stopped on. Phone: a real hand
    enters from below and taps; laptop: a mouse cursor arrives and clicks.
    Transparent to clicks so the card link keeps working. */
