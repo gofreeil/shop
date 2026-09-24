@@ -95,9 +95,9 @@
       </div>
       <p class="hero-subtitle">כל אחד יכול לפתוח כאן חנות - ולמכור מוצרים ללקוחות יוצאים לחירות.</p>
       <div class="hero-actions">
-        <a href="products.html" class="btn btn-primary btn-lg">
-          <i class="fas fa-shopping-bag"></i> התחל לקנות
-        </a>
+        <button type="button" class="btn btn-primary btn-lg" onclick="if(!document.getElementById('searchBar').classList.contains('active'))document.getElementById('searchToggle').click();else document.getElementById('searchInput').focus()">
+          <i class="fas fa-search"></i> חפש
+        </button>
         <a href="sell.html" class="btn btn-ghost btn-lg">
           <i class="fas fa-store"></i> פתח חנות
         </a>
