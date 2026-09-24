@@ -44,6 +44,14 @@
   .sd-panel tr:last-child td { border-bottom: none; }
   .sd-row-thumb { width: 38px; height: 38px; border-radius: 10px; background: var(--bg-alt); display: inline-flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; vertical-align: middle; margin-left: 10px; }
   .sd-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .sd-edit-imgs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .sd-edit-imgs:empty::before { content: 'אין תמונות - יוצג סמל המוצר'; color: var(--text-muted); font-size: 13px; }
+  .sd-edit-img { position: relative; width: 96px; height: 72px; border-radius: 10px; overflow: hidden; background: var(--bg-alt); border: 2px solid transparent; }
+  .sd-edit-img.cover { border-color: var(--primary); }
+  .sd-edit-img img { width: 100%; height: 100%; object-fit: cover; }
+  .sd-edit-img .acts { position: absolute; inset: auto 0 0 0; display: flex; justify-content: center; gap: 4px; padding: 3px; background: rgba(0,0,0,0.45); }
+  .sd-edit-img .acts button { border: 0; background: #fff; color: #333; width: 24px; height: 24px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+  .sd-edit-img .acts button.danger { color: #b91c1c; }
   .sd-inv-input { width: 72px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 13px; text-align: center; }
   .sd-inv-input.price { width: 88px; }
   .sd-low-stock { color: #b91c1c; font-size: 11px; font-weight: 700; display: block; margin-top: 3px; }
@@ -199,8 +207,13 @@
   <div class="modal-content" style="max-width:560px">
     <button type="button" class="modal-close" onclick="closeProductEdit()" aria-label="סגירה"><i class="fas fa-times"></i></button>
     <h3 style="margin-bottom:4px"><i class="fas fa-pen-to-square" style="color:var(--primary)"></i> עריכת <span id="editName"></span></h3>
-    <p class="sd-hint" style="margin-bottom:14px">השינויים מופיעים באתר תוך דקה. לשינוי שם המוצר או התמונות פנו למנהל החנות.</p>
+    <p class="sd-hint" style="margin-bottom:14px">השינויים מופיעים באתר תוך דקה. לשינוי שם המוצר פנו למנהל החנות.</p>
     <form class="form-grid" id="editForm" onsubmit="saveProductEdit(event)" novalidate>
+      <div class="form-field">
+        <label>תמונות המוצר (עד 6 · הראשונה היא הראשית)</label>
+        <div id="editImgs" class="sd-edit-imgs"></div>
+        <label class="btn btn-ghost" id="editImgAdd" style="align-self:flex-start;padding:8px 14px;font-size:13px;cursor:pointer"><i class="fas fa-camera"></i> הוספת / החלפת תמונה<input type="file" accept="image/*" multiple hidden onchange="addEditImages(this.files); this.value=''"></label>
+      </div>
       <div class="form-row">
         <div class="form-field"><label>מחיר לצרכן בש"ח *</label><input type="number" name="price" min="1" max="1000000" step="0.5" required></div>
         <div class="form-field"><label>מחיר לפני הנחה</label><input type="number" name="old_price" min="1" step="0.5" placeholder="ריק = בלי"></div>
@@ -431,7 +444,58 @@ function openProductEdit(documentId) {
   document.getElementById('editError').style.display = 'none';
   for (const k of ['price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'short_description', 'description', 'link']) f[k].value = p[k] ?? '';
   f.delivery_by_carrier.checked = !!p.delivery_by_carrier;
+  editImages = (Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : [])).filter(x => /^data:image\//.test(x || ''));
+  editImagesDirty = false;
+  renderEditImages();
   document.getElementById('editModal').classList.add('active');
+}
+// ---- תמונות המוצר בחלון העריכה: כל תמונה חדשה נחתכת/מוקטנת ל-1200x900 JPEG (כמו בהגשה) ----
+const EDIT_MAX_IMAGES = 6, EDIT_W = 1200, EDIT_H = 900, EDIT_IMG_BYTES = 450000;
+let editImages = [], editImagesDirty = false;
+function renderEditImages() {
+  document.getElementById('editImgs').innerHTML = editImages.map((src, i) => `
+    <div class="sd-edit-img${i === 0 ? ' cover' : ''}">
+      <img src="${src}" alt="">
+      <div class="acts">
+        ${i !== 0 ? `<button type="button" onclick="editImgCover(${i})" title="הפוך לתמונה הראשית"><i class="fas fa-star"></i></button>` : ''}
+        <button type="button" class="danger" onclick="editImgRemove(${i})" title="הסרה"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`).join('');
+  document.getElementById('editImgAdd').style.display = editImages.length >= EDIT_MAX_IMAGES ? 'none' : '';
+}
+function editImgCover(i) { editImages.unshift(editImages.splice(i, 1)[0]); editImagesDirty = true; renderEditImages(); }
+function editImgRemove(i) { editImages.splice(i, 1); editImagesDirty = true; renderEditImages(); }
+function fileToJpeg(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const c = document.createElement('canvas');
+      c.width = EDIT_W; c.height = EDIT_H;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, EDIT_W, EDIT_H);
+      const sc = Math.max(EDIT_W / img.width, EDIT_H / img.height);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, (EDIT_W - img.width * sc) / 2, (EDIT_H - img.height * sc) / 2, img.width * sc, img.height * sc);
+      let q = 0.86, out = c.toDataURL('image/jpeg', q);
+      while (out.length > EDIT_IMG_BYTES && q > 0.5) { q -= 0.08; out = c.toDataURL('image/jpeg', q); }
+      resolve(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('קובץ תמונה לא תקין')); };
+    img.src = url;
+  });
+}
+async function addEditImages(files) {
+  const list = [...(files || [])].filter(f => f && f.type.startsWith('image/'));
+  if (!list.length) return;
+  const room = EDIT_MAX_IMAGES - editImages.length;
+  if (room <= 0) return toast(`אפשר עד ${EDIT_MAX_IMAGES} תמונות למוצר`, 'fa-circle-exclamation');
+  if (list.length > room) toast(`נוספו ${room} תמונות - המקסימום הוא ${EDIT_MAX_IMAGES}`, 'fa-circle-info');
+  for (const file of list.slice(0, room)) {
+    try { editImages.push(await fileToJpeg(file)); editImagesDirty = true; } catch (ex) { toast(ex.message, 'fa-circle-exclamation'); }
+  }
+  renderEditImages();
 }
 function closeProductEdit() { document.getElementById('editModal').classList.remove('active'); editingId = null; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && editingId) closeProductEdit(); });
@@ -449,6 +513,7 @@ async function saveProductEdit(e) {
     quantity: n(f.quantity.value), delivery_days: n(f.delivery_days.value), delivery_by_carrier: f.delivery_by_carrier.checked,
     short_description: f.short_description.value.trim(), description: f.description.value, link: f.link.value.trim(),
   };
+  if (editImagesDirty) body.images = editImages;
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
   try {
