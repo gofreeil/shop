@@ -154,10 +154,10 @@
             <h2><i class="fas fa-boxes-stacked" style="color:var(--primary)"></i> המוצרים שלי - ניהול מלאי</h2>
             <button class="btn btn-ghost" onclick="loadDashboard()" style="padding:7px 12px;font-size:12px"><i class="fas fa-rotate"></i> רענן</button>
           </div>
-          <p class="sd-hint">שנו כמות במלאי או מחיר ישירות כאן - השינוי נשמר מיד. עריכה מלאה (תמונות, תיאור) דרך "המוצרים שהגשתי".</p>
+          <p class="sd-hint">שנו כמות במלאי או מחיר ישירות כאן - השינוי נשמר מיד. לעריכת התיאור, המשלוח, זמן האספקה והקישור - לחצו <strong>עריכה</strong> ליד המוצר.</p>
           <div style="overflow-x:auto">
             <table>
-              <thead><tr><th>מוצר</th><th>מחיר</th><th>מלאי</th><th>נמכרו</th><th>תצוגה</th><th>סטטוס</th></tr></thead>
+              <thead><tr><th>מוצר</th><th>מחיר</th><th>מלאי</th><th>נמכרו</th><th>תצוגה</th><th>סטטוס</th><th></th></tr></thead>
               <tbody id="dashProductsTable"></tbody>
             </table>
           </div>
@@ -192,6 +192,37 @@
     </div>
   </div>
 </footer>
+
+<!-- עריכת מוצר מלאה על ידי המוכר (השדות ש-PUT /api/seller-products?mine=1 מקבל) -->
+<div class="modal" id="editModal">
+  <div class="modal-overlay" onclick="closeProductEdit()"></div>
+  <div class="modal-content" style="max-width:560px">
+    <button type="button" class="modal-close" onclick="closeProductEdit()" aria-label="סגירה"><i class="fas fa-times"></i></button>
+    <h3 style="margin-bottom:4px"><i class="fas fa-pen-to-square" style="color:var(--primary)"></i> עריכת <span id="editName"></span></h3>
+    <p class="sd-hint" style="margin-bottom:14px">השינויים מופיעים באתר תוך דקה. לשינוי שם המוצר או התמונות פנו למנהל החנות.</p>
+    <form class="form-grid" id="editForm" onsubmit="saveProductEdit(event)" novalidate>
+      <div class="form-row">
+        <div class="form-field"><label>מחיר לצרכן בש"ח *</label><input type="number" name="price" min="1" max="1000000" step="0.5" required></div>
+        <div class="form-field"><label>מחיר לפני הנחה</label><input type="number" name="old_price" min="1" step="0.5" placeholder="ריק = בלי"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>מחיר משלוח בש"ח</label><input type="number" name="shipping_price" min="0" max="10000" step="0.5" placeholder="0 = חינם · ריק = בתיאום"></div>
+        <div class="form-field"><label>כמות במלאי</label><input type="number" name="quantity" min="0" step="1" placeholder="ריק = ללא הגבלה"></div>
+      </div>
+      <div class="form-field">
+        <label>זמן אספקה (ימי עסקים)</label><input type="number" name="delivery_days" min="1" max="60" step="1" placeholder="למשל 3">
+        <label class="inline-check"><input type="checkbox" name="delivery_by_carrier"> בכפוף לחברת המשלוחים</label>
+      </div>
+      <div class="form-field"><label>תיאור המוצר</label><textarea name="description" rows="6" maxlength="2000"></textarea></div>
+      <div class="form-field"><label>קישור לאתר / קטלוג</label><input type="url" name="link" maxlength="300" placeholder="https://"></div>
+      <div id="editError" style="display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.1);color:#b91c1c;font-size:14px"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="submit" class="btn btn-primary" id="editSave"><i class="fas fa-check"></i> שמירת השינויים</button>
+        <button type="button" class="btn btn-ghost" onclick="closeProductEdit()">ביטול</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -343,7 +374,7 @@ function unitsSold(documentId) {
 }
 function renderProductsTable() {
   const tbody = document.getElementById('dashProductsTable');
-  if (!dashProducts.length) { tbody.innerHTML = `<tr><td colspan="6" class="sd-empty">עדיין לא העליתם מוצרים. <a href="add-product.html">להעלאת מוצר ראשון</a></td></tr>`; return; }
+  if (!dashProducts.length) { tbody.innerHTML = `<tr><td colspan="7" class="sd-empty">עדיין לא העליתם מוצרים. <a href="add-product.html">להעלאת מוצר ראשון</a></td></tr>`; return; }
   tbody.innerHTML = dashProducts.map(p => {
     const [label, icon] = PROD_STATUS[p.status] || PROD_STATUS.pending;
     const low = p.status === 'approved' && p.quantity != null && p.quantity <= LOW_STOCK;
@@ -364,6 +395,7 @@ function renderProductsTable() {
         ${vis === 'neighborhoods' ? `<input type="text" class="sd-inv-input" style="width:130px;margin-top:6px" placeholder="שכונות, מופרדות בפסיק" value="${esc(p.neighborhoods || '')}" onchange="updateInventory('${esc(p.documentId)}','neighborhoods',this.value,this)">` : ''}
       </td>
       <td><span class="status-pill ${p.status}"><i class="fas ${icon}"></i> ${label}</span>${p.status === 'rejected' && p.rejection_reason ? `<div style="color:var(--text-muted);font-size:11px;margin-top:3px">${esc(p.rejection_reason)}</div>` : ''}</td>
+      <td><button type="button" class="btn btn-ghost" style="padding:6px 12px;font-size:13px;white-space:nowrap" onclick="openProductEdit('${esc(p.documentId)}')"><i class="fas fa-pen-to-square"></i> עריכה</button></td>
     </tr>`;
   }).join('');
 }
@@ -383,6 +415,56 @@ async function updateInventory(documentId, field, value, input) {
   } catch (e) {
     toast(e.message || 'העדכון נכשל', 'fa-circle-exclamation');
     renderProductsTable();
+  }
+}
+
+let editingId = null;
+function openProductEdit(documentId) {
+  const p = dashProducts.find(x => x.documentId === documentId);
+  if (!p) return;
+  editingId = documentId;
+  const f = document.getElementById('editForm');
+  f.reset();
+  document.getElementById('editName').textContent = '"' + p.name + '"';
+  document.getElementById('editError').style.display = 'none';
+  for (const k of ['price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'description', 'link']) f[k].value = p[k] ?? '';
+  f.delivery_by_carrier.checked = !!p.delivery_by_carrier;
+  document.getElementById('editModal').classList.add('active');
+}
+function closeProductEdit() { document.getElementById('editModal').classList.remove('active'); editingId = null; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && editingId) closeProductEdit(); });
+async function saveProductEdit(e) {
+  e.preventDefault();
+  const f = e.target;
+  const err = document.getElementById('editError');
+  err.style.display = 'none';
+  if (!editingId || !validateFormFriendly(f, err)) return;
+  const btn = document.getElementById('editSave');
+  if (btn.disabled) return;
+  const n = v => (v === '' ? null : v);
+  const body = {
+    documentId: editingId, price: f.price.value, old_price: n(f.old_price.value), shipping_price: n(f.shipping_price.value),
+    quantity: n(f.quantity.value), delivery_days: n(f.delivery_days.value), delivery_by_carrier: f.delivery_by_carrier.checked,
+    description: f.description.value, link: f.link.value.trim(),
+  };
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';
+  try {
+    const r = await fetch('/api/seller-products?mine=1', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(json.error && json.error !== 'failed' ? json.error : 'השמירה נכשלה - נסו שוב');
+    const idx = dashProducts.findIndex(p => p.documentId === editingId);
+    if (idx >= 0) dashProducts[idx] = { ...dashProducts[idx], ...(json.item || body) };
+    closeProductEdit();
+    renderStats();
+    renderProductsTable();
+    toast('המוצר עודכן', 'fa-circle-check');
+  } catch (ex) {
+    err.textContent = ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message;
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check"></i> שמירת השינויים';
   }
 }
 

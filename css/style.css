@@ -958,6 +958,12 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .form-field.has-error > label { color: #dc2626; }
 .consent.has-error { outline: 2px solid #ef4444; outline-offset: 4px; border-radius: 10px; }
 
+/* בחירת אמצעי תשלום בצ'קאאוט - המסגרת עוברת לאפשרות שנבחרה */
+.pay-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.pay-option { padding: 14px; border: 1px solid var(--border); border-radius: 12px; justify-content: center; cursor: pointer; }
+.pay-option:has(input:checked) { border: 2px solid var(--primary); background: rgba(8,145,178,0.06); }
+@media (max-width: 480px) { .pay-options { grid-template-columns: 1fr; } }
+
 /* מסך "המוצר עלה" בהעלאת מוצר */
 .success-steps { display: grid; gap: 14px; text-align: right; max-width: 620px; margin: 0 auto 22px; }
 .success-step { display: flex; gap: 14px; align-items: flex-start; background: var(--bg-alt); border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.6; }
@@ -973,6 +979,11 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .success-shot-row span.box::after { content: '✎'; margin-right: 6px; color: var(--primary); }
 
 /* === Responsive === */
+/* טלפון: שדות טופס זה מתחת לזה, וגרידים שהוגדרו inline (צור קשר, אודות) נשברים לעמודה אחת */
+@media (max-width: 560px) {
+  .form-row { grid-template-columns: 1fr; }
+  .container > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 24px !important; }
+}
 @media (max-width: 1024px) {
   .hero-inner { grid-template-columns: 1fr; gap: 24px; }
   .hero-visual { height: 280px; max-width: 500px; margin: 0 auto; }

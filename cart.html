@@ -113,7 +113,7 @@ function renderCart() {
   }).join('');
 
   const subtotal = cart.reduce((s, i) => s + (products.find(p => p.id === i.id)?.price || 0) * i.qty, 0);
-  const shipping = subtotal >= 199 ? 0 : 29;
+  const shipping = !subtotal || subtotal >= 199 ? 0 : 29;
   const total = subtotal + shipping;
 
   container.innerHTML = `

@@ -68,22 +68,16 @@
         <div class="form-field"><label>הערות למשלוח (אופציונלי)</label><textarea name="note" rows="2" maxlength="1000" placeholder="קומה, כניסה, שעות נוחות..."></textarea></div>
 
         <h2 style="font-size:20px;margin:24px 0 8px">פרטי תשלום</h2>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-          <label class="filter-option" style="padding:14px;border:2px solid var(--primary);border-radius:12px;justify-content:center"><input type="radio" name="pay" value="card" checked> <i class="fas fa-credit-card"></i> כרטיס</label>
-          <label class="filter-option" style="padding:14px;border:1px solid var(--border);border-radius:12px;justify-content:center"><input type="radio" name="pay" value="paypal"> <i class="fab fa-paypal"></i> PayPal</label>
-          <label class="filter-option" style="padding:14px;border:1px solid var(--border);border-radius:12px;justify-content:center"><input type="radio" name="pay" value="cash"> <i class="fas fa-money-bill-wave"></i> מזומן</label>
+        <p class="hint" style="margin:0 0 10px;color:var(--text-muted);font-size:14px">אין צורך להזין פרטי כרטיס. ההזמנה נרשמת, ונחזור אליכם בטלפון לתיאום התשלום בדרך שבחרתם:</p>
+        <div class="pay-options">
+          <label class="filter-option pay-option"><input type="radio" name="pay" value="card" checked> <i class="fas fa-credit-card"></i> כרטיס אשראי</label>
+          <label class="filter-option pay-option"><input type="radio" name="pay" value="paypal"> <i class="fab fa-paypal"></i> PayPal</label>
+          <label class="filter-option pay-option"><input type="radio" name="pay" value="cash"> <i class="fas fa-money-bill-wave"></i> מזומן</label>
         </div>
-        <!-- שדות הכרטיס הם דמו בלבד: ללא name, לא נשלחים לשום מקום -->
-        <div class="form-field"><label>מספר כרטיס</label><input type="text" placeholder="1234 5678 9012 3456" autocomplete="off"></div>
-        <div class="form-row">
-          <div class="form-field"><label>תוקף</label><input type="text" placeholder="MM/YY" autocomplete="off"></div>
-          <div class="form-field"><label>CVV</label><input type="text" placeholder="123" autocomplete="off"></div>
-        </div>
-        <p style="font-size:12px;color:var(--text-muted)">⚠️ הסליקה עדיין לא פעילה - אל תזינו פרטי כרטיס אמיתיים. ההזמנה נרשמת ונחזור אליכם לתשלום.</p>
 
         <div id="checkoutError" style="display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.1);color:#b91c1c;font-size:14px"></div>
         <button type="submit" class="btn btn-primary btn-lg btn-block" id="checkoutBtn" style="margin-top:16px">
-          <i class="fas fa-lock"></i> בצע הזמנה מאובטחת
+          <i class="fas fa-paper-plane"></i> שליחת ההזמנה
         </button>
       </form>
       <div id="checkoutSuccess" class="sell-success" hidden>
@@ -110,7 +104,7 @@
 function renderOrderSummary() {
   // מוצר מוכר שעדיין לא נטען מהשרת - נספר כ-0 עד שיגיע (productsUpdated מרענן)
   const sub = cart.reduce((s,i) => s + (products.find(p => p.id === i.id)?.price || 0) * i.qty, 0);
-  const ship = sub >= 199 ? 0 : 29;
+  const ship = !sub || sub >= 199 ? 0 : 29;
   const tot = sub + ship;
 
   document.getElementById('orderItems').innerHTML = cart.map(i => {
@@ -165,7 +159,7 @@ async function handleCheckout(e) {
     err.textContent = ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message;
     err.style.display = 'block';
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-lock"></i> בצע הזמנה מאובטחת';
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> שליחת ההזמנה';
   }
 }
 </script>
