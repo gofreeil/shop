@@ -337,6 +337,9 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .btn-light { background: white; color: var(--primary); }
 .btn-light:hover { transform: translateY(-2px); }
 .btn-block { width: 100%; justify-content: center; }
+/* כותרות המקטעים בתפריט החשבון (ניהול / אזור אישי / החנות שלי) */
+.account-menu-section { font-size: 12px; font-weight: 700; color: var(--text-muted); padding: 10px 4px 2px; border-top: 1px solid var(--border, #e5e7eb); }
+.account-menu-section:first-child { border-top: 0; padding-top: 0; }
 
 .hero-stats { display: flex; gap: 28px; }
 /* כל מספר בגיבור הוא כפתור לדף פירוט (חנויות / מוצרים / קטגוריות) */

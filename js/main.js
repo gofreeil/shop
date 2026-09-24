@@ -1061,14 +1061,17 @@ function renderAccountMenu() {
     </div>
     <div style="display:grid;gap:6px">
       ${currentUser.superAdmin ? `
+      <div class="account-menu-section">ניהול האתר</div>
       <a href="admin.html#stores" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shield-halved" style="color:#4f46e5"></i> ניהול החנות${adminPending ? ` <span style="margin-right:auto;background:#ef4444;color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px">${adminPending === 1 ? 'חנות ממתינה לאישור' : `${adminPending} חנויות ממתינות`}</span>` : ''}</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();document.getElementById('seToggle')?.click()" style="justify-content:flex-start"><i class="fas fa-pen-to-square" style="color:#f59e0b"></i> עריכת תוכן האתר</button>` : ''}
+      <div class="account-menu-section">האזור האישי</div>
       <a href="account.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-user-circle" style="color:var(--primary)"></i> החשבון שלי - הזמנות, מועדפים ועדכונים</a>
       <button class="btn btn-ghost btn-block" onclick="closeAccountMenu();openWishlist()" style="justify-content:flex-start"><i class="fas fa-heart" style="color:#ef4444"></i> המועדפים שלי <span style="margin-right:auto;color:var(--text-muted)">${wishlist.length}</span></button>
       <a href="cart.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-shopping-bag"></i> העגלה שלי</a>
+      <div class="account-menu-section">החנות שלי</div>
       <a href="seller-dashboard.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-chart-line" style="color:var(--accent-2)"></i> לוח בקרה למוכר</a>
       <a href="add-product.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
-      <button class="btn btn-ghost btn-block" onclick="logoutUser()" style="justify-content:flex-start;color:#ef4444"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
+      <button class="btn btn-ghost btn-block" onclick="logoutUser()" style="justify-content:flex-start;color:#ef4444;margin-top:10px"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
     </div>
   `;
 }
