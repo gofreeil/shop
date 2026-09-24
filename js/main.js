@@ -152,13 +152,13 @@ function productCard(p) {
     </div>
   `;
 }
-// לחיצה בכל מקום בכרטיס מוצר פותחת את המוצר (חוץ מקישור החנות וכפתור ה-+).
+// לחיצה בכל מקום בכרטיס מוצר פותחת את דף המוצר (חוץ מקישור החנות וכפתור ה-+).
 // לחיצה ימנית פותחת תפריט קטן: הוספה לסל / סימון אהבתי.
 document.addEventListener('click', e => {
   if (document.body.classList.contains('se-editing')) return;
   const card = e.target.closest('.product-card[data-id]');
   if (!card || e.target.closest('a, button, .success-preview')) return;
-  openQuickView(Number(card.dataset.id));
+  openProduct(Number(card.dataset.id));
 });
 function closeCardMenu() { document.getElementById('cardMenu')?.remove(); }
 document.addEventListener('contextmenu', e => {
@@ -290,17 +290,43 @@ function initTapHints(cards) {
   settleTimer = setTimeout(fire, 700);
 }
 
-// === Quick View ===
-function openQuickView(productId) {
+// === דף מוצר (product.html?id=<id>) ===
+function productUrl(id) { return `product.html?id=${id}`; }
+function openProduct(id) { location.href = productUrl(id); }
+// מוצרי מוכרים מגיעים מהשרת אחרי הטעינה - מחכים להם לפני "המוצר לא נמצא"
+function initProductPage() {
+  const view = document.getElementById('productView');
+  if (!view) return;
+  const id = Number(new URLSearchParams(location.search).get('id'));
+  const found = () => products.some(p => p.id === id);
+  if (found()) renderProduct(id);
+  document.addEventListener('productsUpdated', e => {
+    if (found() && (!view.dataset.for || e.detail?.overrides)) renderProduct(id);
+  });
+  sellerProductsReady.then(() => {
+    if (found()) return;
+    document.title = 'המוצר לא נמצא | קניון החירות';
+    view.innerHTML = `
+      <div class="product-missing">
+        <span>📦</span>
+        <h2>המוצר לא נמצא</h2>
+        <p>ייתכן שהוסר מהאתר או שהקישור שגוי.</p>
+        <a href="products.html" class="btn btn-primary"><i class="fas fa-store"></i> לכל המוצרים</a>
+      </div>`;
+  });
+}
+function renderProduct(productId) {
   const p = products.find(x => x.id === productId);
-  if (!p) return;
+  const content = document.getElementById('productView');
+  if (!p || !content) return;
   const cat = categories.find(c => c.id === p.category) || categories[0];
-  const modal = document.getElementById('quickViewModal');
-  const content = document.getElementById('quickViewContent');
   const imgs = productImages(p);
   qvGallery = { id: p.id, imgs, index: 0 };
+  content.dataset.for = p.id;
+  document.title = `${htmlDecode(p.name)} | קניון החירות`;
+  const crumb = document.getElementById('productCrumb');
+  if (crumb) crumb.innerHTML = `<a href="index.html">בית</a> / <a href="products.html?category=${cat.id}">${cat.name}</a> / <span>${p.name}</span>`;
   content.innerHTML = `
-    <button class="modal-close" onclick="closeQuickView()"><i class="fas fa-times"></i></button>
     ${adminGearHtml(p)}
     <div class="quick-view">
       <div class="quick-view-media">
@@ -336,7 +362,7 @@ function openQuickView(productId) {
           ${p.oldPrice ? `<span class="product-price-old" style="font-size:18px">₪${p.oldPrice}</span>` : ''}
         </div>
         <div style="display:flex;gap:12px">
-          <button class="btn btn-primary btn-block" onclick="addToCart(${p.id}); closeQuickView()">
+          <button class="btn btn-primary btn-block" onclick="addToCart(${p.id})">
             <i class="fas fa-shopping-bag"></i> הוסף לעגלה
           </button>
           <button class="btn btn-ghost" onclick="toggleWishlist(${p.id})" data-wishlist="${p.id}">
@@ -354,15 +380,12 @@ function openQuickView(productId) {
     <div id="qvRecs" data-for="${p.id}"></div>
     <div class="quick-view-reviews" id="qvComments" data-for="${p.id}"></div>
   `;
-  modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
-  content.scrollTop = 0;
   attachSwipe(document.getElementById('qvMain'), d => qvStep(d));
   renderRecommendations(p);
   renderComments(p.id);
 }
 
-// === גלגל שיניים לסופר-אדמין בחלון המוצר ===
+// === גלגל שיניים לסופר-אדמין בדף המוצר ===
 // כמו AdminGemachMenu בגמ"ח הארצי: כפתור ⚙️ קטן עם תפריט נפתח - עריכה במקום,
 // הסתרה/החזרה לתצוגה ומחיקה. רק למוצרי מוכרים (יש documentId ב-Strapi);
 // השרת (api/seller-products PUT/DELETE) ו-Strapi אוכפים שהמבקש מנהל.
@@ -423,22 +446,21 @@ async function adminProductAction(id, action) {
   if (action === 'show') {
     p.visibility = 'visible';
     toast('המוצר חזר לתצוגה');
-    return openQuickView(id);
+    return renderProduct(id);
   }
   removeFromShelf(p, action === 'delete' ? 'המוצר נמחק' : 'המוצר הוסתר מהאתר');
 }
-// מוסתר או נמחק - יורד מהמדף בדף הנוכחי
+// מוסתר או נמחק - יורד מהאתר, ודף המוצר כבר לא רלוונטי - חוזרים לחנות
 function removeFromShelf(p, msg) {
   const i = products.indexOf(p);
   if (i >= 0) products.splice(i, 1);
-  closeQuickView();
-  document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { removed: 1 } }));
   toast(msg);
+  setTimeout(() => { location.href = 'products.html'; }, 1200);
 }
 
 function openAdminEdit(id) {
   const p = products.find(x => x.id === id);
-  const info = document.querySelector('#quickViewContent .quick-view-info');
+  const info = document.querySelector('#productView .quick-view-info');
   if (!p || !info) return;
   toggleAdminGear(false);
   const v = k => htmlEsc(htmlDecode(p[k] ?? ''));
@@ -469,7 +491,7 @@ function openAdminEdit(id) {
       </select></label>
       <div class="actions">
         <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> שמירה</button>
-        <button type="button" class="btn btn-ghost" onclick="openQuickView(${p.id})">ביטול</button>
+        <button type="button" class="btn btn-ghost" onclick="renderProduct(${p.id})">ביטול</button>
       </div>
     </form>`;
   info.querySelector('input[name="name"]').focus();
@@ -497,7 +519,7 @@ async function saveAdminEdit(id, form) {
   if (f.visibility !== 'visible') return removeFromShelf(p, 'המוצר עודכן והוסתר מהמדף');
   toast('המוצר עודכן');
   document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { edited: 1 } }));
-  openQuickView(id);
+  renderProduct(id);
 }
 
 // === זום / מרכוז לתמונה של מוצר קיים (סופר-אדמין) ===
@@ -593,10 +615,10 @@ async function saveAdminZoom() {
   closeAdminZoom();
   toast('התמונה עודכנה');
   document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { edited: 1 } }));
-  openQuickView(az.id);
+  renderProduct(az.id);
 }
 
-// === גלריית המוצר בחלון המהיר ===
+// === גלריית התמונות בדף המוצר ===
 // מוצר מוכר נושא images (עד 6, הראשונה ראשית); מוצר עם image בלבד = גלריה של אחת.
 let qvGallery = { id: 0, imgs: [], index: 0 };
 function productImages(p) {
@@ -629,9 +651,9 @@ function attachSwipe(el, onSwipe) {
 
 // === שיתוף מוצר ===
 // הקישור המשותף הוא /p/<id> - דף שמגיש לרובוטים של וואטסאפ/פייסבוק/טלגרם/X את
-// השם, התיאור והתמונה הראשית (Open Graph), ומעביר גולש אמיתי לחלון המוצר.
+// השם, התיאור והתמונה הראשית (Open Graph), ומעביר גולש אמיתי לדף המוצר.
 function productShareUrl(id) { return `${location.origin}/p/${id}`; }
-function productShareText(p) { return `${p.name} - ₪${p.price}${p.seller ? ` · ${p.seller}` : ''} | קנין החירות`; }
+function productShareText(p) { return `${p.name} - ₪${p.price}${p.seller ? ` · ${p.seller}` : ''} | קניון החירות`; }
 function shareBarHtml(p) {
   const url = productShareUrl(p.id);
   const text = productShareText(p);
@@ -791,7 +813,7 @@ function closeLightbox() {
 }
 function lightboxOpen() { return document.getElementById('lightbox')?.classList.contains('active'); }
 
-// === המלצות בחלון המוצר ===
+// === המלצות בדף המוצר ===
 // 1. "עוד מהחנות של X" - מוצרים נוספים של אותו מוכר (למוצר קבוע: מאותה קטגוריה).
 // 2. "לקוחות שהתעניינו במוצר זה רכשו גם" - מההזמנות האמיתיות (ספירות אנונימיות של
 //    מוצרים שנרכשו יחד, דרך /api/orders?related=). כשאין עדיין נתונים - מוצרים
@@ -844,7 +866,7 @@ const RV_LEVELS = {
 const RV_EMPTY = '<div class="comment-empty">עדיין אין דירוגים. היו הראשונים לדרג את המוצר!</div>';
 let rv = { id: null, items: [], isAdmin: false, rating: 0, draft: '', replyOpen: {}, replyDraft: {}, busy: {}, thanks: false };
 
-// --- דירוג ממוצע לכל המוצרים (כרטיסים + חלון המוצר) ---
+// --- דירוג ממוצע לכל המוצרים (כרטיסים + דף המוצר) ---
 let ratingSummary = {};
 function starsMeter(avg) {
   return `<span class="stars-meter" style="--r:${Math.max(0, Math.min(5, avg))}" aria-hidden="true"><span>★★★★★</span></span>`;
@@ -1108,16 +1130,11 @@ async function deleteComment(docId) {
     toast('המחיקה נכשלה', 'fa-circle-exclamation');
   }
 }
-// התחברות/התנתקות בזמן שחלון המוצר פתוח - מרעננים את אזור הדירוגים
+// התחברות/התנתקות בדף המוצר - מרעננים את אזור הדירוגים
 document.addEventListener('userChanged', () => {
   const el = document.getElementById('qvComments');
-  if (el && document.getElementById('quickViewModal')?.classList.contains('active')) renderComments(Number(el.dataset.for));
+  if (el) renderComments(Number(el.dataset.for));
 });
-
-function closeQuickView() {
-  document.getElementById('quickViewModal').classList.remove('active');
-  document.body.style.overflow = '';
-}
 
 // === Search ===
 // כפתור החיפוש ותיבת החיפוש קיימים בכל הדפים (מוזרקים אם חסרים בדף). בתוך
@@ -1188,7 +1205,7 @@ function initSearch() {
     suggestions.innerHTML = results.length ? results.map(p => {
       const cat = categories.find(c => c.id === p.category) || categories[0];
       return `
-        <a href="products.html?search=${encodeURIComponent(q)}" class="search-result" onclick="openQuickView(${p.id});event.preventDefault()">
+        <a href="${productUrl(p.id)}" class="search-result">
           <div class="search-result-img" style="background:${cat.color}22">${p.image ? `<img src="${p.image}" alt="">` : p.emoji}</div>
           <div class="search-result-info">
             <div class="search-result-name">${p.name}</div>
@@ -1563,6 +1580,7 @@ function renderWishlistModal() {
 // נטענים מ-/api/seller-products (פרוקסי ל-Strapi המשותף) ומתמזגים לתוך products.
 // הדפים מרנדרים קודם את המוצרים הקבועים, ומאזינים ל-productsUpdated כדי לרנדר מחדש.
 // ב-dev מקומי (http-server בלי API) הקריאה נכשלת בשקט.
+let sellerProductsReady = Promise.resolve();
 async function loadSellerProducts() {
   try {
     // מנהל עוקף את הקאש - אחרת מוצר שמחק/הסתיר חוזר אליו לכמה דקות אחרי רענון
@@ -1701,7 +1719,7 @@ document.addEventListener('DOMContentLoaded', () => {
   injectCategoriesMenu();
   applyHeaderTooltips();
   hydrateUser();
-  loadSellerProducts();
+  sellerProductsReady = loadSellerProducts();
   loadApprovedStores();
   loadRatingSummary();
   updateCartCount();
@@ -1713,24 +1731,20 @@ document.addEventListener('DOMContentLoaded', () => {
     wishBtn.addEventListener('click', e => { e.preventDefault(); openWishlist(); });
   }
   document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
-  document.querySelector('#quickViewModal .modal-overlay')?.addEventListener('click', closeQuickView);
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       if (lightboxOpen()) return closeLightbox();
-      closeQuickView(); closeAuth(); closeWishlist(); closeAccountMenu();
+      closeAuth(); closeWishlist(); closeAccountMenu();
     }
-    // חיצים: דפדוף בגלריה (בלייטבוקס או בחלון המוצר). RTL: חץ שמאלה = הבאה
+    // חיצים: דפדוף בגלריה (בלייטבוקס או בדף המוצר). RTL: חץ שמאלה = הבאה
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       const d = e.key === 'ArrowLeft' ? 1 : -1;
       if (lightboxOpen()) lbStep(d);
-      else if (document.getElementById('quickViewModal')?.classList.contains('active') && qvGallery.imgs.length > 1) qvStep(d);
+      else if (document.getElementById('qvMain') && qvGallery.imgs.length > 1 && !e.target.closest?.('input, textarea, select')) qvStep(d);
     }
   });
-  // קישור עמוק למוצר (מקישורי שיתוף /p/<id>): ?product=<id> פותח את חלון המוצר.
-  // מוצרי מוכרים מגיעים מהשרת אחרי הטעינה - מנסים שוב כשהם נטענים.
-  const deepId = Number(new URLSearchParams(location.search).get('product'));
-  if (deepId && document.getElementById('quickViewModal')) {
-    const tryOpen = () => { if (products.some(p => p.id === deepId)) { openQuickView(deepId); return true; } return false; };
-    if (!tryOpen()) document.addEventListener('productsUpdated', tryOpen, { once: true });
-  }
+  // קישורים ישנים ?product=<id> (מלפני דף המוצר) - מעבירים לדף המוצר
+  const legacyId = Number(new URLSearchParams(location.search).get('product'));
+  if (legacyId) return location.replace(productUrl(legacyId));
+  initProductPage();
 });

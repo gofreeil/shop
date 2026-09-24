@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>צור קשר | קנין החירות | יוצאים לחירות</title>
+<title>צור קשר | קניון החירות | יוצאים לחירות</title>
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/logo.png">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="קנין החירות">
-<meta property="og:title" content="צור קשר | קנין החירות | יוצאים לחירות">
+<meta property="og:site_name" content="קניון החירות">
+<meta property="og:title" content="צור קשר | קניון החירות | יוצאים לחירות">
 <meta property="og:description" content="דברו איתנו - שאלות, הזמנות, שירות לקוחות">
 <meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
 <meta property="og:image:width" content="1024">
 <meta property="og:image:height" content="1024">
-<meta property="og:image:alt" content="לוגו קנין החירות">
+<meta property="og:image:alt" content="לוגו קניון החירות">
 <meta property="og:url" content="https://shop.gofreeil.com/contact">
 <meta property="og:locale" content="he_IL">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="צור קשר | קנין החירות | יוצאים לחירות">
+<meta name="twitter:title" content="צור קשר | קניון החירות | יוצאים לחירות">
 <meta name="twitter:description" content="דברו איתנו - שאלות, הזמנות, שירות לקוחות">
 <meta name="twitter:image" content="https://shop.gofreeil.com/images/logo.png">
 <meta name="theme-color" content="#6366f1">
@@ -37,7 +37,7 @@
 
 <header class="header">
   <div class="container header-inner">
-    <a href="index.html" class="logo"><img src="images/logo.png" alt="קנין החירות"></a>
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="קניון החירות"></a>
     <nav class="main-nav">
       <div class="nav-dropdown">
         <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
@@ -106,7 +106,7 @@
 <footer class="footer">
   <div class="container">
     <div class="footer-bottom" style="border:none">
-      <p>© 2026 קנין החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a></p>
+      <p>© 2026 קניון החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a></p>
     </div>
   </div>
 </footer>
@@ -122,10 +122,10 @@ function handleContact(e) {
   e.preventDefault();
   const f = Object.fromEntries(new FormData(e.target));
   const from = [f.name, f.phone, f.email].filter(Boolean).join(' · ');
-  const text = [`נושא: ${f.subject}`, f.message, '', from, '(נשלח מדף צור קשר בקנין החירות)'].join('\n');
+  const text = [`נושא: ${f.subject}`, f.message, '', from, '(נשלח מדף צור קשר בקניון החירות)'].join('\n');
   const viaMail = e.submitter?.dataset.via === 'mail';
   const url = viaMail
-    ? `mailto:freedomhasbegun@gmail.com?subject=${encodeURIComponent('קנין החירות - ' + f.subject)}&body=${encodeURIComponent(text)}`
+    ? `mailto:freedomhasbegun@gmail.com?subject=${encodeURIComponent('קניון החירות - ' + f.subject)}&body=${encodeURIComponent(text)}`
     : `https://wa.me/972508750632?text=${encodeURIComponent(text)}`;
   if (viaMail) location.href = url; else window.open(url, '_blank', 'noopener');
   toast(viaMail ? 'נפתח המייל עם ההודעה - לחצו שליחה' : 'נפתח וואטסאפ עם ההודעה - לחצו שליחה', 'fa-paper-plane');

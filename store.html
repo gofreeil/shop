@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>חנות בקניון | קנין החירות | יוצאים לחירות</title>
-<meta name="description" content="דף חנות בקניון השיתופי קנין החירות">
+<title>חנות בקניון | קניון החירות | יוצאים לחירות</title>
+<meta name="description" content="דף חנות בקניון השיתופי קניון החירות">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/logo.png">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="קנין החירות">
+<meta property="og:site_name" content="קניון החירות">
 <meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
 <meta property="og:locale" content="he_IL">
 <meta name="theme-color" content="#6366f1">
@@ -28,7 +28,7 @@
 
 <header class="header">
   <div class="container header-inner">
-    <a href="index.html" class="logo"><img src="images/logo.png" alt="קנין החירות"></a>
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="קניון החירות"></a>
     <nav class="main-nav">
       <div class="nav-dropdown">
         <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
@@ -74,16 +74,12 @@
 <footer class="footer">
   <div class="container">
     <div class="footer-bottom" style="border:none">
-      <p>© 2026 קנין החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a> · <a href="contract.html">הסכם המוכר</a></p>
+      <p>© 2026 קניון החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a> · <a href="contract.html">הסכם המוכר</a></p>
     </div>
   </div>
 </footer>
 
 <div class="toast" id="toast"></div>
-<div class="modal" id="quickViewModal">
-  <div class="modal-overlay"></div>
-  <div class="modal-content" id="quickViewContent"></div>
-</div>
 <script src="data/products.js"></script>
 <script src="js/main.js"></script>
 <script src="js/seller-store.js"></script>
@@ -110,7 +106,7 @@ function renderStorePage() {
     }
     return;
   }
-  document.title = `${s.name} | קנין החירות`;
+  document.title = `${s.name} | קניון החירות`;
   // זו החנות שלי? מציגים פס קצר עם קישור לסטודיו העיצוב
   const mine = getSavedStore();
   const mineSlug = mine ? (mine.slug || storeSlug(mine.store_name)) : '';

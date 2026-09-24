@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>הקטגוריות בקניון | קנין החירות | יוצאים לחירות</title>
-<meta name="description" content="כל הקטגוריות בקניון השיתופי קנין החירות - מה יש בכל קטגוריה, כמה מוצרים, אילו חנויות וטווח המחירים">
+<title>הקטגוריות בקניון | קניון החירות | יוצאים לחירות</title>
+<meta name="description" content="כל הקטגוריות בקניון השיתופי קניון החירות - מה יש בכל קטגוריה, כמה מוצרים, אילו חנויות וטווח המחירים">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/logo.png">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="קנין החירות">
-<meta property="og:title" content="הקטגוריות בקניון | קנין החירות | יוצאים לחירות">
-<meta property="og:description" content="כל הקטגוריות בקניון השיתופי קנין החירות">
+<meta property="og:site_name" content="קניון החירות">
+<meta property="og:title" content="הקטגוריות בקניון | קניון החירות | יוצאים לחירות">
+<meta property="og:description" content="כל הקטגוריות בקניון השיתופי קניון החירות">
 <meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
 <meta property="og:url" content="https://shop.gofreeil.com/categories">
 <meta property="og:locale" content="he_IL">
@@ -31,7 +31,7 @@
 
 <header class="header">
   <div class="container header-inner">
-    <a href="index.html" class="logo"><img src="images/logo.png" alt="קנין החירות"></a>
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="קניון החירות"></a>
     <nav class="main-nav">
       <div class="nav-dropdown">
         <a href="categories.html" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
@@ -64,16 +64,12 @@
 <footer class="footer">
   <div class="container">
     <div class="footer-bottom" style="border:none">
-      <p>© 2026 קנין החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a></p>
+      <p>© 2026 קניון החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a></p>
     </div>
   </div>
 </footer>
 
 <div class="toast" id="toast"></div>
-<div class="modal" id="quickViewModal">
-  <div class="modal-overlay"></div>
-  <div class="modal-content" id="quickViewContent"></div>
-</div>
 <script src="data/products.js"></script>
 <script src="js/main.js"></script>
 <script src="js/site-editor.js"></script>
@@ -125,11 +121,11 @@
               <h4>מוצרים מובילים</h4>
               <div class="cat-mini">
                 ${top.map(p => `
-                  <button class="cat-mini-row" onclick="openQuickView(${p.id})" title="צפייה במוצר">
+                  <a class="cat-mini-row" href="${productUrl(p.id)}" title="צפייה במוצר">
                     <span class="cat-mini-thumb">${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy">` : (p.emoji || '📦')}</span>
                     <span class="cat-mini-name">${p.name}</span>
                     <span class="cat-mini-price">₪${p.price}</span>
-                  </button>`).join('')}
+                  </a>`).join('')}
               </div>
             </div>` : ''}
           <a class="btn btn-primary btn-block" href="products.html?category=${c.id}">

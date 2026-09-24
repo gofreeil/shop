@@ -5,8 +5,8 @@ const { STRAPI_URL, strapiFetch: strapi } = require('./_shared');
 
 // דף שיתוף למוצר - /p/<id>. כשמשתפים מוצר בוואטסאפ / פייסבוק / טלגרם / X,
 // הרובוט שלהם קורא את הדף הזה ומקבל og:title / og:description / og:image של
-// המוצר עצמו (שם, תיאור והתמונה הראשית). גולש אמיתי מועבר מיד ל-products?product=<id>
-// שפותח את חלון המוצר. מוצרי מוכרים (id >= 100000) נמשכים מ-Strapi (מאושרים
+// המוצר עצמו (שם, תיאור והתמונה הראשית). גולש אמיתי מועבר מיד ל-product?id=<id>
+// - דף המוצר. מוצרי מוכרים (id >= 100000) נמשכים מ-Strapi (מאושרים
 // בלבד); המוצרים הקבועים - מ-data/products.js.
 const SITE = 'https://shop.gofreeil.com';
 const ID_BASE = 100000;
@@ -56,13 +56,13 @@ module.exports = async (req, res) => {
 	if (!Number.isInteger(id) || id <= 0) return res.redirect(302, '/products');
 	let p = null;
 	try { p = await loadProduct(id); } catch { /* נופלים לדף הכללי */ }
-	const target = `${SITE}/products?product=${id}`;
+	const target = `${SITE}/product?id=${id}`;
 	res.setHeader('Content-Type', 'text/html; charset=utf-8');
 	res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
 	if (!p) {
-		return res.status(200).end(`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>קנין החירות</title><meta http-equiv="refresh" content="0;url=${esc(target)}"><script>location.replace(${JSON.stringify(target)})</script></head><body><a href="${esc(target)}">למוצר</a></body></html>`);
+		return res.status(200).end(`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>קניון החירות</title><meta http-equiv="refresh" content="0;url=${esc(target)}"><script>location.replace(${JSON.stringify(target)})</script></head><body><a href="${esc(target)}">למוצר</a></body></html>`);
 	}
-	const title = `${p.name} | קנין החירות`;
+	const title = `${p.name} | קניון החירות`;
 	const priceTxt = `₪${p.price}`;
 	const desc = [priceTxt, p.store ? `מהחנות של ${p.store}` : '', String(p.desc || '').replace(/\s+/g, ' ').trim().slice(0, 200)].filter(Boolean).join(' · ');
 	const image = p.image || `${SITE}/images/logo.png`;
@@ -76,7 +76,7 @@ module.exports = async (req, res) => {
 <link rel="canonical" href="${esc(target)}">
 <link rel="icon" type="image/png" href="${SITE}/images/logo.png">
 <meta property="og:type" content="product">
-<meta property="og:site_name" content="קנין החירות">
+<meta property="og:site_name" content="קניון החירות">
 <meta property="og:title" content="${esc(p.name)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${esc(image)}">
@@ -99,7 +99,7 @@ ${p.image ? `<meta property="og:image:width" content="${p.imageW}">\n<meta prope
 ${p.image ? `<img src="${esc(image)}" alt="${esc(p.name)}">` : ''}
 <h1>${esc(p.name)}</h1>
 <p>${esc(desc)}</p>
-<p><a href="${esc(target)}">למוצר בקנין החירות</a></p>
+<p><a href="${esc(target)}">למוצר בקניון החירות</a></p>
 </body>
 </html>`;
 	return res.status(200).end(html);

@@ -289,7 +289,7 @@ function sdGallery(store, design, opts) {
               ? `<span class="sp-btn sp-btn-sm">לעגלה</span>`
               : `<button type="button" class="sp-btn sp-btn-sm" onclick="addToCart(${Number(p.id)})">לעגלה</button>`)
             : '';
-          const open = opts.preview ? '' : ` onclick="openQuickView(${Number(p.id)})"`;
+          const open = opts.preview ? '' : ` onclick="openProduct(${Number(p.id)})"`;
           return `
             <article class="sp-prod">
               <div class="sp-prod-media"${open}>${media}</div>
