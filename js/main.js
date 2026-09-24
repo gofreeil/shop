@@ -1072,6 +1072,8 @@ function renderAccountMenu() {
       <div class="account-menu-section">החנות שלי</div>
       <a href="seller-dashboard.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-chart-line" style="color:var(--accent-2)"></i> לוח בקרה למוכר</a>
       <a href="add-product.html#mine" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-store"></i> המוצרים שהגשתי למכירה</a>
+      <a href="sell.html?edit=1" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-pen" style="color:var(--primary)"></i> עריכת פרטי החנות</a>
+      <a href="store-designer.html" class="btn btn-ghost btn-block" style="justify-content:flex-start"><i class="fas fa-wand-magic-sparkles" style="color:#a855f7"></i> עיצוב דף החנות</a>
       <button class="btn btn-ghost btn-block" onclick="logoutUser()" style="justify-content:flex-start;color:#ef4444;margin-top:10px"><i class="fas fa-sign-out-alt"></i> התנתקות</button>
     </div>
   `;
