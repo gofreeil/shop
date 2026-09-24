@@ -109,8 +109,9 @@
           <div class="form-field"><label>קטגוריה *</label><select name="category" id="categorySelect" required></select></div>
           <div class="form-row">
             <div class="form-field"><label>מחיר לצרכן בש"ח (כולל מע"מ) *</label><input type="number" name="price" id="priceInput" min="1" max="1000000" step="0.5" required placeholder="100" oninput="updateCommission()"></div>
-            <div class="form-field"><label>מחיר לפני הנחה (אופציונלי)</label><input type="number" name="old_price" min="1" step="0.5" placeholder="למשל 129"></div>
+            <div class="form-field"><label>מחיר לפני הנחה (אופציונלי)</label><input type="number" name="old_price" min="1" step="0.5" placeholder="ריק = בלי מחיר קודם"></div>
           </div>
+          <p class="hint" style="margin:-4px 0 0">מחיר לפני הנחה: אם המוצר במבצע, כתבו כאן את המחיר המקורי שלו. הלקוח יראה אותו מחוק ליד המחיר החדש (למשל <s>129</s> ← 100). השאירו ריק אם אין הנחה - אז לא יוצג ללקוח שום מחיר קודם. הטקסט האפור בתוך התיבה הוא רק הסבר, הוא לא נשמר ולא מוצג לאף אחד.</p>
           <div class="form-field">
             <label>מחיר משלוח ללקוח בש"ח</label>
             <input type="number" name="shipping_price" id="shippingInput" min="0" max="10000" step="0.5" placeholder="למשל 30 · 0 = משלוח חינם" oninput="updateCommission()">
@@ -179,10 +180,10 @@
       <aside class="sell-side">
         <div class="commission-box">
           <h3><i class="fas fa-calculator" style="color:var(--primary)"></i> כמה תקבלו</h3>
-          <div class="commission-row"><span>מחיר לצרכן</span><span id="calcPrice">₪0</span></div>
-          <div class="commission-row"><span>עמלת החנות (10%)</span><span id="calcFee">-₪0</span></div>
-          <div class="commission-row"><span>משלוח (ללא עמלה)</span><span id="calcShipping">—</span></div>
-          <div class="commission-row"><span>הלקוח משלם</span><span id="calcTotal">₪0</span></div>
+          <div class="commission-row"><span>מחיר המוצר</span><span id="calcPrice">₪0</span></div>
+          <div class="commission-row"><span>+ משלוח (ללא עמלה)</span><span id="calcShipping">—</span></div>
+          <div class="commission-row"><span>= הלקוח משלם</span><span id="calcTotal">₪0</span></div>
+          <div class="commission-row"><span>− עמלת החנות (10% ממחיר המוצר בלבד)</span><span id="calcFee">-₪0</span></div>
           <div class="commission-row total"><span>אתם מקבלים</span><span id="calcPayout">₪0</span></div>
           <p style="font-size:12px;color:var(--text-muted);margin-top:12px">התשלום מועבר לאחר 14 יום ממסירת המוצר ללקוח (תקופת הביטול לפי חוק הגנת הצרכן), במחזור חודשי, כנגד חשבונית. פירוט מלא בסעיף 4 להסכם.</p>
         </div>
@@ -270,7 +271,7 @@ function updateCommission() {
   const shipRaw = document.getElementById('shippingInput').value.trim();
   const ship = Math.max(0, parseFloat(shipRaw) || 0);
   document.getElementById('calcFee').textContent = '-' + fmt(fee);
-  document.getElementById('calcShipping').textContent = shipRaw === '' ? 'בתיאום' : ship === 0 ? 'חינם' : fmt(ship);
+  document.getElementById('calcShipping').textContent = shipRaw === '' ? 'בתיאום' : ship === 0 ? 'חינם' : '+' + fmt(ship);
   document.getElementById('calcTotal').textContent = fmt(price + ship);
   document.getElementById('calcPayout').textContent = fmt(price - fee + ship);
 }

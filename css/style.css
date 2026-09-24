@@ -1022,6 +1022,8 @@ input, textarea { font-family: inherit; font-size: inherit; }
   transition: var(--transition); font-size: 15px;
 }
 .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--primary); }
+/* טקסט הדוגמה בתוך שדה ריק - בהיר ונטוי כדי שלא ייראה כמו ערך שכבר מולא */
+.form-field input::placeholder, .form-field textarea::placeholder { color: #9ca3af; font-style: italic; opacity: 1; }
 /* שדה שלא עבר אימות (validateFormFriendly ב-main.js) */
 .form-field input.field-invalid, .form-field textarea.field-invalid, .form-field select.field-invalid { border-color: #ef4444; background: rgba(239,68,68,0.06); }
 .form-field.has-error > label { color: #dc2626; }
