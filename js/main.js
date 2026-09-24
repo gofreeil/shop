@@ -945,9 +945,9 @@ function ensureAuthModal() {
   return modal;
 }
 // התחברות דרך יוצאים לחירות (SSO): הקהילה שותלת את העוגייה המשותפת gofreeil-auth,
-// חוזרת לחנות, ואז /api/me מזהה את המשתמש.
+// חוזרת לאותו דף שממנו יצא (לא לדף הבית - שם אבדה לו העבודה), ואז /api/me מזהה את המשתמש.
 function loginWithCommunity() {
-  const callback = `${window.location.origin}/`;
+  const callback = window.location.href.split('#')[0];
   window.location.href = `https://community.gofreeil.com/sso?callback=${encodeURIComponent(callback)}`;
 }
 

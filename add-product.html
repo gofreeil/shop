@@ -88,6 +88,19 @@
         <!-- מצב החנות: מה שקובע אם המוצר יעלה עכשיו למדף או ימתין איתה לאישור -->
         <div class="sell-note" id="storeStatusNote" hidden></div>
 
+        <!-- לא מחובר: אומרים את זה לפני שמתחילים למלא, לא אחרי -->
+        <div class="sell-note rejected" id="loginNotice" hidden>
+          <i class="fas fa-user-lock"></i>
+          <div>
+            <strong>אינכם מחוברים לחשבון.</strong> מוצר נשלח למדף רק מחשבון מחובר - התחברו לפני ההעלאה.
+            מה שתמלאו כאן (כולל התמונות) נשמר במכשיר הזה ולא יאבד גם אם תצאו להתחבר.
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+              <button type="button" class="btn btn-primary" onclick="loginWithCommunity()" style="padding:8px 14px;font-size:14px"><i class="fas fa-right-to-bracket"></i> התחברות</button>
+              <button type="button" class="btn btn-ghost" onclick="openAuth('login')" style="padding:8px 14px;font-size:14px"><i class="fas fa-envelope"></i> התחברות עם אימייל וסיסמה</button>
+            </div>
+          </div>
+        </div>
+
         <form class="sell-form form-grid" id="productForm" onsubmit="submitProduct(event)" novalidate hidden>
           <h2 style="margin-top:0"><i class="fas fa-box" style="color:var(--primary)"></i> המוצר</h2>
           <p class="hint">כל השדות המסומנים ב-* הם חובה. התיאור והתמונה הם מה שהלקוח רואה - השקיעו בהם.</p>
@@ -357,6 +370,7 @@ function renderGallery() {
   const full = gallery.length >= MAX_IMAGES;
   document.getElementById('imageDrop').style.display = full ? 'none' : '';
   updateEmojiFallback();
+  scheduleDraftSave();
   document.getElementById('imageDropText').textContent = gallery.length
     ? `הוסיפו עוד תמונות (${gallery.length}/${MAX_IMAGES})`
     : 'לחצו לבחירת תמונות או גררו לכאן · JPG/PNG/WebP · עד 6 תמונות';
@@ -414,6 +428,74 @@ function clearImages() {
   document.getElementById('imageInput').value = '';
   renderGallery();
 }
+
+// ---- טיוטת המוצר: כל מה שהוקלד והתמונות נשמרים במכשיר (IndexedDB) תוך כדי מילוי ----
+// כך שום דבר לא אובד: לא ביציאה להתחברות, לא ברענון ולא בשליחה שנכשלה. נמחקת רק
+// אחרי שהמוצר התקבל בשרת. IndexedDB ולא localStorage - התמונות שוקלות מגה-בייטים.
+const DRAFT_FIELDS = ['name', 'category', 'price', 'old_price', 'quantity', 'delivery_days', 'link', 'description', 'emoji'];
+function draftDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('shop-product-draft', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('draft');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function draftStore(mode, fn) {
+  const db = await draftDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('draft', mode);
+    const req = fn(tx.objectStore('draft'));
+    tx.oncomplete = () => { db.close(); resolve(req?.result); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+}
+let draftRestoring = false;
+let draftTimer = null;
+function scheduleDraftSave() {
+  if (draftRestoring) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveProductDraft, 400);
+}
+async function saveProductDraft() {
+  const form = document.getElementById('productForm');
+  const fields = {};
+  for (const k of DRAFT_FIELDS) fields[k] = form.elements[k]?.value ?? '';
+  const empty = !gallery.length && !['name', 'price', 'description', 'link', 'old_price'].some(k => String(fields[k]).trim());
+  try {
+    if (empty) await draftStore('readwrite', s => s.delete('current'));
+    else await draftStore('readwrite', s => s.put({
+      fields,
+      unlimited: document.getElementById('unlimitedStock').checked,
+      accuracy: document.getElementById('consentAccuracy').checked,
+      gallery: gallery.map(it => ({ src: it.src, out: it.out, view: it.view })),
+      savedAt: Date.now(),
+    }, 'current'));
+  } catch { /* מצב גלישה פרטית / דפדפן בלי IndexedDB - ממשיכים בלי טיוטה */ }
+}
+async function clearProductDraft() {
+  clearTimeout(draftTimer);
+  try { await draftStore('readwrite', s => s.delete('current')); } catch { /* ignore */ }
+}
+async function restoreProductDraft() {
+  let d = null;
+  try { d = await draftStore('readonly', s => s.get('current')); } catch { return; }
+  if (!d) return;
+  const form = document.getElementById('productForm');
+  draftRestoring = true;
+  for (const k of DRAFT_FIELDS) if (form.elements[k] && d.fields?.[k] != null) form.elements[k].value = d.fields[k];
+  document.getElementById('unlimitedStock').checked = !!d.unlimited;
+  document.getElementById('consentAccuracy').checked = !!d.accuracy;
+  gallery = Array.isArray(d.gallery) ? d.gallery.filter(it => it?.out) : [];
+  toggleUnlimitedStock();
+  updateCommission();
+  renderEmojiPicker();
+  renderGallery();
+  draftRestoring = false;
+  toast('המוצר שהתחלתם למלא שוחזר - אפשר להמשיך מאיפה שעצרתם', 'fa-clock-rotate-left');
+}
+document.getElementById('productForm').addEventListener('input', scheduleDraftSave);
+document.getElementById('productForm').addEventListener('change', scheduleDraftSave);
 const drop = document.getElementById('imageDrop');
 ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
 ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
@@ -529,6 +611,7 @@ function renderStore() {
   // "אין חנות" מוצג רק אחרי שידוע שגם בחשבון אין (או שאין חשבון)
   document.getElementById('noStore').hidden = has || !identityChecked;
   document.getElementById('noStoreLogin').hidden = !!currentUser;
+  document.getElementById('loginNotice').hidden = !has || !!currentUser;
   if (!has) return;
   document.getElementById('storeSummaryLogo').innerHTML = storeLogoHtml({ logo: store.store_logo, name: store.store_name }, 64);
   document.getElementById('storeSummaryName').textContent = store.store_name;
@@ -627,6 +710,20 @@ async function submitProduct(e) {
   const store = getSavedStore();
   if (!store) { location.href = 'sell.html'; return; }
   if (!form.reportValidity()) return;
+  await saveProductDraft();
+  // הזהות נבדקת מול השרת ברגע השליחה - לא לפי מה שהדפדפן זוכר. מי שלא מחובר
+  // מקבל הסבר וכפתור התחברות, והטיוטה (כולל התמונות) מחכה לו כשיחזור.
+  let signedIn = !!currentUser;
+  try { signedIn = !!(await (await fetch('/api/me')).json()).user; } catch { /* אין רשת - השליחה עצמה תגיד */ }
+  if (!signedIn) {
+    if (currentUser) { currentUser = null; localStorage.removeItem(STORAGE.USER); updateAccountBtn(); }
+    err.innerHTML = '<strong>אינכם מחוברים לחשבון, ולכן המוצר עוד לא נשלח.</strong> כל מה שמילאתם, כולל התמונות, שמור במכשיר הזה. התחברו - ותחזרו בדיוק לכאן עם הטופס המלא. '
+      + '<button type="button" class="btn btn-primary" onclick="loginWithCommunity()" style="padding:6px 12px;font-size:13px;margin-top:8px"><i class="fas fa-right-to-bracket"></i> התחברות</button> '
+      + '<button type="button" class="btn btn-ghost" onclick="openAuth(\'login\')" style="padding:6px 12px;font-size:13px;margin-top:8px">אימייל וסיסמה</button>';
+    err.style.display = 'block';
+    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
   // תנאי סף: חתימה על אמנת המוסר העולמית. השרת דוחה הגשה בלי חתימה, ולכן
   // אין טעם לשלוח - עוצרים כאן עם הסבר וקישור לחתימה.
   if (!charterGate.signed) {
@@ -660,6 +757,7 @@ async function submitProduct(e) {
     const r = await fetch('/api/seller-products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     const json = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(json.error || 'ההגשה נכשלה');
+    await clearProductDraft();
     // מאשרים חנות, לא מוצר: מוצר של חנות מאושרת עולה למדף מיד, ומוצר של חנות
     // שעדיין ממתינה יעלה אוטומטית ברגע שהחנות תאושר
     const live = json.item?.status === 'approved';
@@ -685,7 +783,7 @@ async function submitProduct(e) {
     renderStore();
     loadMine();
   } catch (ex) {
-    err.textContent = ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message;
+    err.textContent = (ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message) + ' - הפרטים והתמונות שמורים במכשיר ולא אבדו.';
     err.style.display = 'block';
   } finally {
     btn.disabled = false;
@@ -697,6 +795,7 @@ function resetProductForm() {
   const form = document.getElementById('productForm');
   form.reset();
   clearImages();
+  clearProductDraft();
   renderEmojiPicker();
   toggleUnlimitedStock();
   updateCommission();
@@ -710,6 +809,7 @@ document.addEventListener('onboardingChanged', () => onbRenderBar('#onbBar', { h
 updateCommission();
 renderEmojiPicker();
 renderStore();
+restoreProductDraft();
 if (new URLSearchParams(location.search).get('new') === '1' && getSavedStore()) toast('החנות פתוחה - עכשיו מעלים את המוצר הראשון', 'fa-store');
 applyUser();
 // בלי חתימה על אמנת המוסר העולמית השרת דוחה את ההגשה - מראים את זה מראש
