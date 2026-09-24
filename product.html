@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מוצר | קניון החירות</title>
+<link rel="icon" type="image/png" href="images/logo.png">
+<link rel="apple-touch-icon" href="images/logo.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="קניון החירות">
+<meta property="og:title" content="מוצר | קניון החירות">
+<meta property="og:description" content="כל המוצרים בקניון החירות - בריאות טבעית, חקלאות ביתית, טכנולוגיה ועוד">
+<meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="לוגו קניון החירות">
+<meta property="og:url" content="https://shop.gofreeil.com/product">
+<meta property="og:locale" content="he_IL">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="מוצר | קניון החירות">
+<meta name="twitter:description" content="כל המוצרים בקניון החירות - בריאות טבעית, חקלאות ביתית, טכנולוגיה ועוד">
+<meta name="twitter:image" content="https://shop.gofreeil.com/images/logo.png">
+<meta name="theme-color" content="#6366f1">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Analytics — נכס משותף לכל אתרי "יוצאים לחירות". ההפרדה בין
+     האתרים נעשית לפי hostName, ולכן אותו מזהה משמש את כולם. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YTEG7S0H9N"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag() { dataLayer.push(arguments); }
+	gtag('js', new Date());
+	gtag('config', 'G-YTEG7S0H9N');
+</script>
+</head>
+<body>
+
+<header class="header" id="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="קניון החירות"></a>
+    <nav class="main-nav">
+      <div class="nav-dropdown">
+        <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
+        <div class="nav-dropdown-menu" id="navCategoriesMenu"></div>
+      </div>
+      <a href="about.html">אודות</a>
+      <a href="sell.html">הוסף חנות</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="searchToggle"><i class="fas fa-search"></i></button>
+      <button class="icon-btn" id="themeToggle"><i class="fas fa-moon"></i></button>
+      <a href="#" class="icon-btn"><i class="fas fa-heart"></i><span class="badge" id="wishlistCount">0</span></a>
+      <a href="cart.html" class="icon-btn cart-btn"><span class="cart-emoji" aria-hidden="true">🛒</span><span class="badge" id="cartCount">0</span></a>
+    </div>
+  </div>
+  <div class="search-bar" id="searchBar">
+    <div class="container">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="חפש מוצרים...">
+        <button class="search-close" id="searchClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="search-suggestions" id="searchSuggestions"></div>
+    </div>
+  </div>
+</header>
+
+<section class="page-header product-page-header">
+  <div class="container">
+    <div class="breadcrumb" id="productCrumb"><a href="index.html">בית</a> / <a href="products.html">כל המוצרים</a></div>
+  </div>
+</section>
+
+<section class="container">
+  <div class="product-page" id="productView">
+    <div class="product-loading"><i class="fas fa-spinner fa-spin"></i> טוען את המוצר...</div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border:none">
+      <p>© 2026 קניון החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a></p>
+      <div class="payment-methods">
+        <i class="fab fa-cc-visa"></i><i class="fab fa-cc-mastercard"></i><i class="fab fa-cc-paypal"></i>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="data/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/site-editor.js"></script>
+</body>
+</html>
