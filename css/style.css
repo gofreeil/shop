@@ -476,9 +476,9 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .category-bg-icon { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 52px; }
 .hero-categories .category-bg-icon { font-size: 72px; }
 
-/* desktop: category banners live inside the hero instead of the floating demo cards, and float like they did */
+/* desktop & tablet (everything above mobile): category banners live inside the hero instead of the floating demo cards, and float like they did */
 .hero-categories { display: none; }
-@media (min-width: 1025px) {
+@media (min-width: 721px) {
   .hero-visual { display: none; }
   .hero-categories { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 22px; }
   .hero-categories .category-bg { height: 190px; }
@@ -491,6 +491,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
   .hero-categories .category-card:hover { animation-play-state: paused; }
   #categories { display: none; }
 }
+@media (min-width: 721px) and (max-width: 1024px) { .hero-categories { grid-template-columns: repeat(3, 1fr); } }
 /* gentle float for the hero banners - a few pixels, barely any tilt */
 @keyframes cardFloatSoft {
   0%, 100% { transform: translateY(0) rotate(-0.4deg); }
