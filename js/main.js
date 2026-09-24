@@ -19,6 +19,63 @@ function toast(msg, icon = 'fa-check-circle') {
   t._timer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+// === אימות טפסים ידידותי ===
+// לא סומכים על בועת השגיאה של הדפדפן: בדפדפנים פנימיים (וואטסאפ/פייסבוק) ובחלק
+// מהטלפונים היא לא מופיעה, והלחיצה על "שליחה" נראית כמו קפיצה למעלה בלי סיבה.
+// כאן: אומרים במילים מה חסר, מסמנים את השדה באדום וממקדים אליו.
+function fieldLabel(el) {
+  const box = el.closest('.form-field, .consent, label');
+  const raw = box?.querySelector('label, strong')?.textContent || el.placeholder || el.name || '';
+  return raw.replace(/\s*\*\s*$/, '').replace(/\s+/g, ' ').trim() || 'שדה חובה';
+}
+function fieldProblem(el) {
+  const v = el.validity;
+  if (v.valueMissing) return el.type === 'checkbox' ? 'יש לסמן' : el.tagName === 'SELECT' ? 'יש לבחור' : 'יש למלא';
+  if (v.typeMismatch && el.type === 'email') return 'כתובת אימייל לא תקינה';
+  if (v.typeMismatch && el.type === 'url') return 'קישור לא תקין';
+  if (v.rangeUnderflow) return `הערך קטן מדי (מינימום ${el.min})`;
+  if (v.rangeOverflow) return `הערך גדול מדי (מקסימום ${el.max})`;
+  if (v.stepMismatch) return 'מספר לא תקין';
+  if (v.badInput) return 'יש להקליד מספר';
+  if (v.tooLong) return 'הטקסט ארוך מדי';
+  return 'הערך לא תקין';
+}
+function markFieldInvalid(el) {
+  el.classList.add('field-invalid');
+  el.closest('.form-field, .consent')?.classList.add('has-error');
+  const clear = () => { el.classList.remove('field-invalid'); el.closest('.form-field, .consent')?.classList.remove('has-error'); };
+  el.addEventListener('input', clear, { once: true });
+  el.addEventListener('change', clear, { once: true });
+}
+// מחזיר true אם הטופס תקין; אחרת מציג הודעה (ב-errEl אם יש, ובטוסט) וגולל לשדה הראשון
+function validateFormFriendly(form, errEl) {
+  // קישור בלי https:// - משלימים במקום לדחות
+  form.querySelectorAll('input[type=url]').forEach(el => {
+    const v = el.value.trim();
+    if (v && !/^[a-z]+:\/\//i.test(v)) el.value = 'https://' + v;
+  });
+  const bad = [...form.elements].filter(el => el.willValidate && !el.checkValidity());
+  if (!bad.length) return true;
+  bad.forEach(markFieldInvalid);
+  const first = bad[0];
+  const msg = `${fieldProblem(first)}: ${fieldLabel(first)}` + (bad.length === 2 ? ' (ועוד שדה אחד מסומן באדום)' : bad.length > 2 ? ` (ועוד ${bad.length - 1} שדות מסומנים באדום)` : '');
+  if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  toast(msg, 'fa-circle-exclamation');
+  first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => { try { first.focus({ preventScroll: true }); } catch {} }, 400);
+  return false;
+}
+// טפסים שעדיין משתמשים באימות של הדפדפן: תופסים את השדה הלא-תקין הראשון בכל
+// ניסיון שליחה ומוסיפים הסבר וסימון - גם כשהבועה של הדפדפן לא מופיעה
+document.addEventListener('invalid', e => {
+  const el = e.target;
+  if (!el.form || el.form._invalidShown) return;
+  el.form._invalidShown = true;
+  setTimeout(() => { el.form._invalidShown = false; }, 50);
+  markFieldInvalid(el);
+  toast(`${fieldProblem(el)}: ${fieldLabel(el)}`, 'fa-circle-exclamation');
+}, true);
+
 // === Cart ===
 function saveCart() {
   localStorage.setItem(STORAGE.CART, JSON.stringify(cart));

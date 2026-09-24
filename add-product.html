@@ -165,7 +165,9 @@
         <div class="sell-success" id="sellSuccess" hidden>
           <i class="fas fa-circle-check"></i>
           <h2 style="font-size:26px;margin-bottom:8px">המוצר עלה למדף</h2>
-          <p style="color:var(--text-muted);margin-bottom:20px;max-width:520px;margin-inline:auto">המוצר גלוי ללקוחות. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.</p>
+          <p style="color:var(--text-muted);margin-bottom:20px;max-width:520px;margin-inline:auto">המוצר גלוי ללקוחות.</p>
+          <div class="success-preview" id="successPreview"></div>
+          <div class="success-steps" id="successSteps"></div>
           <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" id="successActions">
             <button class="btn btn-primary" onclick="resetProductForm()"><i class="fas fa-plus"></i> העלאת מוצר נוסף</button>
             <a href="#mine" class="btn btn-ghost"><i class="fas fa-list-check"></i> המוצרים שהגשתי</a>
@@ -719,14 +721,21 @@ async function loadMine() {
 }
 
 // ---- שליחה: פרטי המוצר מהטופס + פרטי החנות, המוכר וההסכם מהחנות השמורה ----
+// נעילה מהלחיצה הראשונה: כמה לחיצות מהירות (או לחיצה בזמן שהבדיקה מול השרת
+// עוד רצה) לא ישלחו את אותו מוצר פעמיים
+let submitting = false;
 async function submitProduct(e) {
   e.preventDefault();
-  const form = e.target;
+  if (submitting) return;
+  submitting = true;
+  try { await submitProductOnce(e.target); } finally { submitting = false; }
+}
+async function submitProductOnce(form) {
   const err = document.getElementById('submitError');
   err.style.display = 'none';
   const store = getSavedStore();
   if (!store) { location.href = 'sell.html'; return; }
-  if (!form.reportValidity()) return;
+  if (!validateFormFriendly(form, err)) return;
   await saveProductDraft();
   // הזהות נבדקת מול השרת ברגע השליחה - לא לפי מה שהדפדפן זוכר. מי שלא מחובר
   // מקבל הסבר וכפתור התחברות, והטיוטה (כולל התמונות) מחכה לו כשיחזור.
@@ -753,6 +762,7 @@ async function submitProduct(e) {
   if (!store.contract_accepted || store.contract_version !== SELLER_CONTRACT_VERSION) {
     err.innerHTML = 'הסכם המוכר עודכן - יש לאשר אותו מחדש ב<a href="sell.html?edit=1" style="text-decoration:underline">פרטי החנות</a> לפני העלאת מוצר.';
     err.style.display = 'block';
+    err.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
   const f = Object.fromEntries(new FormData(form));
@@ -781,22 +791,7 @@ async function submitProduct(e) {
     const wasFirst = !onbState().first_product_at && !(Number(onbState().products_count) || 0);
     if (wasFirst) onbSave({ first_product_at: new Date().toISOString() });
     form.hidden = true;
-    const box = document.getElementById('sellSuccess');
-    box.querySelector('h2').textContent = live ? 'המוצר עלה למדף' : 'המוצר ממתין לאישור החנות';
-    box.querySelector('p').innerHTML = live
-      ? 'החנות שלכם מאושרת, ולכן המוצר כבר על המדף וגלוי ללקוחות. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.'
-      : 'המוצר נשמר וממתין ל<strong>אישור החנות</strong> - מנהל הקניון מאשר חנות אחת, לא מוצר אחר מוצר. ברגע שהחנות תאושר המוצר הזה וכל השאר יעלו למדף יחד, ותקבלו עדכון באימייל. מכאן והלאה כל מוצר שתעלו יעלה למדף מיד. עותק של ההסכם שאישרתם זמין ב<a href="contract.html" style="color:var(--primary);text-decoration:underline">דף ההסכם</a>.';
-    // אחרי המוצר הראשון ממשיכים ללוח הבקרה ולסיור שמלמד לנהל את החנות
-    if (wasFirst) {
-      box.querySelector('p').innerHTML += ' <br><strong>השלב האחרון במסלול:</strong> סיור קצר בלוח הבקרה - שם רואים מכירות והזמנות, משנים מחיר ומלאי, ומעלימים מוצר מהמדף.';
-      document.getElementById('successActions').innerHTML = `
-        <a href="seller-dashboard.html?tour=1" class="btn btn-primary btn-lg"><i class="fas fa-chart-line"></i> ללוח הבקרה - סיור קצר</a>
-        <button class="btn btn-ghost" onclick="resetProductForm()"><i class="fas fa-plus"></i> העלאת מוצר נוסף</button>
-        <a href="#mine" class="btn btn-ghost"><i class="fas fa-list-check"></i> המוצרים שהגשתי</a>`;
-    }
-    box.hidden = false;
-    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    toast(live ? 'המוצר עלה למדף' : 'המוצר ממתין לאישור החנות', 'fa-circle-check');
+    showProductSuccess({ data, live, wasFirst, id: json.item?.id });
     renderStore();
     loadMine();
   } catch (ex) {
@@ -806,6 +801,43 @@ async function submitProduct(e) {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> העלאת המוצר למדף';
   }
+}
+// מסך "המוצר עלה": איך המוצר נראה בחנות, איפה עורכים אותו, המבצע והתראת ה-SMS
+function showProductSuccess({ data, live, wasFirst, id }) {
+  const box = document.getElementById('sellSuccess');
+  box.querySelector('h2').textContent = live ? 'המוצר שלך עלה בהצלחה! 🎉' : 'המוצר נשמר בהצלחה! 🎉';
+  box.querySelector('p').innerHTML = live
+    ? 'המוצר כבר על המדף וגלוי ללקוחות. כך הוא נראה בחנות:'
+    : 'המוצר ממתין ל<strong>אישור החנות</strong> (מאשרים חנות פעם אחת, לא כל מוצר). ברגע שהחנות תאושר הוא יעלה למדף אוטומטית ותקבלו עדכון באימייל. כך הוא ייראה בחנות:';
+  // תצוגה מקדימה - אותו כרטיס שהלקוח רואה, בנוי מהנתונים שנשלחו
+  document.getElementById('successPreview').innerHTML = productCard({
+    id: 0, name: esc(data.name), category: data.category, price: Number(data.price),
+    oldPrice: data.old_price ? Number(data.old_price) : null, image: data.image, emoji: esc(data.emoji || '📦'),
+    seller: esc(data.store_name), storeSlug: storeSlug(data.store_name), storeLogo: data.store_logo || '', badge: 'new',
+  });
+  const shot = `<div class="success-shot" aria-hidden="true">
+      <div class="success-shot-bar"><i class="fas fa-chart-line"></i> לוח הבקרה ← המוצרים שלי</div>
+      <div class="success-shot-row"><strong>${esc(data.name)}</strong><span class="box">₪${Number(data.price)}</span><span class="box">${data.quantity || 'מלאי'}</span></div>
+    </div>`;
+  document.getElementById('successSteps').innerHTML = `
+    <div class="success-step"><i class="fas fa-pen-to-square"></i><div>
+      <strong>תמיד אפשר לערוך את המוצר</strong> - מחיר, מלאי, תיאור והסתרה מהמדף - באזור האישי שלך:
+      <a href="seller-dashboard.html" style="color:var(--primary);text-decoration:underline">לוח הבקרה של החנות</a>
+      (גם מתפריט החשבון למעלה ← החנות שלי ← "לוח בקרה למוכר").${shot}</div></div>
+    <div class="success-step promo"><i class="fas fa-gift"></i><div>
+      <strong>מבצע מיוחד:</strong> כל מוצר חדש שעולה לחנות מוצג <strong>חודש שלם בחינם</strong> באתרי יוצאים לחירות.</div></div>
+    <div class="success-step"><i class="fas fa-comment-sms"></i><div>
+      <strong>כשלקוח ירכוש את המוצר תקבלו הודעת SMS</strong> לנייד הרשום בחנות (${esc(data.seller_phone || data.store_phone || '')}), וגם מייל עם פרטי המשלוח.</div></div>`;
+  const view = live && id ? `<a href="${productShareUrl(100000 + Number(id))}" class="btn btn-ghost"><i class="fas fa-eye"></i> צפייה במוצר בחנות</a>` : '';
+  document.getElementById('successActions').innerHTML = wasFirst
+    // אחרי המוצר הראשון ממשיכים ללוח הבקרה ולסיור שמלמד לנהל את החנות
+    ? `<a href="seller-dashboard.html?tour=1" class="btn btn-primary btn-lg"><i class="fas fa-chart-line"></i> ללוח הבקרה - סיור קצר</a>
+       <button class="btn btn-ghost" onclick="resetProductForm()"><i class="fas fa-plus"></i> העלאת מוצר נוסף</button>${view}`
+    : `<button class="btn btn-primary" onclick="resetProductForm()"><i class="fas fa-plus"></i> העלאת מוצר נוסף</button>
+       <a href="seller-dashboard.html" class="btn btn-ghost"><i class="fas fa-pen-to-square"></i> עריכת המוצרים שלי</a>${view}`;
+  box.hidden = false;
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  toast(live ? 'המוצר עלה למדף' : 'המוצר נשמר וממתין לאישור החנות', 'fa-circle-check');
 }
 const DEFAULT_SUCCESS_ACTIONS = document.getElementById('successActions').innerHTML;
 function resetProductForm() {

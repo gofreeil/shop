@@ -953,6 +953,24 @@ input, textarea { font-family: inherit; font-size: inherit; }
   transition: var(--transition); font-size: 15px;
 }
 .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--primary); }
+/* שדה שלא עבר אימות (validateFormFriendly ב-main.js) */
+.form-field input.field-invalid, .form-field textarea.field-invalid, .form-field select.field-invalid { border-color: #ef4444; background: rgba(239,68,68,0.06); }
+.form-field.has-error > label { color: #dc2626; }
+.consent.has-error { outline: 2px solid #ef4444; outline-offset: 4px; border-radius: 10px; }
+
+/* מסך "המוצר עלה" בהעלאת מוצר */
+.success-steps { display: grid; gap: 14px; text-align: right; max-width: 620px; margin: 0 auto 22px; }
+.success-step { display: flex; gap: 14px; align-items: flex-start; background: var(--bg-alt); border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.6; }
+.sell-success .success-step > i { font-size: 22px; margin: 2px 0 0; color: var(--primary); flex-shrink: 0; width: 26px; text-align: center; }
+.success-step.promo { background: linear-gradient(135deg, rgba(245,158,11,0.16), rgba(236,72,153,0.10)); border: 1px dashed #f59e0b; }
+.sell-success .success-step.promo > i { color: #d97706; }
+.success-preview { max-width: 280px; margin: 0 auto 22px; text-align: right; pointer-events: none; }
+.success-preview .product-actions, .success-preview .product-add { display: none; }
+.success-shot { margin-top: 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); overflow: hidden; font-size: 12px; }
+.success-shot-bar { background: var(--bg); padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text-muted); display: flex; gap: 6px; align-items: center; }
+.success-shot-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; padding: 8px 10px; }
+.success-shot-row span.box { border: 1.5px solid var(--primary); border-radius: 6px; padding: 2px 8px; background: var(--bg); position: relative; }
+.success-shot-row span.box::after { content: '✎'; margin-right: 6px; color: var(--primary); }
 
 /* === Responsive === */
 @media (max-width: 1024px) {
@@ -1287,7 +1305,7 @@ a.product-seller:hover { color: var(--primary); }
 .no-store-panel { text-align: center; padding: 40px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
 .no-store-panel i { font-size: 48px; color: var(--primary); margin-bottom: 12px; }
 .sell-success { text-align: center; padding: 48px 24px; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
-.sell-success i { font-size: 64px; color: var(--accent-2); margin-bottom: 16px; }
+.sell-success > i { font-size: 64px; color: var(--accent-2); margin-bottom: 16px; }
 
 /* מסלול פתיחת החנות (js/seller-onboarding.js) - פס התקדמות, כרטיס "השלב הבא" וסיור מודרך */
 .onb-bar { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 18px 22px; margin-bottom: 20px; }
