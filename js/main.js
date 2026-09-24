@@ -142,7 +142,6 @@ function productCard(p) {
         <div class="product-badges">${badge}</div>
       </div>
       <div class="product-info">
-        <span class="product-category">${cat.name}</span>
         <h3 class="product-name">${p.name}</h3>
         ${p.seller
           ? `<a class="product-seller" href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}" title="לדף החנות">${p.storeLogo ? `<img src="${p.storeLogo}" alt="">` : '<i class="fas fa-store"></i>'} ${p.seller}</a>`
