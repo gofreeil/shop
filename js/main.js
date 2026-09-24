@@ -1315,12 +1315,6 @@ function renderStores(containerId, withOpen = true, limit = null) {
 }
 
 // === Newsletter ===
-function handleNewsletter(e) {
-  e.preventDefault();
-  toast('הצטרפת בהצלחה! בדוק את האימייל שלך', 'fa-paper-plane');
-  e.target.reset();
-}
-
 // === Init ===
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();

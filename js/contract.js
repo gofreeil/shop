@@ -8,7 +8,7 @@ const SELLER_COMMISSION_PERCENT = 10;
 // ימי הביטול לצרכן לפי חוק הגנת הצרכן (עסקת מכר מרחוק) - קובע מתי משוחרר התשלום למוכר
 const SELLER_PAYOUT_HOLD_DAYS = 14;
 const SHOP_LEGAL_NAME = 'חנות החירות (shop.gofreeil.com), מרשת "יוצאים לחירות"';
-const SHOP_CONTACT_EMAIL = 'info@no-shop.co.il';
+const SHOP_CONTACT_EMAIL = 'freedomhasbegun@gmail.com';
 const AGREED_DAMAGES_ILS = 5000;
 
 const SELLER_CONTRACT_HTML = `

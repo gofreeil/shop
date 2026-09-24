@@ -66,37 +66,37 @@
       <div>
         <h2 style="font-size:28px;margin-bottom:24px">דרכי יצירת קשר</h2>
         <div style="display:grid;gap:20px">
-          <div style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--bg-alt);border-radius:16px">
-            <i class="fas fa-phone" style="font-size:24px;color:var(--primary)"></i>
-            <div><strong>טלפון</strong><br><span style="color:var(--text-muted)">1-800-חנות החירות</span></div>
-          </div>
-          <div style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--bg-alt);border-radius:16px">
-            <i class="fas fa-envelope" style="font-size:24px;color:var(--primary)"></i>
-            <div><strong>אימייל</strong><br><span style="color:var(--text-muted)">info@no-shop.co.il</span></div>
-          </div>
-          <div style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--bg-alt);border-radius:16px">
+          <a href="https://wa.me/972508750632" target="_blank" rel="noopener" style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--bg-alt);border-radius:16px;color:inherit;text-decoration:none">
             <i class="fab fa-whatsapp" style="font-size:24px;color:#25d366"></i>
-            <div><strong>וואטסאפ</strong><br><span style="color:var(--text-muted)">052-1234567</span></div>
-          </div>
-          <div style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--bg-alt);border-radius:16px">
-            <i class="fas fa-clock" style="font-size:24px;color:var(--primary)"></i>
-            <div><strong>שעות פעילות</strong><br><span style="color:var(--text-muted)">א'-ה' 9:00-21:00, ו' 9:00-13:00</span></div>
-          </div>
+            <div><strong>וואטסאפ (הכי מהיר)</strong><br><span style="color:var(--text-muted)" dir="ltr">050-8750632</span></div>
+          </a>
+          <a href="tel:0508750632" style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--bg-alt);border-radius:16px;color:inherit;text-decoration:none">
+            <i class="fas fa-phone" style="font-size:24px;color:var(--primary)"></i>
+            <div><strong>טלפון</strong><br><span style="color:var(--text-muted)" dir="ltr">050-8750632</span></div>
+          </a>
+          <a href="mailto:freedomhasbegun@gmail.com" style="display:flex;gap:16px;align-items:flex-start;padding:20px;background:var(--bg-alt);border-radius:16px;color:inherit;text-decoration:none">
+            <i class="fas fa-envelope" style="font-size:24px;color:var(--primary)"></i>
+            <div><strong>אימייל</strong><br><span style="color:var(--text-muted)" dir="ltr">freedomhasbegun@gmail.com</span></div>
+          </a>
         </div>
       </div>
       <div>
         <form class="form-grid" onsubmit="handleContact(event)" style="background:var(--bg-card);padding:32px;border-radius:20px;border:1px solid var(--border)">
           <h2 style="font-size:24px">שלח לנו הודעה</h2>
           <div class="form-row">
-            <div class="form-field"><label>שם מלא</label><input type="text" required></div>
-            <div class="form-field"><label>אימייל</label><input type="email" required></div>
+            <div class="form-field"><label>שם מלא *</label><input type="text" name="name" required></div>
+            <div class="form-field"><label>אימייל</label><input type="email" name="email"></div>
           </div>
-          <div class="form-field"><label>טלפון</label><input type="tel"></div>
+          <div class="form-field"><label>טלפון</label><input type="tel" name="phone"></div>
           <div class="form-field"><label>נושא</label>
-            <select><option>שאלה כללית</option><option>בקשת החזרה</option><option>תמיכה טכנית</option><option>שיתוף פעולה</option></select>
+            <select name="subject"><option>שאלה כללית</option><option>בקשת החזרה</option><option>תמיכה טכנית</option><option>שיתוף פעולה</option></select>
           </div>
-          <div class="form-field"><label>הודעה</label><textarea rows="6" required></textarea></div>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> שלח הודעה</button>
+          <div class="form-field"><label>הודעה *</label><textarea name="message" rows="6" required></textarea></div>
+          <p class="hint" style="margin:0;color:var(--text-muted);font-size:13px">ההודעה נפתחת בוואטסאפ (או במייל) כשהיא כבר כתובה - נשאר רק ללחוץ "שליחה".</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button type="submit" class="btn btn-primary"><i class="fab fa-whatsapp"></i> שליחה בוואטסאפ</button>
+            <button type="submit" class="btn btn-ghost" data-via="mail"><i class="fas fa-envelope"></i> שליחה במייל</button>
+          </div>
         </form>
       </div>
     </div>
@@ -116,10 +116,19 @@
 <script src="js/main.js"></script>
 <script src="js/site-editor.js"></script>
 <script>
+// אין לחנות שרת מייל משלה: ההודעה נפתחת מוכנה בוואטסאפ או באפליקציית המייל
+// של הגולש, אל הפרטים של יוצאים לחירות - ורק הוא לוחץ שליחה
 function handleContact(e) {
   e.preventDefault();
-  toast('ההודעה נשלחה בהצלחה!', 'fa-check-circle');
-  e.target.reset();
+  const f = Object.fromEntries(new FormData(e.target));
+  const from = [f.name, f.phone, f.email].filter(Boolean).join(' · ');
+  const text = [`נושא: ${f.subject}`, f.message, '', from, '(נשלח מדף צור קשר בחנות החירות)'].join('\n');
+  const viaMail = e.submitter?.dataset.via === 'mail';
+  const url = viaMail
+    ? `mailto:freedomhasbegun@gmail.com?subject=${encodeURIComponent('חנות החירות - ' + f.subject)}&body=${encodeURIComponent(text)}`
+    : `https://wa.me/972508750632?text=${encodeURIComponent(text)}`;
+  if (viaMail) location.href = url; else window.open(url, '_blank', 'noopener');
+  toast(viaMail ? 'נפתח המייל עם ההודעה - לחצו שליחה' : 'נפתח וואטסאפ עם ההודעה - לחצו שליחה', 'fa-paper-plane');
 }
 </script>
 </body>
