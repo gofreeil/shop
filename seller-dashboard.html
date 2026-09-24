@@ -214,6 +214,7 @@
         <label>זמן אספקה (ימי עסקים)</label><input type="number" name="delivery_days" min="1" max="60" step="1" placeholder="למשל 3">
         <label class="inline-check"><input type="checkbox" name="delivery_by_carrier"> בכפוף לחברת המשלוחים</label>
       </div>
+      <div class="form-field"><label>תיאור קצר (ליד השם בכרטיס)</label><input type="text" name="short_description" maxlength="80"></div>
       <div class="form-field"><label>תיאור המוצר</label><textarea name="description" rows="6" maxlength="2000"></textarea></div>
       <div class="form-field"><label>קישור לאתר / קטלוג</label><input type="url" name="link" maxlength="300" placeholder="https://"></div>
       <div id="editError" style="display:none;padding:12px 14px;border-radius:10px;background:rgba(239,68,68,0.1);color:#b91c1c;font-size:14px"></div>
@@ -428,7 +429,7 @@ function openProductEdit(documentId) {
   f.reset();
   document.getElementById('editName').textContent = '"' + p.name + '"';
   document.getElementById('editError').style.display = 'none';
-  for (const k of ['price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'description', 'link']) f[k].value = p[k] ?? '';
+  for (const k of ['price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'short_description', 'description', 'link']) f[k].value = p[k] ?? '';
   f.delivery_by_carrier.checked = !!p.delivery_by_carrier;
   document.getElementById('editModal').classList.add('active');
 }
@@ -446,7 +447,7 @@ async function saveProductEdit(e) {
   const body = {
     documentId: editingId, price: f.price.value, old_price: n(f.old_price.value), shipping_price: n(f.shipping_price.value),
     quantity: n(f.quantity.value), delivery_days: n(f.delivery_days.value), delivery_by_carrier: f.delivery_by_carrier.checked,
-    description: f.description.value, link: f.link.value.trim(),
+    short_description: f.short_description.value.trim(), description: f.description.value, link: f.link.value.trim(),
   };
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> שומר...';

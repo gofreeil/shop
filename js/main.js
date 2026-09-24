@@ -142,7 +142,7 @@ function productCard(p) {
         <div class="product-badges">${badge}</div>
       </div>
       <div class="product-info">
-        <h3 class="product-name">${p.name}</h3>
+        <h3 class="product-name">${p.name}${p.shortDesc ? ` <span class="product-short">${p.shortDesc}</span>` : ''}</h3>
         <div class="product-rating" data-rating-for="${p.id}">${ratingInner(p.id)}</div>
         <div class="product-price-row">
           <div><span class="product-price">₪${p.price}</span>${oldPrice}</div>
@@ -316,7 +316,7 @@ function openQuickView(productId) {
       </div>
       <div class="quick-view-info">
         <span class="product-category" style="color:${cat.color}">${cat.name}</span>
-        <h2>${p.name}</h2>
+        <h2>${p.name}</h2>${p.shortDesc ? `<p class="qv-short">${p.shortDesc}</p>` : ''}
         <div class="product-rating qv-rating" data-rating-for="${p.id}" data-long="1" onclick="document.getElementById('qvComments')?.scrollIntoView({behavior:'smooth'})" title="לדירוגים ולתגובות">${ratingInner(p.id, true)}</div>
         ${p.seller
           ? `<p style="color:var(--text-muted);margin:16px 0">${p.desc || ''}</p>
@@ -459,6 +459,7 @@ function openAdminEdit(id) {
         <label>ימי אספקה<input name="delivery_days" type="number" min="1" step="1" value="${p.deliveryDays ?? ''}"></label>
       </div>
       <label class="inline-check"><input type="checkbox" name="delivery_by_carrier" value="true"${p.deliveryByCarrier ? ' checked' : ''}> אספקה בכפוף לחברת המשלוחים</label>
+      <label>תיאור קצר (ליד השם בכרטיס)<input name="short_description" maxlength="80" value="${v('shortDesc')}"></label>
       <label>תיאור<textarea name="description" rows="8" maxlength="2000">${v('desc')}</textarea></label>
       <label>קישור חיצוני<input name="link" type="url" maxlength="300" placeholder="https://" value="${v('link')}"></label>
       <label>תצוגה<select name="visibility">
@@ -490,7 +491,7 @@ async function saveAdminEdit(id, form) {
   Object.assign(p, {
     name: htmlEsc(f.name.trim()), category: f.category, emoji: htmlEsc(f.emoji.trim() || '📦'),
     price: Number(f.price), oldPrice: num(f.old_price) || null, quantity: num(f.quantity) || null,
-    deliveryDays: num(f.delivery_days) || null, deliveryByCarrier: f.delivery_by_carrier === 'true', desc: htmlEsc(f.description.trim()),
+    deliveryDays: num(f.delivery_days) || null, deliveryByCarrier: f.delivery_by_carrier === 'true', shortDesc: htmlEsc(f.short_description.trim()), desc: htmlEsc(f.description.trim()),
     link: htmlEsc(f.link.trim()), visibility: f.visibility
   });
   if (f.visibility !== 'visible') return removeFromShelf(p, 'המוצר עודכן והוסתר מהמדף');

@@ -78,6 +78,7 @@ function toShopProduct(row) {
 		emoji: esc(row.emoji || '📦'),
 		image: images[0] || '',
 		images,
+		shortDesc: esc(row.short_description || ''),
 		desc: esc(row.description || ''),
 		link: SAFE_LINK.test(row.link || '') ? esc(row.link) : '',
 		quantity: row.quantity,
@@ -148,7 +149,7 @@ module.exports = async (req, res) => {
 			// ניהול מלאי עצמי (לוח המכוונים של המוכר): רק שדות המלאי/מחיר, ורק על המוצר שלו - Strapi אוכף בעלות
 			if (req.query?.mine) {
 				const data = {};
-				for (const k of ['quantity', 'price', 'old_price', 'shipping_price', 'delivery_days', 'delivery_by_carrier', 'description', 'link', 'visibility', 'neighborhoods']) {
+				for (const k of ['quantity', 'price', 'old_price', 'shipping_price', 'delivery_days', 'delivery_by_carrier', 'short_description', 'description', 'link', 'visibility', 'neighborhoods']) {
 					if (body[k] !== undefined) data[k] = body[k];
 				}
 				const r = await strapi(`${ENDPOINT}/mine/${encodeURIComponent(documentId)}`, {
@@ -165,7 +166,7 @@ module.exports = async (req, res) => {
 			if (typeof body.rejection_reason === 'string') data.rejection_reason = body.rejection_reason.slice(0, 1000);
 			if (typeof body.admin_note === 'string') data.admin_note = body.admin_note.slice(0, 1000);
 			// עריכת המוצר עצמו מגלגל השיניים שבחלון המוצר (סופר-אדמין) - Strapi אוכף שהמבקש מנהל
-			const TEXT = { name: 120, category: 40, emoji: 8, description: 2000, link: 300 };
+			const TEXT = { name: 120, category: 40, emoji: 8, short_description: 80, description: 2000, link: 300 };
 			for (const [k, max] of Object.entries(TEXT)) {
 				if (typeof body[k] === 'string') data[k] = body[k].trim().slice(0, max);
 			}
