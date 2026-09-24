@@ -374,6 +374,7 @@ function adminGearHtml(p) {
       <button type="button" class="admin-gear-btn" onclick="event.stopPropagation();toggleAdminGear()" title="ניהול המוצר (אדמין)" aria-label="תפריט ניהול עבור המוצר">⚙️</button>
       <div class="admin-gear-menu" role="menu" hidden>
         <button type="button" role="menuitem" onclick="openAdminEdit(${p.id})">✏️ עריכה</button>
+        ${productImages(p).length ? `<button type="button" role="menuitem" onclick="openAdminZoom(${p.id})">🔍 זום / מרכוז לתמונה</button>` : ''}
         ${hidden
           ? `<button type="button" role="menuitem" class="ok" onclick="adminProductAction(${p.id}, 'show')">👁️ החזר לתצוגה</button>`
           : `<button type="button" role="menuitem" class="warn" onclick="adminProductAction(${p.id}, 'hide')">🙈 הסתר מהאתר</button>`}
@@ -496,6 +497,102 @@ async function saveAdminEdit(id, form) {
   toast('המוצר עודכן');
   document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { edited: 1 } }));
   openQuickView(id);
+}
+
+// === זום / מרכוז לתמונה של מוצר קיים (סופר-אדמין) ===
+// התמונה השמורה כבר חתוכה ל-4:3; כאן אפשר רק להגדיל ולהזיז בתוכה (למשל להעלים
+// כותרת שנחתכה חלקית בשוליים) - התוצאה נשמרת במקום התמונה שמוצגת כעת בגלריה.
+const az = { id: 0, index: 0, img: null, scale: 1, x: 0, y: 0, drag: null };
+function azEnsureModal() {
+  if (document.getElementById('azModal')) return;
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="modal crop-modal" id="azModal">
+      <div class="modal-overlay" onclick="closeAdminZoom()"></div>
+      <div class="modal-content">
+        <button type="button" class="modal-close" onclick="closeAdminZoom()"><i class="fas fa-times"></i></button>
+        <h3><i class="fas fa-crop-simple"></i> זום / מרכוז לתמונה</h3>
+        <p class="hint">גררו כדי למרכז, גלגלת או הסליידר כדי לזום. מה שבתוך המסגרת - זה מה שיוצג באתר.</p>
+        <div class="crop-stage" id="azStage"><canvas id="azCanvas" width="1200" height="900"></canvas></div>
+        <div class="crop-toolbar">
+          <div class="zoom">
+            <i class="fas fa-magnifying-glass-minus"></i>
+            <input type="range" id="azZoom" min="100" max="300" value="100" oninput="azZoomTo(this.value / 100)">
+            <i class="fas fa-magnifying-glass-plus"></i>
+          </div>
+          <div class="tools"><button type="button" onclick="az.x = 0; az.y = 0; azDraw()"><i class="fas fa-crosshairs"></i> מרכוז</button></div>
+        </div>
+        <div class="crop-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeAdminZoom()">ביטול</button>
+          <button type="button" class="btn btn-primary" id="azSave" onclick="saveAdminZoom()"><i class="fas fa-check"></i> שמירה</button>
+        </div>
+      </div>
+    </div>`);
+  const stage = document.getElementById('azStage');
+  const pt = e => { const r = stage.getBoundingClientRect(); return { x: (e.clientX - r.left) * 1200 / r.width, y: (e.clientY - r.top) * 900 / r.height }; };
+  stage.addEventListener('pointerdown', e => { stage.setPointerCapture(e.pointerId); const p = pt(e); az.drag = { px: p.x, py: p.y, x: az.x, y: az.y }; });
+  stage.addEventListener('pointermove', e => { if (!az.drag) return; const p = pt(e); az.x = az.drag.x + p.x - az.drag.px; az.y = az.drag.y + p.y - az.drag.py; azDraw(); });
+  ['pointerup', 'pointercancel'].forEach(ev => stage.addEventListener(ev, () => { az.drag = null; }));
+  stage.addEventListener('wheel', e => { e.preventDefault(); azZoomTo(az.scale * (e.deltaY < 0 ? 1.08 : 1 / 1.08)); }, { passive: false });
+}
+// scale יחסית ל"מילוי" (1 = התמונה כפי שהיא); x/y = הסטת המרכז בפיקסלים של הקנבס
+function azDraw() {
+  const c = document.getElementById('azCanvas'), img = az.img;
+  const base = Math.max(1200 / img.width, 900 / img.height), s = base * az.scale;
+  const maxX = (img.width * s - 1200) / 2, maxY = (img.height * s - 900) / 2;
+  az.x = Math.min(maxX, Math.max(-maxX, az.x));
+  az.y = Math.min(maxY, Math.max(-maxY, az.y));
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 1200, 900);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 600 + az.x - img.width * s / 2, 450 + az.y - img.height * s / 2, img.width * s, img.height * s);
+  document.getElementById('azZoom').value = Math.round(az.scale * 100);
+}
+function azZoomTo(scale) {
+  const s2 = Math.min(3, Math.max(1, Number(scale)));
+  az.x *= s2 / az.scale; az.y *= s2 / az.scale;
+  az.scale = s2;
+  azDraw();
+}
+function openAdminZoom(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  toggleAdminGear(false);
+  const index = qvGallery.id === id ? qvGallery.index : 0;
+  const src = productImages(p)[index];
+  if (!src) return;
+  const img = new Image();
+  img.onload = () => {
+    Object.assign(az, { id, index, img, scale: 1, x: 0, y: 0, drag: null });
+    azEnsureModal();
+    document.getElementById('azModal').classList.add('active');
+    azDraw();
+  };
+  img.onerror = () => toast('טעינת התמונה נכשלה', 'fa-circle-exclamation');
+  img.src = src;
+}
+function closeAdminZoom() { document.getElementById('azModal')?.classList.remove('active'); }
+async function saveAdminZoom() {
+  const p = products.find(x => x.id === az.id);
+  if (!p) return;
+  const btn = document.getElementById('azSave');
+  btn.disabled = true;
+  const data = document.getElementById('azCanvas').toDataURL('image/jpeg', 0.88);
+  try {
+    await adminPut({ documentId: p.documentId, replace_image: { index: az.index, data } });
+  } catch (err) {
+    btn.disabled = false;
+    return toast(err.message, 'fa-circle-exclamation');
+  }
+  btn.disabled = false;
+  // מציגים מיד את הגרסה החדשה; בטעינה הבאה השרת כבר מחזיר כתובת עם גרסה חדשה
+  const imgs = productImages(p).slice();
+  imgs[az.index] = data;
+  p.images = imgs;
+  p.image = imgs[0];
+  closeAdminZoom();
+  toast('התמונה עודכנה');
+  document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { edited: 1 } }));
+  openQuickView(az.id);
 }
 
 // === גלריית המוצר בחלון המהיר ===

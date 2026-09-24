@@ -365,9 +365,9 @@ async function addImages(files) {
     } catch (ex) { toast(ex.message, 'fa-circle-exclamation'); }
   }
   renderGallery();
-  // תמונה אחת - פותחים מיד את העורך; כמה יחד - נחתכו במרכז, ואפשר לערוך כל אחת
-  if (added.length === 1) openCropEditor(gallery.indexOf(added[0]));
-  else if (added.length > 1) toast('לחצו על תמונה כדי לזום ולמרכז', 'fa-wand-magic-sparkles');
+  // פותחים מיד את העורך על התמונה הראשונה שנוספה - כך המוכר רואה איך היא תיחתך בכרטיס
+  if (added.length) openCropEditor(gallery.indexOf(added[0]));
+  if (added.length > 1) toast('לחצו על כל תמונה אחרת כדי לזום ולמרכז', 'fa-wand-magic-sparkles');
 }
 function renderGallery() {
   const grid = document.getElementById('imgGrid');

@@ -42,8 +42,10 @@ function storeSlug(name) {
 // התמונות נשמרות ב-Strapi כ-data URL, אבל לרשימה הציבורית מחזירים כתובות
 // (/img/<documentId>/<n>, מוגש ע"י api/product-image.js עם קאש CDN) - אחרת רשימת
 // מוצרים עם גלריות הייתה שוקלת עשרות מגה, וקישורי שיתוף (og:image) חייבים URL.
+// ?v= לפי updatedAt: תמונה שנערכה (זום של מנהל) מקבלת כתובת חדשה ועוקפת את קאש ה-CDN
 function imageUrl(row, i) {
-	return `/img/${encodeURIComponent(row.documentId)}/${i}`;
+	const v = Date.parse(row.updatedAt || "");
+	return `/img/${encodeURIComponent(row.documentId)}/${i}${v ? `?v=${v.toString(36)}` : ""}`;
 }
 function galleryUrls(row) {
 	const list = Array.isArray(row.images) && row.images.length ? row.images : (row.image ? [row.image] : []);
@@ -181,6 +183,20 @@ module.exports = async (req, res) => {
 			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null;
 			if (body.delivery_by_carrier !== undefined) data.delivery_by_carrier = body.delivery_by_carrier === true || body.delivery_by_carrier === 'true';
 			if (['visible', 'hidden', 'neighborhoods'].includes(body.visibility)) data.visibility = body.visibility;
+			// החלפת תמונה אחת בגלריה (זום/מרכוז של מנהל): שולפים את הגלריה המלאה ומחליפים רק אותה
+			if (body.replace_image) {
+				const idx = Number(body.replace_image.index);
+				const img = String(body.replace_image.data || '');
+				if (!DATA_IMAGE.test(img) || img.length > 1200000) return res.status(400).json({ error: 'תמונה לא תקינה' });
+				const cur = await strapi(`${ENDPOINT}/${encodeURIComponent(documentId)}`, { headers: authHeaders(req) });
+				const row = cur.ok ? cur.json?.data : null;
+				if (!row) return res.status(404).json({ error: 'המוצר לא נמצא' });
+				const list = Array.isArray(row.images) && row.images.length ? [...row.images] : (row.image ? [row.image] : []);
+				if (!Number.isInteger(idx) || idx < 0 || idx >= list.length) return res.status(400).json({ error: 'תמונה לא קיימת' });
+				list[idx] = img;
+				data.images = list;
+				data.image = list[0];
+			}
 			const r = await strapi(`${ENDPOINT}/${encodeURIComponent(documentId)}`, {
 				method: 'PUT',
 				headers: authHeaders(req),

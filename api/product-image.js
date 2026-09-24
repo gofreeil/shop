@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
 		const buf = Buffer.from(m[2], 'base64');
 		res.setHeader('Content-Type', m[1] === 'image/jpg' ? 'image/jpeg' : m[1]);
 		res.setHeader('Content-Length', buf.length);
-		// מוצר מאושר לא משתנה (הגשה חדשה = רשומה חדשה) - קאש ארוך ב-CDN
+		// קאש ארוך ב-CDN; תמונה שנערכה מוגשת בכתובת חדשה (?v=updatedAt מ-api/seller-products)
 		res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
 		return res.status(200).end(buf);
 	} catch {
