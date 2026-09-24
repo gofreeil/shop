@@ -143,12 +143,7 @@ function productCard(p) {
       </div>
       <div class="product-info">
         <h3 class="product-name">${p.name}</h3>
-        ${p.seller
-          ? `<a class="product-seller" href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}" title="לדף החנות">${p.storeLogo ? `<img src="${p.storeLogo}" alt="">` : '<i class="fas fa-store"></i>'} ${p.seller}</a>`
-          : `<div class="product-rating">
-          <span class="stars">★★★★★</span>
-          <span>${p.rating} (${p.reviews})</span>
-        </div>`}
+        <div class="product-rating" data-rating-for="${p.id}">${ratingInner(p.id)}</div>
         <div class="product-price-row">
           <div><span class="product-price">₪${p.price}</span>${oldPrice}</div>
           <button class="product-add" onclick="addToCart(${p.id})" title="הוסף לעגלה"><i class="fas fa-plus"></i></button>
@@ -322,10 +317,7 @@ function openQuickView(productId) {
       <div class="quick-view-info">
         <span class="product-category" style="color:${cat.color}">${cat.name}</span>
         <h2>${p.name}</h2>
-        ${p.seller ? '' : `<div class="product-rating" style="margin:12px 0">
-          <span class="stars">★★★★★</span>
-          <span>${p.rating} (${p.reviews} ביקורות)</span>
-        </div>`}
+        <div class="product-rating qv-rating" data-rating-for="${p.id}" data-long="1" onclick="document.getElementById('qvComments')?.scrollIntoView({behavior:'smooth'})" title="לדירוגים ולתגובות">${ratingInner(p.id, true)}</div>
         ${p.seller
           ? `<p style="color:var(--text-muted);margin:16px 0">${p.desc || ''}</p>
         <div class="seller-note">
@@ -738,9 +730,45 @@ async function renderRecommendations(p) {
     : '';
   el.innerHTML = block('fa-store', moreTitle, more) + block('fa-bag-shopping', boughtTitle, bought);
 }
-// === תגובות על מוצר ===
-// מתחת לכל מוצר: רשימת התגובות (ציבורית) וטופס כתיבה - רק למשתמש רשום ומחובר.
-// השם והתמונה של הכותב נקבעים בשרת לפי המשתמש המחובר; מחיקה - הכותב או מנהל.
+// === דירוגים ותגובות על מוצר ===
+// אותו מודל כמו דירוגי שביעות הרצון בקבוצות הרכישה (RatingForm + דף התגובות שם):
+// דירוג 1-5 כוכבים עם אימוג'י + תגובה, לייק ותגובה-לתגובה לכל מחובר, ונעיצה /
+// "אהוב על המנהל" / תשובת מנהל למנהל. הטופס גלוי לכולם; אורח שלוחץ על דירוג או
+// שליחה מקבל הודעת הרשמה. השם והתמונה של הכותב נקבעים בשרת לפי המשתמש המחובר;
+// דירוג אחד למשתמש למוצר (דירוג חוזר מעדכן). ההרשאות נאכפות ב-Strapi.
+const RV_LEVELS = {
+  1: { face: '😞', text: 'מאוד לא מרוצה' },
+  2: { face: '😐', text: 'לא מרוצה' },
+  3: { face: '🙂', text: 'סביר' },
+  4: { face: '😊', text: 'מרוצה' },
+  5: { face: '🤩', text: 'מאוד מרוצה!' },
+};
+const RV_EMPTY = '<div class="comment-empty">עדיין אין דירוגים. היו הראשונים לדרג את המוצר!</div>';
+let rv = { id: null, items: [], isAdmin: false, rating: 0, draft: '', replyOpen: {}, replyDraft: {}, busy: {}, thanks: false };
+
+// --- דירוג ממוצע לכל המוצרים (כרטיסים + חלון המוצר) ---
+let ratingSummary = {};
+function starsMeter(avg) {
+  return `<span class="stars-meter" style="--r:${Math.max(0, Math.min(5, avg))}" aria-hidden="true"><span>★★★★★</span></span>`;
+}
+function ratingInner(id, long = false) {
+  const s = ratingSummary[id];
+  if (!s || !s[1]) return '';
+  return `${starsMeter(s[0])}<span>${s[0].toFixed(1)} (${long ? (s[1] === 1 ? 'דירוג אחד' : s[1] + ' דירוגים') : s[1]})</span>`;
+}
+function paintRatings() {
+  document.querySelectorAll('[data-rating-for]').forEach(el => {
+    el.innerHTML = ratingInner(Number(el.dataset.ratingFor), el.dataset.long === '1');
+  });
+}
+async function loadRatingSummary() {
+  try {
+    const r = await fetch('/api/comments?summary=1');
+    if (r.ok) ratingSummary = (await r.json()).ratings || {};
+  } catch { /* offline / dev ללא API */ }
+  paintRatings();
+}
+
 function commentTime(iso) {
   const d = new Date(iso);
   if (isNaN(d)) return '';
@@ -750,98 +778,239 @@ function commentTime(iso) {
   if (diff < 86400) return `לפני ${Math.floor(diff / 3600)} שע'`;
   return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' });
 }
-function commentHtml(c) {
-  const name = htmlEsc(c.author_name || 'משתמש');
-  const initial = htmlEsc((c.author_name || '?').charAt(0));
-  const avatar = c.author_avatar && /^https:\/\//.test(c.author_avatar)
-    ? `<img src="${htmlEsc(c.author_avatar)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">`
+function rvAvatar(name, url) {
+  const initial = htmlEsc((name || '?').charAt(0));
+  return url && /^https:\/\//.test(url)
+    ? `<img src="${htmlEsc(url)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">`
     : `<span>${initial}</span>`;
-  return `<div class="comment" data-id="${htmlEsc(c.documentId)}">
-    <div class="comment-avatar">${avatar}</div>
+}
+function rvItemHtml(c) {
+  const id = htmlEsc(c.documentId);
+  const replies = c.replies || [];
+  const open = rv.replyOpen[c.documentId];
+  return `<div class="comment${c.is_featured ? ' featured' : ''}" data-id="${id}">
+    <div class="comment-avatar">${rvAvatar(c.author_name, c.author_avatar)}</div>
     <div class="comment-main">
-      <div class="comment-head"><strong>${name}</strong><span>${commentTime(c.createdAt)}</span>
-        ${c.canDelete ? `<button type="button" class="comment-del" onclick="deleteComment('${htmlEsc(c.documentId)}')" title="מחיקת התגובה" aria-label="מחיקת התגובה"><i class="fas fa-trash-can"></i></button>` : ''}
+      <div class="comment-head">
+        <strong>${htmlEsc(c.author_name || 'משתמש')}</strong>
+        ${c.rating ? `<span class="rv-item-stars" title="${c.rating} מתוך 5">${'★'.repeat(c.rating)}<i>${'★'.repeat(5 - c.rating)}</i></span>` : ''}
+        ${c.is_featured ? '<span title="תגובה מובילה">📌</span>' : ''}
+        ${c.admin_liked ? '<span title="אהוב על המנהל">❤️</span>' : ''}
+        <span class="comment-date">${commentTime(c.createdAt)}</span>
       </div>
-      <p>${htmlEsc(c.body)}</p>
+      ${c.body ? `<p>${htmlEsc(c.body)}</p>` : ''}
+      ${c.admin_reply ? `<div class="rv-admin-reply"><span>תגובת המנהל:</span><p>${htmlEsc(c.admin_reply)}</p></div>` : ''}
+      <div class="rv-actions">
+        <button type="button" class="rv-act${c.liked ? ' liked' : ''}" onclick="rvLike('${id}')" ${rv.busy['like' + c.documentId] ? 'disabled' : ''} aria-pressed="${!!c.liked}" title="${c.liked ? 'בטל לייק' : 'אהבתי'}">${c.liked ? '❤️' : '🤍'} אהבתי${c.likes ? ` <b>${c.likes}</b>` : ''}</button>
+        <button type="button" class="rv-act" onclick="rvToggleReply('${id}')" title="הגב לתגובה">💬 הגב${replies.length ? ` (${replies.length})` : ''}</button>
+        ${c.canDelete ? `<button type="button" class="rv-act rv-del" onclick="deleteComment('${id}')" title="מחיקה"><i class="fas fa-trash-can"></i></button>` : ''}
+      </div>
+      ${rv.isAdmin ? `<div class="rv-admin-row">
+        <button type="button" onclick="rvAdmin('${id}','is_featured')">📌 ${c.is_featured ? 'בטל נעיצה' : 'נעץ'}</button>
+        <button type="button" onclick="rvAdmin('${id}','admin_liked')">${c.admin_liked ? '💔 בטל אהוב' : '❤️ אהוב על המנהל'}</button>
+        <button type="button" onclick="rvAdminReply('${id}')">✍️ ${c.admin_reply ? 'ערוך תשובת מנהל' : 'תשובת מנהל'}</button>
+      </div>` : ''}
+      ${replies.length ? `<div class="rv-replies">${replies.map(r => `<div class="rv-reply${r.is_admin ? ' admin' : ''}">
+        <div class="rv-reply-meta"><strong>${htmlEsc(r.user_name || 'משתמש')}</strong>${r.is_admin ? '<span class="rv-admin-tag">מנהל</span>' : ''}<span>${commentTime(r.created_at)}</span></div>
+        <p>${htmlEsc(r.text)}</p></div>`).join('')}</div>` : ''}
+      ${open ? `<div class="rv-reply-box">
+        <textarea rows="2" maxlength="1000" placeholder="כתוב תגובה…" oninput="rv.replyDraft['${id}']=this.value">${htmlEsc(rv.replyDraft[c.documentId] || '')}</textarea>
+        <button type="button" class="btn btn-primary btn-sm" onclick="rvSendReply('${id}')" ${rv.busy['reply' + c.documentId] ? 'disabled' : ''}>${rv.busy['reply' + c.documentId] ? 'שולח…' : 'שלח תגובה'}</button>
+      </div>` : ''}
     </div>
   </div>`;
 }
-function commentFormHtml(productId) {
-  if (!currentUser) {
-    return `<div class="comment-login">
-      <i class="fas fa-lock"></i> כדי לכתוב תגובה צריך להיות משתמש רשום.
-      <button type="button" class="btn btn-primary btn-sm" onclick="openAuth('login')">התחברות / הרשמה</button>
-    </div>`;
+function rvFormHtml() {
+  if (rv.thanks) {
+    return `<div class="rv-thanks"><div>✨</div><h4>תודה על הדירוג!</h4><p>המשוב שלך עוזר לקונים אחרים.</p>
+      <button type="button" class="rv-link" onclick="rv.thanks=false;rvDraw()">עדכון הדירוג</button></div>`;
   }
-  return `<form class="comment-form" onsubmit="submitComment(event, ${productId})">
-    <div class="comment-avatar">${avatarHtml(38, 16)}</div>
-    <div class="comment-main">
-      <textarea name="body" rows="2" maxlength="1000" required placeholder="כתבו תגובה על המוצר..." oninput="this.form.querySelector('.comment-count').textContent = this.value.length + '/1000'"></textarea>
-      <div class="comment-actions"><span class="comment-count">0/1000</span><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> פרסום</button></div>
+  const mine = rv.items.find(c => c.mine);
+  const lvl = RV_LEVELS[rv.rating];
+  return `<div class="rv-form">
+    <div class="rv-rate">
+      <span class="rv-label">דרג:</span>
+      <div class="rv-stars">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= rv.rating ? 'filled' : ''}" onclick="rvRate(${n})" aria-label="דירוג ${n} מתוך 5">★</button>`).join('')}</div>
+      ${lvl ? `<div class="rv-emoji"><span>${lvl.face}</span><b>${lvl.text}</b></div>` : ''}
     </div>
-  </form>`;
+    ${mine ? '<p class="rv-note">כבר דירגת את המוצר - אפשר לעדכן את הדירוג והתגובה</p>' : ''}
+    <label class="rv-label-sm" for="rvBody">הערות על המוצר:</label>
+    <div class="rv-body-row">
+      <textarea id="rvBody" rows="3" maxlength="1000" placeholder="איכות המוצר, התאמה לתיאור ולתמונות, זמן האספקה, השירות של המוכר וכו'" oninput="rv.draft=this.value">${htmlEsc(rv.draft)}</textarea>
+      <button type="button" class="btn btn-primary" onclick="rvSubmit()" ${currentUser && !rv.rating ? 'disabled' : ''} ${rv.busy.submit ? 'disabled' : ''}>${rv.busy.submit ? 'שולח…' : mine ? 'עדכון הדירוג' : 'שלח דירוג ותגובה'}</button>
+    </div>
+    <div class="rv-register" id="rvRegister" hidden>
+      <span>🔒</span>
+      <p>הדירוג והדעה שלך חשובים לנו, אנא הירשם תחילה על מנת לוודא שבוטים לא מעורבים בדירוגים ובתגובות</p>
+      <button type="button" class="btn btn-primary" onclick="openAuth('login')">הרשמה / התחברות</button>
+    </div>
+  </div>`;
+}
+function rvDraw() {
+  const el = document.getElementById('qvComments');
+  if (!el || el.dataset.for !== String(rv.id)) return;
+  const s = ratingSummary[rv.id];
+  el.innerHTML = `
+    <div class="rv-head">
+      <h3><i class="fas fa-star"></i> דירוגים ותגובות</h3>
+      ${s && s[1] ? `<div class="rv-badge">${starsMeter(s[0])}<b>${s[0].toFixed(1)}/5</b><span>(${s[1]})</span></div>` : ''}
+    </div>
+    ${rvFormHtml()}
+    <div class="comment-list">${rv.loading ? '<div class="comment-empty"><i class="fas fa-spinner fa-spin"></i></div>' : rv.items.length ? rv.items.map(rvItemHtml).join('') : RV_EMPTY}</div>`;
+}
+function rvRedrawItem(docId) {
+  const c = rv.items.find(x => x.documentId === docId);
+  const el = document.querySelector(`#qvComments .comment[data-id="${CSS.escape(docId)}"]`);
+  if (c && el) el.outerHTML = rvItemHtml(c);
+}
+function rvNeedLogin() {
+  if (currentUser) return false;
+  const p = document.getElementById('rvRegister');
+  if (p) { p.hidden = false; p.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  return true;
 }
 async function renderComments(productId) {
   const el = document.getElementById('qvComments');
   if (!el || el.dataset.for !== String(productId)) return;
-  const head = n => `<h3><i class="fas fa-comments"></i> תגובות${n ? ` <small>(${n})</small>` : ''}</h3>`;
-  el.innerHTML = head(0) + commentFormHtml(productId) + '<div class="comment-list"><div class="comment-empty"><i class="fas fa-spinner fa-spin"></i></div></div>';
-  let items = [];
+  const same = rv.id === productId;
+  rv = { ...rv, id: productId, loading: true, replyOpen: same ? rv.replyOpen : {}, replyDraft: same ? rv.replyDraft : {}, busy: {}, thanks: same && rv.thanks };
+  if (!same) { rv.items = []; rv.rating = 0; rv.draft = ''; rv.isAdmin = false; }
+  rvDraw();
+  let data = null;
   try {
     const r = await fetch(`/api/comments?product=${productId}`);
-    if (r.ok) items = (await r.json()).items || [];
+    if (r.ok) data = await r.json();
   } catch { /* offline / dev ללא API */ }
-  if (el.dataset.for !== String(productId)) return;
-  el.querySelector('h3').outerHTML = head(items.length);
-  el.querySelector('.comment-list').innerHTML = items.length
-    ? items.map(commentHtml).join('')
-    : '<div class="comment-empty">עדיין אין תגובות. היו הראשונים להגיב!</div>';
+  if (rv.id !== productId) return;
+  rv.loading = false;
+  rv.items = data?.items || [];
+  rv.isAdmin = !!data?.isAdmin;
+  if (data) {
+    ratingSummary[productId] = [data.average || 0, data.count || 0];
+    paintRatings();
+  }
+  // הדירוג הקיים של המשתמש ממלא את הטופס (דירוג חוזר מעדכן)
+  const mine = rv.items.find(c => c.mine);
+  if (mine && !rv.rating) { rv.rating = mine.rating || 0; rv.draft = mine.body || ''; }
+  rvDraw();
 }
-async function submitComment(e, productId) {
-  e.preventDefault();
-  const form = e.target;
-  const ta = form.body;
-  const btn = form.querySelector('button[type=submit]');
-  const body = ta.value.trim();
-  if (body.length < 2) { ta.focus(); return; }
-  btn.disabled = true;
+function rvRate(n) {
+  if (rvNeedLogin()) return;
+  rv.rating = n;
+  rvDraw();
+}
+async function rvSubmit() {
+  if (rvNeedLogin() || !rv.rating || rv.busy.submit) return;
+  rv.busy.submit = true;
+  rvDraw();
   try {
-    const r = await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: productId, body }) });
+    const r = await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: rv.id, rating: rv.rating, body: rv.draft.trim() }) });
     const j = await r.json().catch(() => ({}));
-    if (r.status === 401) { toast('צריך להתחבר מחדש כדי להגיב', 'fa-lock'); openAuth('login'); return; }
-    if (!r.ok || !j.item) { toast(j.error || 'שליחת התגובה נכשלה', 'fa-circle-exclamation'); return; }
-    ta.value = '';
-    form.querySelector('.comment-count').textContent = '0/1000';
-    const list = document.querySelector('#qvComments .comment-list');
-    list.querySelector('.comment-empty')?.remove();
-    list.insertAdjacentHTML('afterbegin', commentHtml(j.item));
-    const n = list.querySelectorAll('.comment').length;
-    document.querySelector('#qvComments h3').innerHTML = `<i class="fas fa-comments"></i> תגובות <small>(${n})</small>`;
-    toast('התגובה פורסמה');
+    if (r.status === 401) { toast('נדרשת הרשמה כדי לדרג ולהגיב', 'fa-lock'); openAuth('login'); return; }
+    if (!r.ok || !j.item) { toast(j.error || 'השליחה נכשלה - נסו שוב בעוד מספר רגעים', 'fa-circle-exclamation'); return; }
+    rv.thanks = true;
+    rv.busy.submit = false;
+    await renderComments(rv.id);
   } catch {
-    toast('שליחת התגובה נכשלה', 'fa-circle-exclamation');
+    toast('השליחה נכשלה - נסו שוב בעוד מספר רגעים', 'fa-circle-exclamation');
   } finally {
-    btn.disabled = false;
+    rv.busy.submit = false;
+    rvDraw();
   }
 }
-async function deleteComment(id) {
-  if (!confirm('למחוק את התגובה?')) return;
+async function rvLike(docId) {
+  if (rvNeedLogin()) return;
+  const c = rv.items.find(x => x.documentId === docId);
+  if (!c || rv.busy['like' + docId]) return;
+  const prev = { likes: c.likes, liked: c.liked };
+  c.likes += c.liked ? -1 : 1;
+  c.liked = !c.liked;
+  rv.busy['like' + docId] = true;
+  rvRedrawItem(docId);
   try {
-    const r = await fetch(`/api/comments?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const r = await fetch(`/api/comments?id=${encodeURIComponent(docId)}&action=like`, { method: 'POST' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error);
+    c.likes = j.likes;
+    c.liked = j.liked;
+  } catch {
+    Object.assign(c, prev);
+    toast('שמירת הלייק נכשלה, נסו שוב', 'fa-circle-exclamation');
+  } finally {
+    rv.busy['like' + docId] = false;
+    rvRedrawItem(docId);
+  }
+}
+function rvToggleReply(docId) {
+  if (rvNeedLogin()) return;
+  rv.replyOpen[docId] = !rv.replyOpen[docId];
+  rvRedrawItem(docId);
+  if (rv.replyOpen[docId]) document.querySelector(`#qvComments .comment[data-id="${CSS.escape(docId)}"] .rv-reply-box textarea`)?.focus();
+}
+async function rvSendReply(docId) {
+  if (rvNeedLogin()) return;
+  const c = rv.items.find(x => x.documentId === docId);
+  const text = (rv.replyDraft[docId] || '').trim();
+  if (!c || rv.busy['reply' + docId]) return;
+  if (text.length < 2) { toast('כתבו תגובה קודם', 'fa-circle-exclamation'); return; }
+  rv.busy['reply' + docId] = true;
+  rvRedrawItem(docId);
+  try {
+    const r = await fetch(`/api/comments?id=${encodeURIComponent(docId)}&action=reply`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error);
+    c.replies = j.replies || c.replies;
+    rv.replyDraft[docId] = '';
+    rv.replyOpen[docId] = false;
+  } catch (e) {
+    toast(e.message || 'שליחת התגובה נכשלה, נסו שוב', 'fa-circle-exclamation');
+  } finally {
+    rv.busy['reply' + docId] = false;
+    rvRedrawItem(docId);
+  }
+}
+async function rvAdminUpdate(docId, data) {
+  const c = rv.items.find(x => x.documentId === docId);
+  try {
+    const r = await fetch(`/api/comments?id=${encodeURIComponent(docId)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.item) throw new Error(j.error);
+    if (c) Object.assign(c, j.item, { replies: c.replies });
+    // נעיצה משנה את הסדר - מציירים את כל הרשימה
+    if ('is_featured' in data) {
+      rv.items.sort((a, b) => Number(!!b.is_featured) - Number(!!a.is_featured) || Date.parse(b.createdAt) - Date.parse(a.createdAt));
+      rvDraw();
+    } else rvRedrawItem(docId);
+  } catch (e) {
+    toast(e.message || 'העדכון נכשל', 'fa-circle-exclamation');
+  }
+}
+function rvAdmin(docId, field) {
+  const c = rv.items.find(x => x.documentId === docId);
+  if (c) rvAdminUpdate(docId, { [field]: !c[field] });
+}
+function rvAdminReply(docId) {
+  const c = rv.items.find(x => x.documentId === docId);
+  if (!c) return;
+  const text = prompt('תשובת המנהל (השאירו ריק כדי למחוק):', c.admin_reply || '');
+  if (text === null) return;
+  rvAdminUpdate(docId, { admin_reply: text.trim() });
+}
+async function deleteComment(docId) {
+  if (!confirm('למחוק את התגובה לצמיתות?')) return;
+  try {
+    const r = await fetch(`/api/comments?id=${encodeURIComponent(docId)}`, { method: 'DELETE' });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { toast(j.error || 'המחיקה נכשלה', 'fa-circle-exclamation'); return; }
-    document.querySelector(`#qvComments .comment[data-id="${CSS.escape(id)}"]`)?.remove();
-    const list = document.querySelector('#qvComments .comment-list');
-    const n = list?.querySelectorAll('.comment').length || 0;
-    if (list && !n) list.innerHTML = '<div class="comment-empty">עדיין אין תגובות. היו הראשונים להגיב!</div>';
-    const h = document.querySelector('#qvComments h3');
-    if (h) h.innerHTML = `<i class="fas fa-comments"></i> תגובות${n ? ` <small>(${n})</small>` : ''}`;
+    const wasMine = rv.items.find(x => x.documentId === docId)?.mine;
+    if (wasMine) { rv.rating = 0; rv.draft = ''; rv.thanks = false; }
     toast('התגובה נמחקה');
+    renderComments(rv.id);
   } catch {
     toast('המחיקה נכשלה', 'fa-circle-exclamation');
   }
 }
-// התחברות/התנתקות בזמן שחלון המוצר פתוח - מרעננים את אזור התגובות
+// התחברות/התנתקות בזמן שחלון המוצר פתוח - מרעננים את אזור הדירוגים
 document.addEventListener('userChanged', () => {
   const el = document.getElementById('qvComments');
   if (el && document.getElementById('quickViewModal')?.classList.contains('active')) renderComments(Number(el.dataset.for));
@@ -1436,6 +1605,7 @@ document.addEventListener('DOMContentLoaded', () => {
   hydrateUser();
   loadSellerProducts();
   loadApprovedStores();
+  loadRatingSummary();
   updateCartCount();
   updateWishlistCount();
   const wishBtn = document.getElementById('wishlistBtn');
