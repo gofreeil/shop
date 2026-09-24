@@ -631,7 +631,7 @@ function attachSwipe(el, onSwipe) {
 // הקישור המשותף הוא /p/<id> - דף שמגיש לרובוטים של וואטסאפ/פייסבוק/טלגרם/X את
 // השם, התיאור והתמונה הראשית (Open Graph), ומעביר גולש אמיתי לחלון המוצר.
 function productShareUrl(id) { return `${location.origin}/p/${id}`; }
-function productShareText(p) { return `${p.name} - ₪${p.price}${p.seller ? ` · ${p.seller}` : ''} | חנות החירות`; }
+function productShareText(p) { return `${p.name} - ₪${p.price}${p.seller ? ` · ${p.seller}` : ''} | קנין החירות`; }
 function shareBarHtml(p) {
   const url = productShareUrl(p.id);
   const text = productShareText(p);

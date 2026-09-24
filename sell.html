@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>פתח חנות | חנות החירות | יוצאים לחירות</title>
-<meta name="description" content="פתחו חנות בקניון השיתופי של חנות החירות - שם, לוגו וטלפון, ואז מעלים מוצרים. מאשרים את החנות פעם אחת, וכל המוצרים עולים למדף. החנות לוקחת 10% ממחיר המכירה">
+<title>פתח חנות | קנין החירות | יוצאים לחירות</title>
+<meta name="description" content="פתחו חנות בקניון השיתופי של קנין החירות - שם, לוגו וטלפון, ואז מעלים מוצרים. מאשרים את החנות פעם אחת, וכל המוצרים עולים למדף. החנות לוקחת 10% ממחיר המכירה">
 <link rel="icon" type="image/png" href="images/logo.png">
 <link rel="apple-touch-icon" href="images/logo.png">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="חנות החירות">
-<meta property="og:title" content="פתח חנות | חנות החירות | יוצאים לחירות">
+<meta property="og:site_name" content="קנין החירות">
+<meta property="og:title" content="פתח חנות | קנין החירות | יוצאים לחירות">
 <meta property="og:description" content="פתחו חנות בקניון השיתופי - 10% לחנות, 90% אליכם">
 <meta property="og:image" content="https://shop.gofreeil.com/images/logo.png">
 <meta property="og:image:width" content="1024">
 <meta property="og:image:height" content="1024">
-<meta property="og:image:alt" content="לוגו חנות החירות">
+<meta property="og:image:alt" content="לוגו קנין החירות">
 <meta property="og:url" content="https://shop.gofreeil.com/sell">
 <meta property="og:locale" content="he_IL">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="פתח חנות | חנות החירות | יוצאים לחירות">
+<meta name="twitter:title" content="פתח חנות | קנין החירות | יוצאים לחירות">
 <meta name="twitter:description" content="פתחו חנות בקניון השיתופי - 10% לחנות, 90% אליכם">
 <meta name="twitter:image" content="https://shop.gofreeil.com/images/logo.png">
 <meta name="theme-color" content="#6366f1">
@@ -38,7 +38,7 @@
 
 <header class="header">
   <div class="container header-inner">
-    <a href="index.html" class="logo"><img src="images/logo.png" alt="חנות החירות"></a>
+    <a href="index.html" class="logo"><img src="images/logo.png" alt="קנין החירות"></a>
     <nav class="main-nav">
       <div class="nav-dropdown">
         <a href="index.html#categories" aria-haspopup="true">קטגוריות <i class="fas fa-chevron-down"></i></a>
@@ -213,7 +213,7 @@
 <footer class="footer">
   <div class="container">
     <div class="footer-bottom" style="border:none">
-      <p>© 2026 חנות החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a> · <a href="contract.html">הסכם המוכר</a></p>
+      <p>© 2026 קנין החירות. כל הזכויות שמורות. · <a href="contact.html">צור קשר</a> · <a href="contract.html">הסכם המוכר</a></p>
     </div>
   </div>
 </footer>
@@ -547,17 +547,22 @@ async function submitStore(e) {
     }
     if (charterMissing && !charterGate.error) {
       const note = document.getElementById('storeSuccessText');
-      const warn = `<span style="display:block;margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,0.12);color:#92400e;font-size:14px"><i class="fas fa-scale-balanced"></i> לא מצאנו חתימה על אמנת המוסר עם האימייל ${esc(currentUser?.email || '')}. אם חתמתם בחכמי העדה עם אימייל אחר או בלי אימייל - מנהל הקניון יבדוק זאת, ואפשר גם <a href="${charterGate.signUrl}" target="_blank" rel="noopener" style="text-decoration:underline">לחתום שוב עם האימייל הזה</a>.</span>`;
+      const warn = `<span style="display:block;margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(245,158,11,0.12);color:#92400e;font-size:14px"><i class="fas fa-scale-balanced"></i> לא מצאנו חתימה על אמנת המוסר עם האימייל ${esc(currentUser?.email || '')}. אפשר לחתום עכשיו בתיבת האמנה בדף הזה ("עריכת פרטי החנות") - שמכם יופיע ברשומות החותמים.</span>`;
       if (isNew && note) note.insertAdjacentHTML('beforeend', warn);
       else toast('החנות נשמרה. לא נמצאה חתימה על האמנה עם האימייל הזה', 'fa-scale-balanced');
     }
   } catch (ex) {
-    err.textContent = ex.message === 'Failed to fetch' ? 'אין חיבור לשרת. נסו שוב.' : ex.message;
+    // השמירה בחשבון נכשלה - לא מאבדים שעה של מילוי טופס: שומרים את החנות
+    // בדפדפן (synced=false), והסנכרון לחשבון ינסה שוב בטעינה/התחברות הבאה.
+    setSavedStore({ ...record, synced: false });
+    renderSummary(getSavedStore());
+    renderOnboarding();
+    err.innerHTML = `${esc(ex.message === 'Failed to fetch' ? 'אין חיבור לשרת.' : ex.message)}<br><strong>הפרטים נשמרו בדפדפן הזה ולא אבדו</strong> - נסו לשמור שוב בעוד כמה דקות, והם יישלחו לחשבון ולאישור.`;
     err.style.display = 'block';
     err.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } finally {
     btn.disabled = false;
-    if (btn.innerHTML.includes('fa-spin')) btn.innerHTML = isNew ? '<i class="fas fa-store"></i> פתח את החנות' : '<i class="fas fa-floppy-disk"></i> שמירת השינויים';
+    if (btn.innerHTML.includes('fa-spin')) btn.innerHTML = isNew ? '<i class="fas fa-paper-plane"></i> שלח חנות לאישור' : '<i class="fas fa-floppy-disk"></i> שמירת השינויים';
   }
 }
 

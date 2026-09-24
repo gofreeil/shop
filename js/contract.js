@@ -7,7 +7,7 @@ const SELLER_CONTRACT_VERSION = '1.3 (ספטמבר 2026)';
 const SELLER_COMMISSION_PERCENT = 10;
 // ימי הביטול לצרכן לפי חוק הגנת הצרכן (עסקת מכר מרחוק) - קובע מתי משוחרר התשלום למוכר
 const SELLER_PAYOUT_HOLD_DAYS = 14;
-const SHOP_LEGAL_NAME = 'חנות החירות (shop.gofreeil.com), מרשת "יוצאים לחירות"';
+const SHOP_LEGAL_NAME = 'קנין החירות (shop.gofreeil.com), מרשת "יוצאים לחירות"';
 const SHOP_CONTACT_EMAIL = 'freedomhasbegun@gmail.com';
 const AGREED_DAMAGES_ILS = 5000;
 
@@ -15,7 +15,7 @@ const SELLER_CONTRACT_HTML = `
 <div class="contract">
   <header class="contract-head">
     <h1>הסכם שיתוף פעולה למכירת מוצרים</h1>
-    <p class="contract-sub">בין חנות החירות לבין מציע המוצר ("המוכר")</p>
+    <p class="contract-sub">בין קנין החירות לבין מציע המוצר ("המוכר")</p>
     <p class="contract-meta">גרסה ${SELLER_CONTRACT_VERSION} · עמלת החנות ${SELLER_COMMISSION_PERCENT}% · מסמך משפטי מחייב</p>
   </header>
 

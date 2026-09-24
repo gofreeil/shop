@@ -60,9 +60,9 @@ module.exports = async (req, res) => {
 	res.setHeader('Content-Type', 'text/html; charset=utf-8');
 	res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
 	if (!p) {
-		return res.status(200).end(`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>חנות החירות</title><meta http-equiv="refresh" content="0;url=${esc(target)}"><script>location.replace(${JSON.stringify(target)})</script></head><body><a href="${esc(target)}">למוצר</a></body></html>`);
+		return res.status(200).end(`<!DOCTYPE html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><title>קנין החירות</title><meta http-equiv="refresh" content="0;url=${esc(target)}"><script>location.replace(${JSON.stringify(target)})</script></head><body><a href="${esc(target)}">למוצר</a></body></html>`);
 	}
-	const title = `${p.name} | חנות החירות`;
+	const title = `${p.name} | קנין החירות`;
 	const priceTxt = `₪${p.price}`;
 	const desc = [priceTxt, p.store ? `מהחנות של ${p.store}` : '', String(p.desc || '').replace(/\s+/g, ' ').trim().slice(0, 200)].filter(Boolean).join(' · ');
 	const image = p.image || `${SITE}/images/logo.png`;
@@ -76,7 +76,7 @@ module.exports = async (req, res) => {
 <link rel="canonical" href="${esc(target)}">
 <link rel="icon" type="image/png" href="${SITE}/images/logo.png">
 <meta property="og:type" content="product">
-<meta property="og:site_name" content="חנות החירות">
+<meta property="og:site_name" content="קנין החירות">
 <meta property="og:title" content="${esc(p.name)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${esc(image)}">
@@ -99,7 +99,7 @@ ${p.image ? `<meta property="og:image:width" content="${p.imageW}">\n<meta prope
 ${p.image ? `<img src="${esc(image)}" alt="${esc(p.name)}">` : ''}
 <h1>${esc(p.name)}</h1>
 <p>${esc(desc)}</p>
-<p><a href="${esc(target)}">למוצר בחנות החירות</a></p>
+<p><a href="${esc(target)}">למוצר בקנין החירות</a></p>
 </body>
 </html>`;
 	return res.status(200).end(html);
