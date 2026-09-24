@@ -361,41 +361,14 @@ function openQuickView(productId) {
       </div>
     </div>
     <div id="qvRecs" data-for="${p.id}"></div>
-    <div class="quick-view-reviews">
-      <h3>מה לקוחות אומרים</h3>
-      <div class="testimonials-grid">
-        <div class="testimonial">
-          <div class="stars">★★★★★</div>
-          <p>"שירות מצוין, משלוח מהיר ומוצרים איכותיים. אני קונה כאן כבר שנה!"</p>
-          <div class="testimonial-author">
-            <div class="avatar">ש</div>
-            <div><strong>שרה כהן</strong><span>תל אביב</span></div>
-          </div>
-        </div>
-        <div class="testimonial">
-          <div class="stars">★★★★★</div>
-          <p>"מוצאת כאן דברים שלא מצאתי בשום מקום אחר. ממליצה בחום!"</p>
-          <div class="testimonial-author">
-            <div class="avatar">ר</div>
-            <div><strong>רחל לוי</strong><span>ירושלים</span></div>
-          </div>
-        </div>
-        <div class="testimonial">
-          <div class="stars">★★★★★</div>
-          <p>"האתר נוח, החיפוש מעולה והמחירים הוגנים. כל הכבוד!"</p>
-          <div class="testimonial-author">
-            <div class="avatar">י</div>
-            <div><strong>יוסי אברהם</strong><span>חיפה</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="quick-view-reviews" id="qvComments" data-for="${p.id}"></div>
   `;
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
   content.scrollTop = 0;
   attachSwipe(document.getElementById('qvMain'), d => qvStep(d));
   renderRecommendations(p);
+  renderComments(p.id);
 }
 
 // === גלגל שיניים לסופר-אדמין בחלון המוצר ===
@@ -766,6 +739,115 @@ async function renderRecommendations(p) {
     : '';
   el.innerHTML = block('fa-store', moreTitle, more) + block('fa-bag-shopping', boughtTitle, bought);
 }
+// === תגובות על מוצר ===
+// מתחת לכל מוצר: רשימת התגובות (ציבורית) וטופס כתיבה - רק למשתמש רשום ומחובר.
+// השם והתמונה של הכותב נקבעים בשרת לפי המשתמש המחובר; מחיקה - הכותב או מנהל.
+function commentTime(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const diff = (Date.now() - d) / 1000;
+  if (diff < 60) return 'עכשיו';
+  if (diff < 3600) return `לפני ${Math.floor(diff / 60)} דק'`;
+  if (diff < 86400) return `לפני ${Math.floor(diff / 3600)} שע'`;
+  return d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: '2-digit' });
+}
+function commentHtml(c) {
+  const name = htmlEsc(c.author_name || 'משתמש');
+  const initial = htmlEsc((c.author_name || '?').charAt(0));
+  const avatar = c.author_avatar && /^https:\/\//.test(c.author_avatar)
+    ? `<img src="${htmlEsc(c.author_avatar)}" alt="" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${initial}'}))">`
+    : `<span>${initial}</span>`;
+  return `<div class="comment" data-id="${htmlEsc(c.documentId)}">
+    <div class="comment-avatar">${avatar}</div>
+    <div class="comment-main">
+      <div class="comment-head"><strong>${name}</strong><span>${commentTime(c.createdAt)}</span>
+        ${c.canDelete ? `<button type="button" class="comment-del" onclick="deleteComment('${htmlEsc(c.documentId)}')" title="מחיקת התגובה" aria-label="מחיקת התגובה"><i class="fas fa-trash-can"></i></button>` : ''}
+      </div>
+      <p>${htmlEsc(c.body)}</p>
+    </div>
+  </div>`;
+}
+function commentFormHtml(productId) {
+  if (!currentUser) {
+    return `<div class="comment-login">
+      <i class="fas fa-lock"></i> כדי לכתוב תגובה צריך להיות משתמש רשום.
+      <button type="button" class="btn btn-primary btn-sm" onclick="openAuth('login')">התחברות / הרשמה</button>
+    </div>`;
+  }
+  return `<form class="comment-form" onsubmit="submitComment(event, ${productId})">
+    <div class="comment-avatar">${avatarHtml(38, 16)}</div>
+    <div class="comment-main">
+      <textarea name="body" rows="2" maxlength="1000" required placeholder="כתבו תגובה על המוצר..." oninput="this.form.querySelector('.comment-count').textContent = this.value.length + '/1000'"></textarea>
+      <div class="comment-actions"><span class="comment-count">0/1000</span><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> פרסום</button></div>
+    </div>
+  </form>`;
+}
+async function renderComments(productId) {
+  const el = document.getElementById('qvComments');
+  if (!el || el.dataset.for !== String(productId)) return;
+  const head = n => `<h3><i class="fas fa-comments"></i> תגובות${n ? ` <small>(${n})</small>` : ''}</h3>`;
+  el.innerHTML = head(0) + commentFormHtml(productId) + '<div class="comment-list"><div class="comment-empty"><i class="fas fa-spinner fa-spin"></i></div></div>';
+  let items = [];
+  try {
+    const r = await fetch(`/api/comments?product=${productId}`);
+    if (r.ok) items = (await r.json()).items || [];
+  } catch { /* offline / dev ללא API */ }
+  if (el.dataset.for !== String(productId)) return;
+  el.querySelector('h3').outerHTML = head(items.length);
+  el.querySelector('.comment-list').innerHTML = items.length
+    ? items.map(commentHtml).join('')
+    : '<div class="comment-empty">עדיין אין תגובות. היו הראשונים להגיב!</div>';
+}
+async function submitComment(e, productId) {
+  e.preventDefault();
+  const form = e.target;
+  const ta = form.body;
+  const btn = form.querySelector('button[type=submit]');
+  const body = ta.value.trim();
+  if (body.length < 2) { ta.focus(); return; }
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: productId, body }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 401) { toast('צריך להתחבר מחדש כדי להגיב', 'fa-lock'); openAuth('login'); return; }
+    if (!r.ok || !j.item) { toast(j.error || 'שליחת התגובה נכשלה', 'fa-circle-exclamation'); return; }
+    ta.value = '';
+    form.querySelector('.comment-count').textContent = '0/1000';
+    const list = document.querySelector('#qvComments .comment-list');
+    list.querySelector('.comment-empty')?.remove();
+    list.insertAdjacentHTML('afterbegin', commentHtml(j.item));
+    const n = list.querySelectorAll('.comment').length;
+    document.querySelector('#qvComments h3').innerHTML = `<i class="fas fa-comments"></i> תגובות <small>(${n})</small>`;
+    toast('התגובה פורסמה');
+  } catch {
+    toast('שליחת התגובה נכשלה', 'fa-circle-exclamation');
+  } finally {
+    btn.disabled = false;
+  }
+}
+async function deleteComment(id) {
+  if (!confirm('למחוק את התגובה?')) return;
+  try {
+    const r = await fetch(`/api/comments?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) { toast(j.error || 'המחיקה נכשלה', 'fa-circle-exclamation'); return; }
+    document.querySelector(`#qvComments .comment[data-id="${CSS.escape(id)}"]`)?.remove();
+    const list = document.querySelector('#qvComments .comment-list');
+    const n = list?.querySelectorAll('.comment').length || 0;
+    if (list && !n) list.innerHTML = '<div class="comment-empty">עדיין אין תגובות. היו הראשונים להגיב!</div>';
+    const h = document.querySelector('#qvComments h3');
+    if (h) h.innerHTML = `<i class="fas fa-comments"></i> תגובות${n ? ` <small>(${n})</small>` : ''}`;
+    toast('התגובה נמחקה');
+  } catch {
+    toast('המחיקה נכשלה', 'fa-circle-exclamation');
+  }
+}
+// התחברות/התנתקות בזמן שחלון המוצר פתוח - מרעננים את אזור התגובות
+document.addEventListener('userChanged', () => {
+  const el = document.getElementById('qvComments');
+  if (el && document.getElementById('quickViewModal')?.classList.contains('active')) renderComments(Number(el.dataset.for));
+});
+
 function closeQuickView() {
   document.getElementById('quickViewModal').classList.remove('active');
   document.body.style.overflow = '';
