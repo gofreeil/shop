@@ -308,7 +308,7 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .hero-brand { display: flex; align-items: center; gap: 18px; margin-bottom: 10px; }
 .hero-brand .hero-title { font-size: clamp(26px, 3.2vw, 42px); line-height: 1.2; margin-bottom: 0; }
 .hero-logo { width: 200px; height: auto; flex-shrink: 0; border-radius: 16px; object-fit: contain; background: #fff; box-shadow: var(--shadow-md); }
-@media (max-width: 600px) { .hero-brand { gap: 12px; } .hero-logo { width: 120px; } }
+@media (max-width: 600px) { .hero-brand { gap: 12px; } .hero-logo { width: 110px; } .hero-brand .hero-title { font-size: 20px; } .hero-subtitle { font-size: 15px; } }
 .gradient-text {
   background: linear-gradient(135deg, var(--primary), var(--accent-2));
   -webkit-background-clip: text; background-clip: text;
@@ -623,7 +623,22 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .products-grid--compact .product-badge { padding: 3px 8px; font-size: 10px; }
 .products-grid--compact .product-badges { top: 8px; right: 8px; }
 @media (max-width: 1024px) { .products-grid--compact { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 768px) { .products-grid--compact { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+/* mobile: one row of 3 small cards, the rest are hidden */
+@media (max-width: 768px) {
+  .products-grid.products-grid--compact { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .products-grid--compact > :nth-child(n+4) { display: none; }
+  .products-grid--compact .product-card { border-radius: 10px; }
+  .products-grid--compact .product-image { aspect-ratio: 1; font-size: 28px; }
+  .products-grid--compact .product-image > span { font-size: 40px !important; }
+  .products-grid--compact .product-info { padding: 6px 7px; }
+  .products-grid--compact .product-category, .products-grid--compact .product-rating, .products-grid--compact .product-short, .products-grid--compact .product-seller { display: none; }
+  .products-grid--compact .product-name { font-size: 12px; margin: 0 0 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .products-grid--compact .product-price { font-size: 13px; }
+  .products-grid--compact .product-price-old { display: none; }
+  .products-grid--compact .product-add { width: 24px; height: 24px; border-radius: 6px; font-size: 11px; }
+  .products-grid--compact .product-badges { top: 4px; right: 4px; }
+  .products-grid--compact .product-badge { padding: 2px 6px; font-size: 9px; }
+}
 
 /* === Promo Banner === */
 .promo-banner {
