@@ -70,6 +70,7 @@ function toShopProduct(row) {
 		category: esc(row.category || 'health'),
 		price: Number(row.price),
 		oldPrice: row.old_price ? Number(row.old_price) : null,
+		shippingPrice: row.shipping_price == null ? null : Number(row.shipping_price),
 		rating: 5,
 		reviews: 0,
 		emoji: esc(row.emoji || '📦'),
@@ -79,6 +80,7 @@ function toShopProduct(row) {
 		link: SAFE_LINK.test(row.link || '') ? esc(row.link) : '',
 		quantity: row.quantity,
 		deliveryDays: row.delivery_days,
+		deliveryByCarrier: !!row.delivery_by_carrier,
 		seller: storeName || esc(row.seller_display || ''),
 		visibility: esc(row.visibility || 'visible'),
 		badge: 'new',
@@ -143,7 +145,7 @@ module.exports = async (req, res) => {
 			// ניהול מלאי עצמי (לוח המכוונים של המוכר): רק שדות המלאי/מחיר, ורק על המוצר שלו - Strapi אוכף בעלות
 			if (req.query?.mine) {
 				const data = {};
-				for (const k of ['quantity', 'price', 'old_price', 'delivery_days', 'description', 'link', 'visibility', 'neighborhoods']) {
+				for (const k of ['quantity', 'price', 'old_price', 'shipping_price', 'delivery_days', 'delivery_by_carrier', 'description', 'link', 'visibility', 'neighborhoods']) {
 					if (body[k] !== undefined) data[k] = body[k];
 				}
 				const r = await strapi(`${ENDPOINT}/mine/${encodeURIComponent(documentId)}`, {
@@ -173,8 +175,10 @@ module.exports = async (req, res) => {
 				data.price = Math.round(price * 100) / 100;
 			}
 			if (body.old_price !== undefined) data.old_price = num(body.old_price) > 0 ? Math.round(num(body.old_price) * 100) / 100 : null;
+			if (body.shipping_price !== undefined) data.shipping_price = num(body.shipping_price) >= 0 && num(body.shipping_price) !== null ? Math.round(num(body.shipping_price) * 100) / 100 : null;
 			if (body.quantity !== undefined) data.quantity = num(body.quantity) > 0 ? Math.floor(num(body.quantity)) : null;
-			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) === 0 ? 0 : num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null; // 0 = בכפוף לחברת המשלוחים
+			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null;
+			if (body.delivery_by_carrier !== undefined) data.delivery_by_carrier = body.delivery_by_carrier === true || body.delivery_by_carrier === 'true';
 			if (['visible', 'hidden', 'neighborhoods'].includes(body.visibility)) data.visibility = body.visibility;
 			const r = await strapi(`${ENDPOINT}/${encodeURIComponent(documentId)}`, {
 				method: 'PUT',

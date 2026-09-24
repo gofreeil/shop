@@ -111,6 +111,11 @@
             <div class="form-field"><label>מחיר לצרכן בש"ח (כולל מע"מ) *</label><input type="number" name="price" id="priceInput" min="1" max="1000000" step="0.5" required placeholder="100" oninput="updateCommission()"></div>
             <div class="form-field"><label>מחיר לפני הנחה (אופציונלי)</label><input type="number" name="old_price" min="1" step="0.5" placeholder="למשל 129"></div>
           </div>
+          <div class="form-field">
+            <label>מחיר משלוח ללקוח בש"ח</label>
+            <input type="number" name="shipping_price" id="shippingInput" min="0" max="10000" step="0.5" placeholder="למשל 30 · 0 = משלוח חינם" oninput="updateCommission()">
+            <p class="hint" style="margin:6px 0 0">נוסף למחיר המוצר ומוצג ללקוח בדף המוצר. 0 - משלוח חינם. השאירו ריק אם עלות המשלוח מתואמת מול הלקוח.</p>
+          </div>
           <div class="form-row">
             <div class="form-field">
               <label>כמות במלאי</label>
@@ -121,7 +126,7 @@
             <div class="form-field">
               <label>זמן אספקה (ימי עסקים)</label>
               <input type="number" name="delivery_days" id="deliveryInput" min="1" max="60" step="1" placeholder="למשל 3">
-              <label class="inline-check"><input type="checkbox" id="deliveryByCarrier" onchange="toggleDeliveryByCarrier()"> בכפוף לחברת המשלוחים</label>
+              <label class="inline-check"><input type="checkbox" id="deliveryByCarrier"> בכפוף לחברת המשלוחים</label>
             </div>
           </div>
           <div class="form-field"><label>קישור לאתר / קטלוג (אופציונלי)</label><input type="url" name="link" maxlength="300" placeholder="https://"></div>
@@ -174,6 +179,8 @@
           <h3><i class="fas fa-calculator" style="color:var(--primary)"></i> כמה תקבלו</h3>
           <div class="commission-row"><span>מחיר לצרכן</span><span id="calcPrice">₪0</span></div>
           <div class="commission-row"><span>עמלת החנות (10%)</span><span id="calcFee">-₪0</span></div>
+          <div class="commission-row"><span>משלוח (ללא עמלה)</span><span id="calcShipping">—</span></div>
+          <div class="commission-row"><span>הלקוח משלם</span><span id="calcTotal">₪0</span></div>
           <div class="commission-row total"><span>אתם מקבלים</span><span id="calcPayout">₪0</span></div>
           <p style="font-size:12px;color:var(--text-muted);margin-top:12px">התשלום מועבר לאחר 14 יום ממסירת המוצר ללקוח (תקופת הביטול לפי חוק הגנת הצרכן), במחזור חודשי, כנגד חשבונית. פירוט מלא בסעיף 4 להסכם.</p>
         </div>
@@ -258,8 +265,12 @@ function updateCommission() {
   const price = parseFloat(document.getElementById('priceInput').value) || 0;
   const fee = price * SELLER_COMMISSION_PERCENT / 100;
   document.getElementById('calcPrice').textContent = fmt(price);
+  const shipRaw = document.getElementById('shippingInput').value.trim();
+  const ship = Math.max(0, parseFloat(shipRaw) || 0);
   document.getElementById('calcFee').textContent = '-' + fmt(fee);
-  document.getElementById('calcPayout').textContent = fmt(price - fee);
+  document.getElementById('calcShipping').textContent = shipRaw === '' ? 'בתיאום' : ship === 0 ? 'חינם' : fmt(ship);
+  document.getElementById('calcTotal').textContent = fmt(price + ship);
+  document.getElementById('calcPayout').textContent = fmt(price - fee + ship);
 }
 
 // ---- גלריית תמונות המוצר: עד 6, הראשונה ראשית, כל אחת עוברת עורך זום/מרכוז ----
@@ -433,19 +444,10 @@ function clearImages() {
   renderGallery();
 }
 
-// זמן אספקה בכפוף לחברת המשלוחים - נשמר כ-0 ומוצג ללקוח כטקסט במקום מספר ימים
-function toggleDeliveryByCarrier() {
-  const on = document.getElementById('deliveryByCarrier').checked;
-  const input = document.getElementById('deliveryInput');
-  input.disabled = on;
-  if (on) input.value = '';
-  input.placeholder = on ? 'בכפוף לחברת המשלוחים' : 'למשל 3';
-}
-
 // ---- טיוטת המוצר: כל מה שהוקלד והתמונות נשמרים במכשיר (IndexedDB) תוך כדי מילוי ----
 // כך שום דבר לא אובד: לא ביציאה להתחברות, לא ברענון ולא בשליחה שנכשלה. נמחקת רק
 // אחרי שהמוצר התקבל בשרת. IndexedDB ולא localStorage - התמונות שוקלות מגה-בייטים.
-const DRAFT_FIELDS = ['name', 'category', 'price', 'old_price', 'quantity', 'delivery_days', 'link', 'description', 'emoji'];
+const DRAFT_FIELDS = ['name', 'category', 'price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'link', 'description', 'emoji'];
 function draftDb() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open('shop-product-draft', 1);
@@ -503,7 +505,6 @@ async function restoreProductDraft() {
   document.getElementById('consentAccuracy').checked = !!d.accuracy;
   gallery = Array.isArray(d.gallery) ? d.gallery.filter(it => it?.out) : [];
   toggleUnlimitedStock();
-  toggleDeliveryByCarrier();
   updateCommission();
   renderEmojiPicker();
   renderGallery();
@@ -756,8 +757,8 @@ async function submitProduct(e) {
   }
   const f = Object.fromEntries(new FormData(form));
   const data = {
-    name: f.name, category: f.category, emoji: f.emoji, price: f.price, old_price: f.old_price || null,
-    quantity: f.quantity || null, delivery_days: document.getElementById('deliveryByCarrier').checked ? 0 : (f.delivery_days || null), link: f.link, description: f.description,
+    name: f.name, category: f.category, emoji: f.emoji, price: f.price, old_price: f.old_price || null, shipping_price: f.shipping_price === '' ? null : f.shipping_price,
+    quantity: f.quantity || null, delivery_days: f.delivery_days || null, delivery_by_carrier: document.getElementById('deliveryByCarrier').checked, link: f.link, description: f.description,
     image: gallery[0]?.out || '',
     images: gallery.map(it => it.out),
     store_name: store.store_name, store_phone: store.store_phone, store_whatsapp: store.store_whatsapp, store_city: store.store_city,
@@ -814,7 +815,6 @@ function resetProductForm() {
   clearProductDraft();
   renderEmojiPicker();
   toggleUnlimitedStock();
-  toggleDeliveryByCarrier();
   updateCommission();
   form.hidden = false;
   document.getElementById('sellSuccess').hidden = true;
