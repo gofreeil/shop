@@ -9,6 +9,7 @@ const { STRAPI_URL, readCookie, parseBody, authHeaders, isShopAdmin, strapiFetch
 //   GET  /api/seller-products?mine=1     ההגשות של המשתמש המחובר
 //   POST /api/seller-products            הגשת מוצר (אנונימי או מחובר) + תיעוד קבלת ההסכם
 //   PUT  /api/seller-products            אישור / דחייה / הערה (מנהל חנות בלבד - Strapi אוכף)
+//   DELETE /api/seller-products?mine=1   מחיקת מוצר של המשתמש בלבד (Strapi אוכף בעלות)
 //   PUT  /api/seller-products?mine=1     ניהול מלאי עצמי - כמות/מחיר/אספקה/תיאור/קישור/תצוגה (visibility) על מוצר של המשתמש בלבד
 //
 // הזהות עוברת ב-JWT מהעוגייה המשותפת gofreeil-auth; Strapi מחליט מי מנהל.
@@ -211,7 +212,8 @@ module.exports = async (req, res) => {
 			const body = parseBody(req);
 			const documentId = String(body.documentId || req.query?.id || '').trim();
 			if (!documentId) return res.status(400).json({ error: 'missing id' });
-			const r = await strapi(`${ENDPOINT}/${encodeURIComponent(documentId)}`, { method: 'DELETE', headers: authHeaders(req) });
+			const path = req.query?.mine ? '/mine/' : '/';
+			const r = await strapi(`${ENDPOINT}${path}${encodeURIComponent(documentId)}`, { method: 'DELETE', headers: authHeaders(req) });
 			if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 403 : 502).json({ error: 'failed' });
 			return res.status(200).json({ ok: true });
 		}

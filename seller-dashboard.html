@@ -235,6 +235,7 @@
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button type="submit" class="btn btn-primary" id="editSave"><i class="fas fa-check"></i> שמירת השינויים</button>
         <button type="button" class="btn btn-ghost" onclick="closeProductEdit()">ביטול</button>
+        <button type="button" class="btn btn-ghost" id="editDelete" style="margin-inline-start:auto;color:#b91c1c" onclick="deleteProduct()"><i class="fas fa-trash"></i> מחיקת המוצר</button>
       </div>
     </form>
   </div>
@@ -498,6 +499,28 @@ async function addEditImages(files) {
     try { editImages.push(await fileToJpeg(file)); editImagesDirty = true; } catch (ex) { toast(ex.message, 'fa-circle-exclamation'); }
   }
   renderEditImages();
+}
+// מחיקה סופית של מוצר מהחנות (לא הסתרה - לזה יש "לא מופיע" בעמודת התצוגה)
+async function deleteProduct() {
+  const p = dashProducts.find(x => x.documentId === editingId);
+  if (!p) return;
+  if (!confirm(`למחוק את "${p.name}" לצמיתות?\nאי אפשר לבטל. כדי רק להוריד מהמדף זמנית - בחרו "לא מופיע" בעמודת התצוגה.`)) return;
+  const btn = document.getElementById('editDelete');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/seller-products?mine=1', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId: p.documentId }) });
+    if (!r.ok) throw new Error();
+    dashProducts = dashProducts.filter(x => x.documentId !== p.documentId);
+    onbSetProducts(dashProducts.length);
+    closeProductEdit();
+    renderStats();
+    renderProductsTable();
+    toast('המוצר נמחק', 'fa-circle-check');
+  } catch {
+    toast('המחיקה נכשלה - נסו שוב', 'fa-circle-exclamation');
+  } finally {
+    btn.disabled = false;
+  }
 }
 function closeProductEdit() { document.getElementById('editModal').classList.remove('active'); editingId = null; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && editingId) closeProductEdit(); });
