@@ -360,7 +360,7 @@ function orderCard(o) {
       <span class="status ${status}">${ORDER_STATUS[status]}</span>
       <span class="date">${fmtDate(o.createdAt)}</span>
     </div>
-    <ul class="order-items">${items.map(it => `<li><span>${esc(it.emoji || '📦')} ${esc(it.name)}${it.qty > 1 ? ` × ${it.qty}` : ''}${it.seller_display ? ` <small style="color:var(--text-muted)">· ${esc(it.seller_display)}</small>` : ''}</span><span>${money(it.price * (it.qty || 1))}</span></li>`).join('')}</ul>
+    <ul class="order-items">${items.map(it => `<li><span>${esc(it.emoji || '📦')} ${esc(it.name)}${it.qty > 1 ? ` × ${it.qty}` : ''}${it.seller_display ? ` <small style="color:var(--text-muted)">· ${esc(it.seller_display)}</small>` : ''}${it.seller_status && it.seller_status !== o.status && ORDER_STATUS[it.seller_status] ? ` <small style="color:var(--primary)">· ${it.seller_status === 'completed' ? 'נמסר' : ORDER_STATUS[it.seller_status]}</small>` : ''}${it.tracking ? `<br><small style="color:var(--text-muted)"><i class="fas fa-truck"></i> מספר מעקב: ${esc(it.tracking)}</small>` : ''}</span><span>${money(it.price * (it.qty || 1))}</span></li>`).join('')}</ul>
     <div class="order-foot">
       <span style="color:var(--text-muted)">משלוח: ${shipping === 0 ? 'חינם' : money(shipping)}${o.customer_city ? ` · ${esc(o.customer_city)}` : ''}</span>
       <span>סה"כ <span class="price">${money(o.total)}</span></span>

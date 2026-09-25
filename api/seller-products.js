@@ -150,7 +150,7 @@ module.exports = async (req, res) => {
 			// ניהול מלאי עצמי (לוח המכוונים של המוכר): רק שדות המלאי/מחיר, ורק על המוצר שלו - Strapi אוכף בעלות
 			if (req.query?.mine) {
 				const data = {};
-				for (const k of ['name', 'quantity', 'price', 'old_price', 'shipping_price', 'delivery_days', 'delivery_by_carrier', 'short_description', 'description', 'link', 'visibility', 'neighborhoods', 'images']) {
+				for (const k of ['name', 'category', 'quantity', 'price', 'old_price', 'shipping_price', 'delivery_days', 'delivery_by_carrier', 'short_description', 'description', 'link', 'visibility', 'neighborhoods', 'images']) {
 					if (body[k] !== undefined) data[k] = body[k];
 				}
 				const r = await strapi(`${ENDPOINT}/mine/${encodeURIComponent(documentId)}`, {

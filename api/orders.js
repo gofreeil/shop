@@ -9,6 +9,7 @@ const { STRAPI_URL, parseBody, authHeaders, isShopAdmin, strapiFetch } = require
 //   GET  /api/orders?seller=1  ההזמנות שכוללות מוצר של המשתמש המחובר (לוח המכוונים של המוכר)
 //   GET  /api/orders?all=1     כל ההזמנות לפאנל (מנהל חנות בלבד)
 //   PUT  /api/orders           עדכון סטטוס / הערה (מנהל חנות בלבד)
+//   PUT  /api/orders?seller=1  המוכר מסמן אספקה (אושרה/נשלחה/נמסרה) + מספר מעקב לפריטים שלו
 const ENDPOINT = STRAPI_URL + '/api/shop-orders';
 
 module.exports = async (req, res) => {
@@ -64,6 +65,14 @@ module.exports = async (req, res) => {
 			const b = parseBody(req);
 			const documentId = String(b.documentId || '').trim();
 			if (!documentId) return res.status(400).json({ error: 'missing id' });
+			if (req.query?.seller) {
+				const data = {};
+				if (['new', 'confirmed', 'shipped', 'completed'].includes(b.status)) data.status = b.status;
+				if (typeof b.tracking === 'string') data.tracking = b.tracking.slice(0, 120);
+				const r = await strapiFetch(`${ENDPOINT}/mine-seller/${encodeURIComponent(documentId)}`, { method: 'PUT', headers: authHeaders(req), body: JSON.stringify({ data }) });
+				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 403 : r.status === 400 ? 400 : 502).json({ error: r.json?.error?.message || 'failed' });
+				return res.status(200).json({ order: r.json?.data ?? null });
+			}
 			const data = {};
 			if (['new', 'confirmed', 'shipped', 'completed', 'cancelled'].includes(b.status)) data.status = b.status;
 			if (typeof b.admin_note === 'string') data.admin_note = b.admin_note.slice(0, 2000);

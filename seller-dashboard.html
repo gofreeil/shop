@@ -179,10 +179,10 @@
 
       <div class="sd-panel" id="dashOrdersPanel">
         <div class="sd-panel-header"><h2><i class="fas fa-truck-fast" style="color:var(--primary)"></i> ההזמנות שלי <span id="dashOrdersSummary" style="font-weight:400;color:var(--text-muted);font-size:13px"></span></h2></div>
-        <p class="sd-hint">הפריטים שלכם מתוך כל הזמנה, כולל פרטי הלקוח לאספקה. סטטוס ההזמנה מנוהל על ידי מנהל החנות. על כל הזמנה חדשה נשלח אליכם SMS עם הפרטים, לנייד שרשום בפרטי המוכר.</p>
+        <p class="sd-hint">הפריטים שלכם מתוך כל הזמנה, כולל פרטי הלקוח לאספקה. עדכנו כאן מה קורה עם כל הזמנה (אושרה ← נשלחה ← נמסרה) והוסיפו מספר מעקב - הלקוח רואה את זה בחשבון שלו. על כל הזמנה חדשה נשלח אליכם SMS עם הפרטים, לנייד שרשום בפרטי המוכר.</p>
         <div style="overflow-x:auto">
           <table>
-            <thead><tr><th>הזמנה</th><th>לקוח</th><th>הפריטים שלי</th><th>הסכום שלי</th><th>סטטוס</th><th>תאריך</th></tr></thead>
+            <thead><tr><th>הזמנה</th><th>לקוח</th><th>הפריטים שלי</th><th>הסכום שלי</th><th>סטטוס</th><th>אספקה שלי</th><th>תאריך</th></tr></thead>
             <tbody id="dashOrdersTable"></tbody>
           </table>
         </div>
@@ -210,6 +210,7 @@
     <p class="sd-hint" style="margin-bottom:14px">השינויים מופיעים באתר תוך דקה.</p>
     <form class="form-grid" id="editForm" onsubmit="saveProductEdit(event)" novalidate>
       <div class="form-field"><label>שם המוצר *</label><input type="text" name="name" maxlength="120" required></div>
+      <div class="form-field"><label>קטגוריה</label><select name="category" id="editCategory"></select></div>
       <div class="form-field">
         <label>תמונות המוצר (עד 6 · הראשונה היא הראשית)</label>
         <div id="editImgs" class="sd-edit-imgs"></div>
@@ -304,9 +305,9 @@ function startDashboardTour() {
     { el: '#dashChart', title: 'המכירות בשבוע האחרון',
       text: 'עמודה ליום. כך רואים מיד אם מבצע, תמונה חדשה או שינוי מחיר עשו את שלהם.' },
     { el: '#dashProductsPanel', title: 'כאן עורכים - בלי טפסים',
-      text: 'המחיר והמלאי נערכים ישירות בטבלה והשינוי נשמר מיד. בעמודת "תצוגה" אפשר להעלים מוצר מהמדף זמנית או להגבילו לשכונות. עריכת תמונות ותיאור - דרך "המוצרים שהגשתי".' },
+      text: 'המחיר והמלאי נערכים ישירות בטבלה והשינוי נשמר מיד. בעמודת "תצוגה" אפשר להעלים מוצר מהמדף זמנית או להגבילו לשכונות. כפתור "עריכה" בכל שורה פותח את כל פרטי המוצר - שם, תמונות, קטגוריה, תיאור - ומשם אפשר גם למחוק אותו.' },
     { el: '#dashOrdersPanel', title: 'ההזמנות שאתם מספקים',
-      text: 'כל הזמנה עם הפריטים שלכם ופרטי הלקוח לאספקה. <strong>על כל הזמנה חדשה יישלח אליכם SMS</strong> עם הפרטים, לנייד שרשום בפרטי המוכר - כדי שלא תפספסו מכירה.' },
+      text: 'כל הזמנה עם הפריטים שלכם ופרטי הלקוח לאספקה. <strong>על כל הזמנה חדשה יישלח אליכם SMS</strong>. מסמנים כאן אושרה/נשלחה/נמסרה ומוסיפים מספר מעקב - והלקוח רואה את זה בחשבון שלו.' },
     { title: 'זהו - סיימתם את המסלול',
       text: 'חנות פתוחה, חשבון, מוצר על המדף ולוח בקרה שאתם יודעים לתפעל. אפשר לחזור לסיור בכל עת מכפתור "סיור בלוח".' },
   ], { onDone: () => finish(true), onSkip: () => finish(false) });
@@ -447,6 +448,11 @@ function openProductEdit(documentId) {
   // f.elements ולא f[k]: אצל <form>, f.name הוא מאפיין שם הטופס ולא השדה
   for (const k of ['name', 'price', 'old_price', 'shipping_price', 'quantity', 'delivery_days', 'short_description', 'description', 'link']) f.elements[k].value = p[k] ?? '';
   f.delivery_by_carrier.checked = !!p.delivery_by_carrier;
+  const catSel = document.getElementById('editCategory');
+  const cats = typeof categories !== 'undefined' ? categories : [];
+  catSel.innerHTML = cats.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')
+    + (p.category && !cats.some(c => c.id === p.category) ? `<option value="${esc(p.category)}">${esc(p.category)}</option>` : '');
+  catSel.value = p.category || (cats[0]?.id ?? '');
   editImages = (Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : [])).filter(x => /^data:image\//.test(x || ''));
   editImagesDirty = false;
   renderEditImages();
@@ -534,7 +540,7 @@ async function saveProductEdit(e) {
   if (btn.disabled) return;
   const n = v => (v === '' ? null : v);
   const body = {
-    documentId: editingId, name: f.elements.name.value.trim(), price: f.price.value, old_price: n(f.old_price.value), shipping_price: n(f.shipping_price.value),
+    documentId: editingId, name: f.elements.name.value.trim(), category: f.elements.category.value, price: f.price.value, old_price: n(f.old_price.value), shipping_price: n(f.shipping_price.value),
     quantity: n(f.quantity.value), delivery_days: n(f.delivery_days.value), delivery_by_carrier: f.delivery_by_carrier.checked,
     short_description: f.short_description.value.trim(), description: f.description.value, link: f.link.value.trim(),
   };
@@ -584,11 +590,30 @@ function renderBestSellers() {
 }
 
 const ORDER_STATUS_HE = { new: 'חדשה', confirmed: 'אושרה', shipped: 'נשלחה', completed: 'הושלמה', cancelled: 'בוטלה' };
+// שלב האספקה של המוכר בהזמנה: מה שסימן על הפריטים שלו, ואם עוד לא סימן - סטטוס ההזמנה
+const SELLER_STEPS = { new: 'חדשה', confirmed: 'אושרה', shipped: 'נשלחה', completed: 'נמסרה' };
+function myStep(o) { const s = (o.items || []).find(it => it.seller_status)?.seller_status || o.status; return SELLER_STEPS[s] ? s : 'new'; }
+function myTracking(o) { return (o.items || []).find(it => it.tracking)?.tracking || ''; }
+async function updateOrderFulfillment(documentId, patch, input) {
+  input.disabled = true;
+  try {
+    const r = await fetch('/api/orders?seller=1', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId, ...patch }) });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(json.error && json.error !== 'failed' ? json.error : 'העדכון נכשל');
+    const idx = dashOrders.findIndex(o => o.documentId === documentId);
+    if (idx >= 0 && json.order) dashOrders[idx] = json.order;
+    renderOrdersTable();
+    toast(patch.tracking !== undefined ? 'מספר המעקב נשמר' : 'סטטוס האספקה עודכן', 'fa-circle-check');
+  } catch (e) {
+    toast(e.message || 'העדכון נכשל', 'fa-circle-exclamation');
+    renderOrdersTable();
+  }
+}
 function renderOrdersTable() {
   const tbody = document.getElementById('dashOrdersTable');
   const live = dashOrders.filter(o => o.status !== 'cancelled');
   document.getElementById('dashOrdersSummary').textContent = dashOrders.length ? `· ${live.length} פעילות מתוך ${dashOrders.length}` : '';
-  if (!dashOrders.length) { tbody.innerHTML = `<tr><td colspan="6" class="sd-empty">עדיין אין הזמנות על מוצרים שלכם.</td></tr>`; return; }
+  if (!dashOrders.length) { tbody.innerHTML = `<tr><td colspan="7" class="sd-empty">עדיין אין הזמנות על מוצרים שלכם.</td></tr>`; return; }
   const sorted = [...dashOrders].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   tbody.innerHTML = sorted.map(o => `
     <tr>
@@ -597,6 +622,11 @@ function renderOrdersTable() {
       <td>${(o.items || []).map(it => `${esc(it.name)} × ${it.qty}`).join('<br>')}</td>
       <td><strong>${ils(o.my_subtotal)}</strong></td>
       <td><span class="sd-order-status ${o.status}">${ORDER_STATUS_HE[o.status] || o.status}</span></td>
+      <td>${o.status === 'cancelled' ? '-' : `
+        <select class="sd-inv-input" style="width:120px" onchange="updateOrderFulfillment('${esc(o.documentId)}',{status:this.value},this)">
+          ${Object.entries(SELLER_STEPS).map(([v, l]) => `<option value="${v}"${myStep(o) === v ? ' selected' : ''}>${l}</option>`).join('')}
+        </select>
+        <input type="text" class="sd-inv-input" style="width:120px;margin-top:6px" maxlength="120" placeholder="מספר מעקב" value="${esc(myTracking(o))}" onchange="updateOrderFulfillment('${esc(o.documentId)}',{tracking:this.value.trim()},this)">`}</td>
       <td>${fmtDate(o.createdAt)}</td>
     </tr>`).join('');
 }
