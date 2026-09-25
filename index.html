@@ -201,7 +201,8 @@
 <script>
   function renderHome() {
     renderCategories();
-    renderProducts('featuredGrid', products.filter(p => p.featured).slice(0, 4));
+    const featured = products.filter(p => p.featured);
+    renderProducts('featuredGrid', (featured.length ? featured : [...products].sort((a, b) => b.rating - a.rating)).slice(0, 4));
     renderProducts('newGrid', [...products].sort((a,b) => b.id - a.id).slice(0, 4));
     document.getElementById('heroStores').textContent = storesFromProducts().length;
     document.getElementById('heroProducts').textContent = realProducts().length;

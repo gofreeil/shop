@@ -220,7 +220,7 @@
         <p style="color:var(--text-muted);font-size:14px">ברוך הבא, מנהל</p>
       </div>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="openProductEditor()"><i class="fas fa-plus"></i> מוצר חדש</button>
+        <a class="btn btn-primary" href="add-product.html"><i class="fas fa-plus"></i> מוצר חדש</a>
       </div>
     </div>
 
@@ -382,39 +382,6 @@
   </main>
 </div>
 
-<!-- Product Editor Modal -->
-<div class="modal" id="editorModal">
-  <div class="modal-overlay" onclick="closeEditor()"></div>
-  <div class="modal-content" style="max-width:600px">
-    <button class="modal-close" onclick="closeEditor()"><i class="fas fa-times"></i></button>
-    <h2 id="editorTitle" style="margin-bottom:20px">מוצר חדש</h2>
-    <form class="form-grid" onsubmit="saveProduct(event)">
-      <div class="form-field"><label>שם המוצר</label><input type="text" id="ed-name" required></div>
-      <div class="form-row">
-        <div class="form-field"><label>קטגוריה</label><select id="ed-category"></select></div>
-        <div class="form-field"><label>אימוג'י</label><input type="text" id="ed-emoji" placeholder="📦"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-field"><label>מחיר</label><input type="number" id="ed-price" required></div>
-        <div class="form-field"><label>מחיר ישן (אופציונלי)</label><input type="number" id="ed-oldPrice"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-field"><label>דירוג</label><input type="number" id="ed-rating" step="0.1" min="0" max="5" value="4.5"></div>
-        <div class="form-field"><label>ביקורות</label><input type="number" id="ed-reviews" value="0"></div>
-      </div>
-      <div class="form-field"><label>תיאור</label><textarea id="ed-desc" rows="3"></textarea></div>
-      <div class="form-row">
-        <div class="form-field"><label>תג</label><select id="ed-badge"><option value="">ללא</option><option value="sale">מבצע</option><option value="new">חדש</option><option value="hot">חם</option></select></div>
-        <div class="form-field" style="display:flex;align-items:flex-end;gap:8px"><label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="ed-featured"> מוצר מומלץ</label></div>
-      </div>
-      <div style="display:flex;gap:12px;justify-content:flex-end">
-        <button type="button" class="btn btn-ghost" onclick="closeEditor()">ביטול</button>
-        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> שמור</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <!-- Product View Modal - "עיין" מהיר על מוצר מכרטיס חנות (אותו כרטיס כמו בטאב מוצרי מוכרים, כולל פעולות אישור/דחייה) -->
 <div class="modal" id="productViewModal">
   <div class="modal-overlay" onclick="closeProductView()"></div>
@@ -462,30 +429,14 @@ function toast(msg, icon = 'fa-check-circle') {
 }
 
 // === Products ===
-// הרשימה הקבועה (data/products.js) פחות מה שנמחק. מחיקה נשמרת בשרת כדריסה
-// product:<id> עם style.hidden (api/site-content, סופר-אדמין) ו-js/site-editor.js
-// מוריד את המוצר מכל דפי האתר לכל הגולשים. עריכות נשמרות עדיין רק מקומית.
-const localProducts = JSON.parse(localStorage.getItem('noshop_products') || 'null') || [];
-const localById = new Map(localProducts.map(p => [p.id, p]));
-let allProducts = products.map(p => localById.get(p.id) || p)
-  .concat(localProducts.filter(p => !products.some(x => x.id === p.id)));
-const productOverrides = new Map(); // 'product:<id>' -> data
-function saveProducts() {
-  localStorage.setItem('noshop_products', JSON.stringify(allProducts));
-}
-async function loadProductOverrides() {
-  try {
-    const r = await fetch('/api/site-content?page=admin&fresh=1');
-    if (!r.ok) return;
-    for (const it of (await r.json()).items || []) {
-      if (/^product:\d+$/.test(it.key)) productOverrides.set(it.key, it.data || {});
-    }
-    const deleted = id => productOverrides.get('product:' + id)?.style?.hidden;
-    allProducts = allProducts.filter(p => !deleted(p.id));
-    renderProducts();
-    renderCategories2();
-  } catch { /* dev ללא API */ }
-}
+// רק מוצרים אמיתיים - מוצרי מוכרים מאושרים (js/main.js טוען אותם לתוך products).
+// עריכה/מחיקה דרך ההגשה עצמה ב-Strapi (openProductView / deleteSeller).
+let allProducts = [];
+document.addEventListener('productsUpdated', () => {
+  allProducts = realProducts();
+  renderProducts();
+  renderCategories2();
+});
 
 // === Tabs ===
 function switchTab(tab) {
@@ -565,15 +516,20 @@ function renderProducts() {
   const tbody = document.getElementById('productsTable');
   const q = (document.getElementById('productSearch')?.value || '').toLowerCase();
   const filtered = allProducts.filter(p => p.name.toLowerCase().includes(q));
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">${allProducts.length ? 'לא נמצאו מוצרים' : 'עדיין אין מוצרים מאושרים באתר'}</td></tr>`;
+    document.getElementById('statProducts').textContent = allProducts.length;
+    return;
+  }
   tbody.innerHTML = filtered.map(p => {
-    const cat = categories.find(c => c.id === p.category);
+    const cat = categories.find(c => c.id === p.category) || { name: p.category, color: '#94a3b8' };
     return `<tr>
-      <td><span class="row-img" style="background:${cat.color}22">${p.emoji||'📦'}</span><strong>${p.name}</strong></td>
+      <td><span class="row-img" style="background:${cat.color}22">${p.image ? `<img src="${p.image}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">` : (p.emoji||'📦')}</span><strong>${p.name}</strong><div style="font-size:12px;color:var(--text-muted)">${p.store || ''}</div></td>
       <td>${cat.name}</td>
       <td><strong>₪${p.price}</strong>${p.oldPrice?` <s style="color:var(--text-muted)">₪${p.oldPrice}</s>`:''}</td>
       <td>⭐ ${p.rating} <span style="color:var(--text-muted)">(${p.reviews})</span></td>
-      <td><span class="status active">פעיל</span></td>
-      <td class="row-actions"><button onclick="openProductEditor(${p.id})"><i class="fas fa-pen"></i></button><button class="del" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button></td>
+      <td>${p.visibility === 'hidden' ? '<span class="status draft">מוסתר</span>' : '<span class="status active">פעיל</span>'}</td>
+      <td class="row-actions"><button onclick="openProductView('${p.documentId}')" title="פרטים ועריכה"><i class="fas fa-pen"></i></button><button class="del" onclick="deleteSeller('${p.documentId}')" title="מחיקה"><i class="fas fa-trash"></i></button></td>
     </tr>`;
   }).join('');
   document.getElementById('statProducts').textContent = allProducts.length;
@@ -660,85 +616,6 @@ function renderChart() {
   document.getElementById('chart').innerHTML = values.map((v, i) =>
     `<div class="bar" style="height:${(v/max)*100}%"><span class="bar-value">₪${v.toLocaleString()}</span><span class="bar-label">${days[i]}</span></div>`
   ).join('');
-}
-
-// === Editor ===
-let editingId = null;
-function openProductEditor(id) {
-  editingId = id || null;
-  document.getElementById('editorTitle').textContent = id ? 'עריכת מוצר' : 'מוצר חדש';
-  const sel = document.getElementById('ed-category');
-  sel.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  if (id) {
-    const p = allProducts.find(x => x.id === id);
-    document.getElementById('ed-name').value = p.name;
-    document.getElementById('ed-category').value = p.category;
-    document.getElementById('ed-emoji').value = p.emoji || '';
-    document.getElementById('ed-price').value = p.price;
-    document.getElementById('ed-oldPrice').value = p.oldPrice || '';
-    document.getElementById('ed-rating').value = p.rating;
-    document.getElementById('ed-reviews').value = p.reviews;
-    document.getElementById('ed-desc').value = p.desc || '';
-    document.getElementById('ed-badge').value = p.badge || '';
-    document.getElementById('ed-featured').checked = !!p.featured;
-  } else {
-    ['ed-name','ed-emoji','ed-oldPrice','ed-desc'].forEach(i => document.getElementById(i).value = '');
-    document.getElementById('ed-price').value = '';
-    document.getElementById('ed-rating').value = 4.5;
-    document.getElementById('ed-reviews').value = 0;
-    document.getElementById('ed-badge').value = '';
-    document.getElementById('ed-featured').checked = false;
-  }
-  document.getElementById('editorModal').classList.add('active');
-}
-function closeEditor() { document.getElementById('editorModal').classList.remove('active'); }
-
-function saveProduct(e) {
-  e.preventDefault();
-  const data = {
-    name: document.getElementById('ed-name').value,
-    category: document.getElementById('ed-category').value,
-    emoji: document.getElementById('ed-emoji').value || '📦',
-    price: parseFloat(document.getElementById('ed-price').value),
-    oldPrice: parseFloat(document.getElementById('ed-oldPrice').value) || null,
-    rating: parseFloat(document.getElementById('ed-rating').value),
-    reviews: parseInt(document.getElementById('ed-reviews').value),
-    desc: document.getElementById('ed-desc').value,
-    badge: document.getElementById('ed-badge').value || null,
-    featured: document.getElementById('ed-featured').checked,
-  };
-  if (editingId) {
-    const idx = allProducts.findIndex(p => p.id === editingId);
-    allProducts[idx] = { ...allProducts[idx], ...data };
-    toast('המוצר עודכן');
-  } else {
-    const newId = Math.max(...allProducts.map(p => p.id)) + 1;
-    allProducts.push({ id: newId, ...data });
-    toast('המוצר נוסף');
-  }
-  saveProducts();
-  renderProducts();
-  closeEditor();
-}
-
-async function deleteProduct(id) {
-  const p = allProducts.find(x => x.id === id);
-  if (!p || !confirm(`למחוק את "${p.name}" מהאתר?`)) return;
-  if (products.some(x => x.id === id)) {
-    // שומרים את השם/תיאור/סגנון שכבר נערכו; תמונה קיימת נשמרת בשרת כשלא שולחים src
-    const ov = productOverrides.get('product:' + id) || {};
-    const data = { alt: ov.alt || '', fields: ov.fields || {}, style: { ...(ov.style || {}), hidden: true } };
-    try {
-      const r = await fetch('/api/site-content', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'product:' + id, page: '*', kind: 'image', data }) });
-      if (r.status === 403) throw new Error('כדי למחוק מהאתר צריך להיות מחובר/ת בחשבון הסופר-אדמין');
-      if (!r.ok) throw new Error('המחיקה נכשלה - נסו שוב');
-      productOverrides.set('product:' + id, data);
-    } catch (err) { return toast(err.message, 'fa-circle-exclamation'); }
-  }
-  allProducts = allProducts.filter(p => p.id !== id);
-  saveProducts();
-  renderProducts();
-  toast('המוצר נמחק', 'fa-trash');
 }
 
 // === Seller submissions (מוצרים שהקהל הגיש למכירה) ===
@@ -1032,6 +909,10 @@ async function deleteSeller(documentId) {
     const r = await fetch('/api/seller-products', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId }) });
     if (!r.ok) throw new Error();
     sellerSubs = sellerSubs.filter(s => s.documentId !== documentId);
+    const pi = products.findIndex(p => p.documentId === documentId);
+    if (pi >= 0) products.splice(pi, 1);
+    allProducts = realProducts();
+    renderProducts();
     updateSellersPendingCount();
     renderSellerSubs();
     renderStores();
@@ -1064,7 +945,6 @@ function init() {
   if (hash && document.getElementById('tab-' + hash)) switchTab(hash);
   renderProducts();
   renderCategories2();
-  loadProductOverrides();
   renderChart();
   loadOrders();
   loadSellerSubmissions();

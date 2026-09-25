@@ -6,34 +6,5 @@ const categories = [
   { id: 'courses', name: 'ידע וקורסים', icon: 'fa-graduation-cap', color: '#f59e0b', desc: 'קורסים, סדנאות, ספרים ומדריכים' }
 ];
 
-const products = [
-  // Health
-  { id: 1, name: 'ויטמין D3 + K2 פרימיום', category: 'health', price: 89, oldPrice: 119, rating: 4.8, reviews: 245, icon: 'fa-pills', emoji: '💊', featured: true, badge: 'sale', desc: 'תוסף איכותי לחיזוק העצמות ומערכת החיסון' },
-  { id: 2, name: 'אומגה 3 טהור מדגי ים עמוקים', category: 'health', price: 129, rating: 4.9, reviews: 412, icon: 'fa-fish', emoji: '🐟', featured: true, badge: 'hot', desc: 'EPA + DHA במינון מיטבי' },
-  { id: 3, name: 'כורכומין עם פיפרין', category: 'health', price: 79, oldPrice: 99, rating: 4.7, reviews: 189, icon: 'fa-capsules', emoji: '💛', badge: 'sale' },
-  { id: 4, name: 'מגנזיום ביסגליצינאט', category: 'health', price: 95, rating: 4.8, reviews: 321, icon: 'fa-tablets', emoji: '⚪', featured: true },
-  { id: 5, name: 'אבקת ספירולינה אורגנית', category: 'health', price: 65, rating: 4.6, reviews: 156, icon: 'fa-leaf', emoji: '🌿' },
-  { id: 6, name: 'פרוביוטיקה 50 מיליארד', category: 'health', price: 149, rating: 4.9, reviews: 287, icon: 'fa-microscope', emoji: '🦠', featured: true, badge: 'new' },
-
-  // Agriculture
-  { id: 7, name: 'ערכת גינון אנכי לבית', category: 'agriculture', price: 299, oldPrice: 399, rating: 4.7, reviews: 134, icon: 'fa-seedling', emoji: '🌱', featured: true, badge: 'sale', desc: 'גן עירוני במינימום מקום' },
-  { id: 8, name: 'מערכת השקיה חכמה WiFi', category: 'agriculture', price: 459, rating: 4.8, reviews: 98, icon: 'fa-faucet', emoji: '💧', featured: true, badge: 'hot' },
-  { id: 9, name: 'ערכת זרעים אורגניים 30 סוגים', category: 'agriculture', price: 89, rating: 4.6, reviews: 245, icon: 'fa-seedling', emoji: '🌾' },
-  { id: 10, name: 'קומפוסטר ביתי חכם', category: 'agriculture', price: 599, rating: 4.9, reviews: 67, icon: 'fa-recycle', emoji: '♻️', badge: 'new' },
-  { id: 11, name: 'גן אורגני אוטומטי', category: 'agriculture', price: 1299, rating: 4.8, reviews: 45, icon: 'fa-leaf', emoji: '🌿', featured: true },
-  { id: 12, name: 'דשן אורגני מולטי-נוטריינט', category: 'agriculture', price: 49, rating: 4.5, reviews: 178, icon: 'fa-flask', emoji: '🌻' },
-
-  // Tech
-  { id: 13, name: 'רובוט שואב חכם AI', category: 'tech', price: 1899, oldPrice: 2499, rating: 4.8, reviews: 523, icon: 'fa-robot', emoji: '🤖', featured: true, badge: 'sale' },
-  { id: 14, name: 'מסך חכם 27" 4K', category: 'tech', price: 1599, rating: 4.9, reviews: 234, icon: 'fa-desktop', emoji: '🖥️', featured: true },
-  { id: 15, name: 'אוזניות אלחוטיות ANC', category: 'tech', price: 549, oldPrice: 699, rating: 4.7, reviews: 678, icon: 'fa-headphones', emoji: '🎧', badge: 'sale' },
-  { id: 16, name: 'שעון חכם פרימיום', category: 'tech', price: 1299, rating: 4.8, reviews: 412, icon: 'fa-clock', emoji: '⌚', featured: true, badge: 'hot' },
-  { id: 17, name: 'מטען אלחוטי 3-ב-1', category: 'tech', price: 199, rating: 4.6, reviews: 289, icon: 'fa-bolt', emoji: '⚡' },
-  { id: 18, name: 'מצלמת בית חכמה 360°', category: 'tech', price: 349, rating: 4.7, reviews: 156, icon: 'fa-video', emoji: '📹', badge: 'new' },
-
-  // Beauty
-  { id: 33, name: 'סרום ויטמין C טהור', category: 'beauty', price: 189, oldPrice: 249, rating: 4.8, reviews: 456, icon: 'fa-droplet', emoji: '✨', featured: true, badge: 'sale' },
-  { id: 34, name: 'מסכת LED לטיפוח פנים', category: 'beauty', price: 899, rating: 4.7, reviews: 123, icon: 'fa-mask', emoji: '💆', badge: 'new' },
-  { id: 35, name: 'שמן ארגן אורגני 100%', category: 'beauty', price: 99, rating: 4.9, reviews: 287, icon: 'fa-bottle-droplet', emoji: '🪔' },
-  { id: 36, name: 'מברשת חשמלית לפנים', category: 'beauty', price: 349, rating: 4.6, reviews: 198, icon: 'fa-brush', emoji: '🌺' }
-];
+// רק מוצרים אמיתיים: מוצרי מוכרים מאושרים נטענים מ-/api/seller-products (js/main.js).
+const products = [];
