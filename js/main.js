@@ -111,6 +111,20 @@ function updateQty(productId, qty) {
   saveCart();
   if (typeof renderCart === 'function') renderCart();
 }
+// דמי משלוח - אותו חישוב כמו בשרת (community-backend shop-order create): משלוח אחד
+// לכל מוכר בעגלה, לפי המחיר שהמוכר קבע (הגבוה מבין המוצרים שלו), וברירת מחדל 35 ₪
+const DEFAULT_SHIPPING = 35;
+function productShipping(p) { return p?.shippingPrice == null ? DEFAULT_SHIPPING : Number(p.shippingPrice); }
+function cartShipping(items = cart) {
+  const bySeller = new Map();
+  for (const i of items) {
+    const p = products.find(x => x.id === i.id);
+    if (!p) continue;
+    const key = p.documentId ? 'seller:' + (p.storeSlug || p.seller || p.documentId) : 'store';
+    bySeller.set(key, Math.max(bySeller.get(key) ?? 0, productShipping(p)));
+  }
+  return [...bySeller.values()].reduce((a, b) => a + b, 0);
+}
 function updateCartCount() {
   const el = document.getElementById('cartCount');
   if (el) el.textContent = cart.reduce((s, i) => s + i.qty, 0);
@@ -388,7 +402,7 @@ function renderProduct(productId) {
         </div>
         ${shareBarHtml(p)}
         <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);display:grid;gap:8px;font-size:14px;color:var(--text-muted)">
-          <div><i class="fas fa-truck" style="color:var(--primary);width:24px"></i> משלוח 35₪ להזמנה</div>
+          <div><i class="fas fa-truck" style="color:var(--primary);width:24px"></i> ${productShipping(p) > 0 ? `משלוח ₪${productShipping(p)}` : 'משלוח חינם'}</div>
           <div><i class="fas fa-rotate-left" style="color:var(--primary);width:24px"></i> החזרה תוך 30 יום</div>
           <div><i class="fas fa-shield-halved" style="color:var(--primary);width:24px"></i> תשלום מאובטח SSL</div>
         </div>

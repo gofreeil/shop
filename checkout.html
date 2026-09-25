@@ -104,7 +104,7 @@
 function renderOrderSummary() {
   // מוצר מוכר שעדיין לא נטען מהשרת - נספר כ-0 עד שיגיע (productsUpdated מרענן)
   const sub = cart.reduce((s,i) => s + (products.find(p => p.id === i.id)?.price || 0) * i.qty, 0);
-  const ship = !sub ? 0 : 35;
+  const ship = sub ? cartShipping() : 0;
   const tot = sub + ship;
 
   document.getElementById('orderItems').innerHTML = cart.map(i => {

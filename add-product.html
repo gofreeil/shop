@@ -115,8 +115,8 @@
           <p class="hint" style="margin:-4px 0 0">מחיר לפני הנחה: אם המוצר במבצע, כתבו כאן את המחיר המקורי שלו. הלקוח יראה אותו מחוק ליד המחיר החדש (למשל <s>129</s> ← 100). השאירו ריק אם אין הנחה - אז לא יוצג ללקוח שום מחיר קודם. הטקסט האפור בתוך התיבה הוא רק הסבר, הוא לא נשמר ולא מוצג לאף אחד.</p>
           <div class="form-field">
             <label>מחיר משלוח ללקוח בש"ח</label>
-            <input type="number" name="shipping_price" id="shippingInput" min="0" max="10000" step="0.5" placeholder="למשל 30 · 0 = משלוח חינם" oninput="updateCommission()">
-            <p class="hint" style="margin:6px 0 0">נוסף למחיר המוצר ומוצג ללקוח בדף המוצר. 0 - משלוח חינם. השאירו ריק אם עלות המשלוח מתואמת מול הלקוח.</p>
+            <input type="number" name="shipping_price" id="shippingInput" min="0" max="10000" step="0.5" value="35" placeholder="ריק = 35 (ברירת המחדל) · 0 = משלוח חינם" oninput="updateCommission()">
+            <p class="hint" style="margin:6px 0 0">נוסף למחיר המוצר ומוצג ללקוח בדף המוצר. ברירת המחדל 35 ₪ - אפשר לשנות. 0 - משלוח חינם. בהזמנה של כמה מוצרים שלכם הלקוח משלם משלוח אחד (הגבוה מביניהם).</p>
           </div>
           <div class="form-row">
             <div class="form-field">
@@ -270,9 +270,9 @@ function updateCommission() {
   const fee = price * SELLER_COMMISSION_PERCENT / 100;
   document.getElementById('calcPrice').textContent = fmt(price);
   const shipRaw = document.getElementById('shippingInput').value.trim();
-  const ship = Math.max(0, parseFloat(shipRaw) || 0);
+  const ship = shipRaw === '' ? 35 : Math.max(0, parseFloat(shipRaw) || 0);
   document.getElementById('calcFee').textContent = '-' + fmt(fee);
-  document.getElementById('calcShipping').textContent = shipRaw === '' ? 'בתיאום' : ship === 0 ? 'חינם' : '+' + fmt(ship);
+  document.getElementById('calcShipping').textContent = ship === 0 ? 'חינם' : '+' + fmt(ship);
   document.getElementById('calcTotal').textContent = fmt(price + ship);
   document.getElementById('calcPayout').textContent = fmt(price - fee + ship);
 }
