@@ -365,7 +365,21 @@ function orderCard(o) {
       <span style="color:var(--text-muted)">משלוח: ${shipping === 0 ? 'חינם' : money(shipping)}${o.customer_city ? ` · ${esc(o.customer_city)}` : ''}</span>
       <span>סה"כ <span class="price">${money(o.total)}</span></span>
     </div>
+    ${status === 'new' && !items.some(it => it.seller_status && it.seller_status !== 'new') ? `<div style="margin-top:10px;text-align:left"><button type="button" class="btn btn-ghost" style="padding:6px 12px;font-size:13px;color:#b91c1c" onclick="cancelOrder('${esc(o.documentId)}', this)"><i class="fas fa-xmark"></i> ביטול ההזמנה</button></div>` : ''}
   </div>`;
+}
+async function cancelOrder(documentId, btn) {
+  if (!confirm('לבטל את ההזמנה?')) return;
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/orders?cancel=1', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documentId }) });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(json.error && json.error !== 'failed' ? json.error : 'הביטול נכשל - נסו שוב');
+    loadOrders(true);
+  } catch (e) {
+    alert(e.message);
+    btn.disabled = false;
+  }
 }
 
 function renderFavorites() {

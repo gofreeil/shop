@@ -181,7 +181,7 @@ module.exports = async (req, res) => {
 			}
 			if (body.old_price !== undefined) data.old_price = num(body.old_price) > 0 ? Math.round(num(body.old_price) * 100) / 100 : null;
 			if (body.shipping_price !== undefined) data.shipping_price = num(body.shipping_price) >= 0 && num(body.shipping_price) !== null ? Math.round(num(body.shipping_price) * 100) / 100 : null;
-			if (body.quantity !== undefined) data.quantity = num(body.quantity) > 0 ? Math.floor(num(body.quantity)) : null;
+			if (body.quantity !== undefined) data.quantity = num(body.quantity) == null || !Number.isFinite(num(body.quantity)) ? null : Math.max(0, Math.floor(num(body.quantity))); // 0 = אזל, ריק = ללא הגבלה
 			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null;
 			if (body.delivery_by_carrier !== undefined) data.delivery_by_carrier = body.delivery_by_carrier === true || body.delivery_by_carrier === 'true';
 			if (['visible', 'hidden', 'neighborhoods'].includes(body.visibility)) data.visibility = body.visibility;

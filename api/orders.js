@@ -9,6 +9,7 @@ const { STRAPI_URL, parseBody, authHeaders, isShopAdmin, strapiFetch } = require
 //   GET  /api/orders?seller=1  ההזמנות שכוללות מוצר של המשתמש המחובר (לוח המכוונים של המוכר)
 //   GET  /api/orders?all=1     כל ההזמנות לפאנל (מנהל חנות בלבד)
 //   PUT  /api/orders           עדכון סטטוס / הערה (מנהל חנות בלבד)
+//   PUT  /api/orders?cancel=1  הלקוח מבטל הזמנה שלו כל עוד היא חדשה
 //   PUT  /api/orders?seller=1  המוכר מסמן אספקה (אושרה/נשלחה/נמסרה) + מספר מעקב לפריטים שלו
 const ENDPOINT = STRAPI_URL + '/api/shop-orders';
 
@@ -49,6 +50,12 @@ module.exports = async (req, res) => {
 				return res.status(200).json({ items: r.json?.data ?? [] });
 			}
 			// ההזמנות שכוללות מוצר של המוכר המחובר (לוח המכוונים שלו) - הפריטים שלא שלו כבר סוננו בשרת
+			// הלקוח מבטל הזמנה שלו (Strapi אוכף בעלות ושההזמנה עוד חדשה)
+			if (req.query?.cancel) {
+				const r = await strapiFetch(`${ENDPOINT}/mine/${encodeURIComponent(documentId)}/cancel`, { method: 'PUT', headers: authHeaders(req), body: JSON.stringify({}) });
+				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 403 : r.status === 400 ? 400 : 502).json({ error: r.json?.error?.message || 'failed' });
+				return res.status(200).json({ order: r.json?.data ?? null });
+			}
 			if (req.query?.seller) {
 				const r = await strapiFetch(ENDPOINT + '/mine-seller', { headers: authHeaders(req) });
 				if (!r.ok) return res.status(r.status === 401 || r.status === 403 ? 401 : 502).json({ error: r.status === 401 || r.status === 403 ? 'נדרשת התחברות' : 'failed' });

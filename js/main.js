@@ -85,6 +85,12 @@ function addToCart(productId, qty = 1) {
   const product = products.find(p => p.id === productId);
   if (!product) return;
   const existing = cart.find(i => i.id === productId);
+  // מלאי של מוכר (quantity מוגדר) - לא מוסיפים מעבר למה שיש; ריק = ללא הגבלה
+  const stock = product.quantity == null ? Infinity : Number(product.quantity);
+  const inCart = existing ? existing.qty : 0;
+  if (inCart + qty > stock) {
+    return toast(stock > 0 ? `נשארו במלאי רק ${stock} יחידות${inCart ? ' וכולן כבר בעגלה' : ''}` : 'המוצר אזל מהמלאי', 'fa-circle-exclamation');
+  }
   if (existing) existing.qty += qty;
   else cart.push({ id: productId, qty });
   saveCart();
@@ -98,7 +104,10 @@ function removeFromCart(productId) {
 function updateQty(productId, qty) {
   const item = cart.find(i => i.id === productId);
   if (!item) return;
-  item.qty = Math.max(1, qty);
+  const product = products.find(p => p.id === productId);
+  const stock = product?.quantity == null ? Infinity : Number(product.quantity);
+  if (qty > stock) toast(`נשארו במלאי רק ${stock} יחידות`, 'fa-circle-exclamation');
+  item.qty = Math.max(1, Math.min(qty, stock));
   saveCart();
   if (typeof renderCart === 'function') renderCart();
 }
@@ -348,7 +357,7 @@ function renderProduct(productId) {
           ? `<p style="color:var(--text-muted);margin:16px 0">${p.desc || ''}</p>
         <div class="seller-note">
           ${storeLogoHtml(p, 48)}
-          <div>נמכר ומסופק על ידי <a href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}"><strong>${p.seller}</strong></a>${p.storeCity ? ` · ${p.storeCity}` : ''}${p.deliveryDays ? ` · אספקה תוך ${p.deliveryDays} ימי עסקים` : ''}${p.deliveryByCarrier ? (p.deliveryDays ? ' (בכפוף לחברת המשלוחים)' : ' · זמן אספקה בכפוף לחברת המשלוחים') : ''}${p.shippingPrice != null ? (p.shippingPrice > 0 ? ` · משלוח ₪${p.shippingPrice}` : ' · משלוח חינם') : ''}${p.quantity ? ` · ${p.quantity} יח' במלאי` : ''}
+          <div>נמכר ומסופק על ידי <a href="store.html?s=${encodeURIComponent(p.storeSlug || storeSlug(p.seller))}"><strong>${p.seller}</strong></a>${p.storeCity ? ` · ${p.storeCity}` : ''}${p.deliveryDays ? ` · אספקה תוך ${p.deliveryDays} ימי עסקים` : ''}${p.deliveryByCarrier ? (p.deliveryDays ? ' (בכפוף לחברת המשלוחים)' : ' · זמן אספקה בכפוף לחברת המשלוחים') : ''}${p.shippingPrice != null ? (p.shippingPrice > 0 ? ` · משלוח ₪${p.shippingPrice}` : ' · משלוח חינם') : ''}${p.quantity === 0 ? ' · <strong style="color:#b91c1c">אזל מהמלאי</strong>' : p.quantity ? ` · ${p.quantity} יח' במלאי` : ''}
             <div class="store-contact">
               ${p.storePhone ? `<a href="tel:${p.storePhone}"><i class="fas fa-phone"></i> ${p.storePhone}</a>` : ''}
               ${waLink(p.storeWhatsapp || p.storePhone) ? `<a href="${waLink(p.storeWhatsapp || p.storePhone)}" target="_blank" rel="noopener" class="wa"><i class="fab fa-whatsapp"></i> וואטסאפ</a>` : ''}
@@ -512,7 +521,7 @@ async function saveAdminEdit(id, form) {
   const num = s => (s === '' ? null : Number(s));
   Object.assign(p, {
     name: htmlEsc(f.name.trim()), category: f.category, emoji: htmlEsc(f.emoji.trim() || '📦'),
-    price: Number(f.price), oldPrice: num(f.old_price) || null, quantity: num(f.quantity) || null,
+    price: Number(f.price), oldPrice: num(f.old_price) || null, quantity: num(f.quantity),
     deliveryDays: num(f.delivery_days) || null, deliveryByCarrier: f.delivery_by_carrier === 'true', shortDesc: htmlEsc(f.short_description.trim()), desc: htmlEsc(f.description.trim()),
     link: htmlEsc(f.link.trim()), visibility: f.visibility
   });
