@@ -7,6 +7,7 @@ const { STRAPI_URL, readCookie, parseBody, authHeaders, isShopAdmin, strapiFetch
 //   GET  /api/seller-products?all=1      כל ההגשות לפאנל הניהול (דורש עוגייה של מנהל חנות)
 //   GET  /api/seller-products?count=1    כמה הגשות ממתינות לאישור (מנהל חנות) - לתג ההתראה בכותרת
 //   GET  /api/seller-products?mine=1     ההגשות של המשתמש המחובר
+//   GET  /api/seller-products?id=<id>    מוצר בודד לדף המוצר - כולל "לא מוצג בחנות" (unlisted) למי שיש קישור
 //   POST /api/seller-products            הגשת מוצר (אנונימי או מחובר) + תיעוד קבלת ההסכם
 //   PUT  /api/seller-products            אישור / דחייה / הערה (מנהל חנות בלבד - Strapi אוכף)
 //   DELETE /api/seller-products?mine=1   מחיקת מוצר של המשתמש בלבד (Strapi אוכף בעלות)
@@ -97,6 +98,14 @@ module.exports = async (req, res) => {
 	try {
 		if (req.method === 'GET') {
 			const q = req.query || {};
+			if (q.id) {
+				const id = Number(q.id) - ID_BASE;
+				if (!Number.isInteger(id) || id <= 0) return res.status(404).json({ item: null });
+				const r = await strapi(`${ENDPOINT}/link/${id}`, { headers: { 'Content-Type': 'application/json' } });
+				if (!r.ok || !r.json?.data) return res.status(404).json({ item: null });
+				res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
+				return res.status(200).json({ item: toShopProduct(r.json.data) });
+			}
 			if (q.mine) {
 				const r = await strapi(ENDPOINT + '/mine', { headers: authHeaders(req) });
 				return res.status(r.ok ? 200 : r.status).json(r.ok ? { items: r.json?.data ?? [] } : { error: 'forbidden' });
@@ -184,7 +193,7 @@ module.exports = async (req, res) => {
 			if (body.quantity !== undefined) data.quantity = num(body.quantity) == null || !Number.isFinite(num(body.quantity)) ? null : Math.max(0, Math.floor(num(body.quantity))); // 0 = אזל, ריק = ללא הגבלה
 			if (body.delivery_days !== undefined) data.delivery_days = num(body.delivery_days) > 0 ? Math.floor(num(body.delivery_days)) : null;
 			if (body.delivery_by_carrier !== undefined) data.delivery_by_carrier = body.delivery_by_carrier === true || body.delivery_by_carrier === 'true';
-			if (['visible', 'hidden', 'neighborhoods'].includes(body.visibility)) data.visibility = body.visibility;
+			if (['visible', 'hidden', 'neighborhoods', 'unlisted'].includes(body.visibility)) data.visibility = body.visibility;
 			// החלפת תמונה אחת בגלריה (זום/מרכוז של מנהל): שולפים את הגלריה המלאה ומחליפים רק אותה
 			if (body.replace_image) {
 				const idx = Number(body.replace_image.index);

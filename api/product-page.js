@@ -30,9 +30,10 @@ function loadFixed() {
 
 async function loadProduct(id) {
 	if (id >= ID_BASE) {
-		const url = `${STRAPI_URL}/api/shop-seller-products?filters[id][$eq]=${id - ID_BASE}&pagination[pageSize]=1`;
+		// גם מוצר "לא מוצג בחנות" - קישור השיתוף הוא בדיוק הדרך שבה מגיעים אליו
+		const url = `${STRAPI_URL}/api/shop-seller-products/link/${id - ID_BASE}`;
 		const r = await strapi(url, { headers: { 'Content-Type': 'application/json' } });
-		const row = r.ok ? r.json?.data?.[0] : null;
+		const row = r.ok ? r.json?.data : null;
 		if (!row) return null;
 		const hasImage = /^data:image\//.test((Array.isArray(row.images) && row.images[0]) || row.image || '');
 		return {

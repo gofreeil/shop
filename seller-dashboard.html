@@ -381,7 +381,7 @@ function renderChart() {
 }
 
 const PROD_STATUS = { pending: ['ממתין לאישור החנות', 'fa-clock'], approved: ['על המדף', 'fa-circle-check'], rejected: ['הורד מהמדף', 'fa-circle-xmark'] };
-const VIS_LABELS = { visible: 'מופיע', hidden: 'לא מופיע', neighborhoods: 'בשכונות בלבד' };
+const VIS_LABELS = { visible: 'מופיע', unlisted: 'לא מוצג בחנות', hidden: 'לא מופיע', neighborhoods: 'בשכונות בלבד' };
 function unitsSold(documentId) {
   let n = 0;
   for (const o of dashOrders) {
@@ -410,12 +410,19 @@ function renderProductsTable() {
         <select class="sd-inv-input" style="width:130px" onchange="updateInventory('${esc(p.documentId)}','visibility',this.value,this)">
           ${Object.entries(VIS_LABELS).map(([v, l]) => `<option value="${v}"${vis === v ? ' selected' : ''}>${l}</option>`).join('')}
         </select>
+        ${vis === 'unlisted' ? `<button type="button" class="btn btn-ghost" style="display:block;margin-top:6px;padding:4px 10px;font-size:12px;white-space:nowrap" onclick="copyPrivateLink(${Number(p.id) + 100000})" title="המוצר לא מופיע בחנות - רק מי שמקבל את הקישור רואה וקונה"><i class="fas fa-link"></i> העתקת קישור</button>` : ''}
         ${vis === 'neighborhoods' ? `<input type="text" class="sd-inv-input" style="width:130px;margin-top:6px" placeholder="שכונות, מופרדות בפסיק" value="${esc(p.neighborhoods || '')}" onchange="updateInventory('${esc(p.documentId)}','neighborhoods',this.value,this)">` : ''}
       </td>
       <td><span class="status-pill ${p.status}"><i class="fas ${icon}"></i> ${label}</span>${p.status === 'rejected' && p.rejection_reason ? `<div style="color:var(--text-muted);font-size:11px;margin-top:3px">${esc(p.rejection_reason)}</div>` : ''}</td>
       <td><button type="button" class="btn btn-ghost" style="padding:6px 12px;font-size:13px;white-space:nowrap" onclick="openProductEdit('${esc(p.documentId)}')"><i class="fas fa-pen-to-square"></i> עריכה</button></td>
     </tr>`;
   }).join('');
+}
+// "לא מוצג בחנות": הקישור לשליחה בפרטי (וואטסאפ וכו'). /p/ נותן תצוגה מקדימה עם תמונה
+async function copyPrivateLink(id) {
+  const url = location.origin + '/p/' + id;
+  try { await navigator.clipboard.writeText(url); toast('הקישור הועתק - שלחו אותו למי שתרצו', 'fa-link'); }
+  catch { prompt('העתיקו את הקישור:', url); }
 }
 async function updateInventory(documentId, field, value, input) {
   // שדה מספרי שרוקן = ללא הגבלה, ולכן נשלח null ולא מחרוזת ריקה
@@ -428,6 +435,7 @@ async function updateInventory(documentId, field, value, input) {
     if (idx >= 0) dashProducts[idx] = { ...dashProducts[idx], ...(json.item || {}) };
     renderStats();
     renderProductsTable();
+    if (field === 'visibility' && value === 'unlisted') { toast('המוצר הוסר מהחנות - שלחו את הקישור בפרטי (כפתור "העתקת קישור")', 'fa-link'); return; }
     const MSG = { quantity: 'המלאי עודכן', price: 'המחיר עודכן', visibility: 'התצוגה עודכנה', neighborhoods: 'השכונות עודכנו' };
     toast(MSG[field] || 'העדכון בוצע', 'fa-circle-check');
   } catch (e) {

@@ -312,8 +312,16 @@ function initProductPage() {
   document.addEventListener('productsUpdated', e => {
     if (found() && (!view.dataset.for || e.detail?.overrides)) renderProduct(id);
   });
-  sellerProductsReady.then(() => {
+  sellerProductsReady.then(async () => {
     if (found()) return;
+    // מוצר "לא מוצג בחנות" לא נמצא ברשימה הכללית - מגיעים אליו רק בקישור, ולכן נטען לבד
+    if (id >= 100000) {
+      try {
+        const r = await fetch('/api/seller-products?id=' + id);
+        const item = r.ok ? (await r.json()).item : null;
+        if (item && !found()) { products.push(item); renderProduct(id); return; }
+      } catch { /* נופלים ל"לא נמצא" */ }
+    }
     document.title = 'המוצר לא נמצא | קניון החירות';
     view.innerHTML = `
       <div class="product-missing">
@@ -497,6 +505,7 @@ function openAdminEdit(id) {
         <option value="visible"${(p.visibility || 'visible') === 'visible' ? ' selected' : ''}>מופיע באתר</option>
         <option value="hidden"${p.visibility === 'hidden' ? ' selected' : ''}>לא מופיע</option>
         <option value="neighborhoods"${p.visibility === 'neighborhoods' ? ' selected' : ''}>בשכונות בלבד</option>
+        <option value="unlisted"${p.visibility === 'unlisted' ? ' selected' : ''}>לא מוצג בחנות (קישור בלבד)</option>
       </select></label>
       <div class="actions">
         <button type="submit" class="btn btn-primary"><i class="fas fa-floppy-disk"></i> שמירה</button>
@@ -1596,12 +1605,21 @@ async function loadSellerProducts() {
     const res = await fetch('/api/seller-products' + (currentUser?.superAdmin ? '?fresh=1' : ''));
     if (!res.ok) return;
     const { items } = await res.json();
-    if (!Array.isArray(items) || !items.length) return;
     let added = 0;
-    for (const p of items) {
+    for (const p of Array.isArray(items) ? items : []) {
       if (products.some(x => x.id === p.id)) continue;
       products.push(p);
       added++;
+    }
+    // מוצרים "לא מוצגים בחנות" (קישור בלבד) לא ברשימה הכללית - מי שהוסיף אותם לעגלה
+    // או למועדפים מהקישור צריך לראות אותם שם, אז טוענים אותם אחד-אחד
+    const missing = [...new Set([...cart.map(i => i.id), ...wishlist])].filter(id => id >= 100000 && !products.some(x => x.id === id));
+    for (const id of missing.slice(0, 20)) {
+      try {
+        const r = await fetch('/api/seller-products?id=' + id);
+        const item = r.ok ? (await r.json()).item : null;
+        if (item && !products.some(x => x.id === item.id)) { products.push(item); added++; }
+      } catch { /* ממשיכים */ }
     }
     if (added) document.dispatchEvent(new CustomEvent('productsUpdated', { detail: { added } }));
   } catch { /* offline / dev ללא API */ }
