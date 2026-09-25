@@ -388,7 +388,7 @@ function renderProduct(productId) {
         </div>
         ${shareBarHtml(p)}
         <div style="margin-top:24px;padding-top:24px;border-top:1px solid var(--border);display:grid;gap:8px;font-size:14px;color:var(--text-muted)">
-          <div><i class="fas fa-truck" style="color:var(--primary);width:24px"></i> משלוח חינם מעל 199₪</div>
+          <div><i class="fas fa-truck" style="color:var(--primary);width:24px"></i> משלוח 35₪ להזמנה</div>
           <div><i class="fas fa-rotate-left" style="color:var(--primary);width:24px"></i> החזרה תוך 30 יום</div>
           <div><i class="fas fa-shield-halved" style="color:var(--primary);width:24px"></i> תשלום מאובטח SSL</div>
         </div>
