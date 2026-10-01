@@ -1398,6 +1398,7 @@ function ensureAuthModal() {
         <h2 style="font-size:22px;margin-bottom:6px">ברוך הבא</h2>
         <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px">התחבר לחשבון שלך</p>
         <div class="form-grid">
+          <a href="forgot-password.html" style="font-size:13px;color:var(--primary-dark);text-decoration:underline;margin-top:-6px" onclick="var m=this.closest('form').elements.email.value.trim();if(m.indexOf('@')>0)this.href='forgot-password.html?email='+encodeURIComponent(m)">שכחתי סיסמה</a>
           <div class="form-field"><label>אימייל</label><input type="email" name="email" required></div>
           <div class="form-field"><label>סיסמה</label><input type="password" name="password" required></div>
           <button type="submit" class="btn btn-primary btn-block">התחבר</button>

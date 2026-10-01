@@ -1,0 +1,139 @@
+/* דפי שחזור הגישה לחשבון (forgot-password / reset-password) - נשען על משתני style.css */
+.rec-wrap {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 40px 16px 56px;
+  min-height: 60vh;
+}
+.rec-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 32px 26px 26px;
+  text-align: right;
+}
+.rec-icon {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  border-radius: 16px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.rec-card h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.rec-sub {
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 22px;
+}
+.rec-lead {
+  line-height: 1.8;
+  margin-bottom: 18px;
+}
+.rec-addr {
+  color: var(--primary-dark);
+  word-break: break-all;
+  unicode-bidi: embed;
+}
+.rec-card .form-field {
+  margin-bottom: 14px;
+}
+.rec-card .btn-block {
+  display: flex;
+  margin-top: 6px;
+}
+.rec-card #mailApp {
+  margin: 0 0 14px;
+}
+.rec-tips {
+  margin: 0 0 16px;
+  padding: 14px 30px 14px 16px;
+  background: var(--bg-alt);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.rec-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin: 4px 0 12px;
+  text-align: center;
+}
+.rec-bad {
+  color: #b91c1c;
+  font-size: 13px;
+  margin-top: 6px;
+}
+.rec-alt {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.rec-alt a {
+  color: var(--primary-dark);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.rec-tip-box {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-muted);
+  text-align: center;
+}
+.rec-tip-box strong { color: var(--text); }
+.rec-tip-box a { color: var(--primary-dark); font-weight: 700; text-decoration: underline; }
+
+.rec-pw { position: relative; }
+.rec-pw input { padding-left: 74px; }
+.rec-eye {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--bg-alt);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+}
+
+.rec-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.rec-bars { display: flex; gap: 4px; flex: 1; }
+.rec-bars i {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  transition: background 0.2s ease;
+}
+.rec-bars[data-level='1'] i:nth-child(-n + 1) { background: #ef4444; }
+.rec-bars[data-level='2'] i:nth-child(-n + 2) { background: #f59e0b; }
+.rec-bars[data-level='3'] i:nth-child(-n + 3) { background: #84cc16; }
+.rec-bars[data-level='4'] i:nth-child(-n + 4) { background: #22c55e; }
+.rec-meter-label { font-size: 13px; color: var(--text-muted); min-width: 48px; }
+
+.rec-card button:disabled { opacity: 0.55; cursor: not-allowed; }
