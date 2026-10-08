@@ -90,14 +90,15 @@ function friendlyName(u) {
 }
 
 // תמונת פרופיל: השדה ששמור ב-Strapi המשותף (מגוגל / העלאה בקהילה), ואם אין - Gravatar
-// עם identicon ייחודי לפי האימייל, כמו בשאר האתרים.
+// אמיתי בלבד. d=404: למי שאין Gravatar התמונה נכשלת וההדר מציג את האות הראשונה, כמו בשאר
+// האתרים (identicon היה מציג תבנית אקראית במקום האות).
 function avatarUrl(u) {
 	const stored = u?.avatar_url || u?.picture || u?.avatar || u?.image || '';
 	if (typeof stored === 'string' && stored.startsWith('http') && stored.indexOf('://') > 0) return stored;
 	const email = String(u?.email || '').trim().toLowerCase();
 	if (!email) return null;
 	const hash = require('crypto').createHash('md5').update(email).digest('hex');
-	return `https://www.gravatar.com/avatar/${hash}?s=160&d=identicon`;
+	return `https://www.gravatar.com/avatar/${hash}?s=160&d=404`;
 }
 
 // קריאה ל-Strapi עם timeout; מחזיר {ok, status, json}
