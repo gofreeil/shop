@@ -130,7 +130,7 @@ const charterGate = {
   async signFromButton() {
     const msg = this._box?.querySelector('.charter-sign-msg');
     try {
-      if (this.guest) { if (typeof openAuth === 'function') openAuth('register'); return; }
+      if (this.guest) { if (typeof openAuth === 'function') openAuth('register', 'חתימה על אמנת המוסר'); return; }
       await this.sign();
     } catch (ex) {
       if (msg) { msg.textContent = ex.message; msg.hidden = false; }

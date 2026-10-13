@@ -10,13 +10,13 @@ function toggleTheme() {}
 function updateThemeIcon() {}
 
 // === Toast ===
-function toast(msg, icon = 'fa-check-circle') {
+function toast(msg, icon = 'fa-check-circle', ms = 2500) {
   const t = document.getElementById('toast');
   if (!t) return;
   t.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
   t.classList.add('show');
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+  t._timer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
 // === אימות טפסים ידידותי ===
@@ -994,7 +994,7 @@ function rvFormHtml() {
     <div class="rv-register" id="rvRegister" hidden>
       <span>🔒</span>
       <p>הדירוג והדעה שלך חשובים לנו, אנא הירשם תחילה על מנת לוודא שבוטים לא מעורבים בדירוגים ובתגובות</p>
-      <button type="button" class="btn btn-primary" onclick="openAuth('login')">הרשמה / התחברות</button>
+      <button type="button" class="btn btn-primary" onclick="openAuth('login', 'דירוג ותגובה על המוצר')">הרשמה / התחברות</button>
     </div>
   </div>`;
 }
@@ -1058,7 +1058,7 @@ async function rvSubmit() {
   try {
     const r = await fetch('/api/comments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: rv.id, rating: rv.rating, body: rv.draft.trim() }) });
     const j = await r.json().catch(() => ({}));
-    if (r.status === 401) { toast('נדרשת הרשמה כדי לדרג ולהגיב', 'fa-lock'); openAuth('login'); return; }
+    if (r.status === 401) { toast('נדרשת הרשמה כדי לדרג ולהגיב', 'fa-lock'); openAuth('login', 'דירוג ותגובה על המוצר'); return; }
     if (!r.ok || !j.item) { toast(j.error || 'השליחה נכשלה - נסו שוב בעוד מספר רגעים', 'fa-circle-exclamation'); return; }
     rv.thanks = true;
     rv.busy.submit = false;
@@ -1276,10 +1276,8 @@ function injectAccountUI() {
   btn.setAttribute('aria-label', 'חשבון');
   btn.onclick = () => currentUser ? openAccountMenu() : openAuth('login');
   updateAccountBtn(btn);
-  // בקצה השמאלי של סרגל הפעולות (אחרי העגלה); בנייד ההמבורגר נשאר בקצה
-  const mobileToggle = document.getElementById('mobileMenuToggle');
-  if (mobileToggle && mobileToggle.parentNode === actions) actions.insertBefore(btn, mobileToggle);
-  else actions.appendChild(btn);
+  // תמיד בקצה השמאלי של סרגל הפעולות (גם בנייד - ההמבורגר נשאר מימינו)
+  actions.appendChild(btn);
 }
 // כפתור החיפוש: בדסקטופ בסוף הניווט הראשי (אחרי "הוסף חנות"); בנייד הניווט מוסתר, אז חוזר לסרגל הפעולות
 const navMobileQuery = window.matchMedia('(max-width: 720px)');
@@ -1348,7 +1346,26 @@ function updateAccountBtn(btn) {
   refreshAdminPending();
 }
 
-function openAuth(tab = 'login') {
+// "הבקשה הראשונה" של מי שנשלח להירשם באמצע פעולה: אחרי ההרשמה/התחברות בחלון מוצג
+// "השלמת את ההרשמה! כעת תועבר לבקשתך הראשונה — <תיאור>", והדף ממשיך מאותו מקום
+// (הדפים מאזינים ל-userChanged). בכניסה דרך הקהילה (מעבר דף) התיאור נשמר ב-sessionStorage.
+const AUTH_REQUEST_KEY = 'shop-auth-request';
+const PAGE_REQUESTS = {
+  'sell.html': 'פתיחת חנות',
+  'add-product.html': 'הגשת מוצר למכירה',
+  'seller-dashboard.html': 'לוח הבקרה למוכר',
+  'store-designer.html': 'עיצוב דף החנות'
+};
+let authRequest = '';
+function announceAuthRequest(isNew) {
+  if (!authRequest) return false;
+  toast(`${isNew ? 'השלמת את ההרשמה! כעת תועבר לבקשתך הראשונה' : 'כעת תועבר לבקשתך'} — ${authRequest}`, isNew ? 'fa-circle-check' : 'fa-hand-wave', 4500);
+  authRequest = '';
+  return true;
+}
+
+function openAuth(tab = 'login', request = '') {
+  authRequest = request || PAGE_REQUESTS[location.pathname.split('/').pop()] || '';
   const modal = ensureAuthModal();
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -1398,9 +1415,9 @@ function ensureAuthModal() {
         <h2 style="font-size:22px;margin-bottom:6px">ברוך הבא</h2>
         <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px">התחבר לחשבון שלך</p>
         <div class="form-grid">
-          <a href="forgot-password.html" style="font-size:13px;color:var(--primary-dark);text-decoration:underline;margin-top:-6px" onclick="var m=this.closest('form').elements.email.value.trim();if(m.indexOf('@')>0)this.href='forgot-password.html?email='+encodeURIComponent(m)">שכחתי סיסמה</a>
           <div class="form-field"><label>אימייל</label><input type="email" name="email" required></div>
           <div class="form-field"><label>סיסמה</label><input type="password" name="password" required></div>
+          <a href="forgot-password.html" style="font-size:13px;color:var(--primary-dark);text-decoration:underline;margin-top:-6px" onclick="var m=this.closest('form').elements.email.value.trim();if(m.indexOf('@')>0)this.href='forgot-password.html?email='+encodeURIComponent(m)">שכחתי סיסמה</a>
           <button type="submit" class="btn btn-primary btn-block">התחבר</button>
         </div>
       </form>
@@ -1432,6 +1449,7 @@ function ensureAuthModal() {
 // התחברות דרך יוצאים לחירות (SSO): הקהילה שותלת את העוגייה המשותפת gofreeil-auth,
 // חוזרת לאותו דף שממנו יצא (לא לדף הבית - שם אבדה לו העבודה), ואז /api/me מזהה את המשתמש.
 function loginWithCommunity() {
+  try { if (authRequest) sessionStorage.setItem(AUTH_REQUEST_KEY, authRequest); } catch { /* ignore */ }
   const callback = window.location.href.split('#')[0];
   window.location.href = `https://community.gofreeil.com/sso?callback=${encodeURIComponent(callback)}`;
 }
@@ -1451,7 +1469,7 @@ async function handleLogin(e) {
     localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     updateAccountBtn();
     closeAuth();
-    toast(`שלום ${currentUser.name}!`, 'fa-hand-wave');
+    if (!announceAuthRequest(false)) toast(`שלום ${currentUser.name}!`, 'fa-hand-wave');
   } catch {
     toast('שגיאת התחברות, נסה שוב', 'fa-circle-exclamation');
   }
@@ -1471,7 +1489,7 @@ async function handleRegister(e) {
     localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
     updateAccountBtn();
     closeAuth();
-    toast(`ברוך הבא ${currentUser.name}!`, 'fa-circle-check');
+    if (!announceAuthRequest(true)) toast(`ברוך הבא ${currentUser.name}!`, 'fa-circle-check');
   } catch {
     toast('שגיאת הרשמה, נסה שוב', 'fa-circle-exclamation');
   }
@@ -1500,6 +1518,12 @@ async function hydrateUser() {
       localStorage.setItem(STORAGE.USER, JSON.stringify(currentUser));
       if (renew) silentReconnect();
       else { try { localStorage.removeItem(SSO_RETRY_KEY); } catch { /* ignore */ } }
+      // חזרה מכניסה דרך הקהילה באמצע בקשה (ראו loginWithCommunity)
+      try {
+        authRequest = sessionStorage.getItem(AUTH_REQUEST_KEY) || '';
+        sessionStorage.removeItem(AUTH_REQUEST_KEY);
+      } catch { /* ignore */ }
+      announceAuthRequest(false);
     } else if (transient) {
       return; // השרת לא ענה - נשארים במצב הקודם
     } else if (currentUser || expired) {
