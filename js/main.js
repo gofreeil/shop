@@ -1814,3 +1814,44 @@ document.addEventListener('DOMContentLoaded', () => {
   if (legacyId) return location.replace(productUrl(legacyId));
   initProductPage();
 });
+
+// עין להצגה/הסתרה בכל שדה סיסמה (גם בטפסים שנבנים דינמית - חלון ההתחברות וההרשמה)
+(function () {
+  const css = '.pw-wrap{position:relative;display:block;width:100%}.pw-wrap>input{padding-inline-end:42px!important}' +
+    '.pw-eye{position:absolute;top:50%;inset-inline-end:6px;transform:translateY(-50%);width:32px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:#94a3b8;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}' +
+    '.pw-eye:hover{background:rgba(148,163,184,.2);color:#64748b}.pw-eye svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}';
+  const OPEN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12C3.5 9.5 7 5 12 5s8.5 4.5 9.5 7c-1 2.5-4.5 7-9.5 7s-8.5-4.5-9.5-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const SHUT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.1A10.4 10.4 0 0 1 12 5c5 0 8.5 4.5 9.5 7a13 13 0 0 1-3.2 4.3M6.6 6.6A13 13 0 0 0 2.5 12c1 2.5 4.5 7 9.5 7a9.7 9.7 0 0 0 4.1-.9"/></svg>';
+  function decorate(inp) {
+    if (inp.dataset.pwEye || !inp.parentNode) return;
+    inp.dataset.pwEye = '1';
+    const wrap = document.createElement('span');
+    wrap.className = 'pw-wrap';
+    inp.parentNode.insertBefore(wrap, inp);
+    wrap.appendChild(inp);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pw-eye';
+    const paint = () => {
+      const shown = inp.type === 'text';
+      btn.innerHTML = shown ? SHUT : OPEN;
+      btn.setAttribute('aria-pressed', String(shown));
+      btn.setAttribute('aria-label', shown ? 'הסתרת הסיסמה' : 'הצגת הסיסמה');
+      btn.title = shown ? 'הסתר סיסמה' : 'הצג סיסמה';
+    };
+    btn.addEventListener('click', () => { inp.type = inp.type === 'text' ? 'password' : 'text'; paint(); });
+    paint();
+    wrap.appendChild(btn);
+  }
+  function scan(root) { (root.querySelectorAll ? root : document).querySelectorAll('input[type="password"]').forEach(decorate); }
+  function start() {
+    const st = document.createElement('style');
+    st.textContent = css;
+    document.head.appendChild(st);
+    scan(document);
+    new MutationObserver((muts) => {
+      for (const m of muts) for (const n of m.addedNodes) if (n.nodeType === 1) { if (n.matches && n.matches('input[type="password"]')) decorate(n); else scan(n); }
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
