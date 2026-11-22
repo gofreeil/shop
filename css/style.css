@@ -174,6 +174,36 @@ input, textarea { font-family: inherit; font-size: inherit; }
 .cart-emoji { font-size: 26px; line-height: 1; font-style: normal; }
 #accountBtn { font-size: 22px; }
 
+/* אורח: יד 👆 ובועה "לא רשום עדיין?" תלויות מתחת לכפתור החשבון (showSignupTip ב-main.js) */
+.signup-anchor { position: relative; display: inline-flex; flex-shrink: 0; }
+.signup-tip-wrap { opacity: 0; transition: opacity 0.9s ease-in-out; }
+.signup-tip-wrap.show { opacity: 1; }
+.signup-hand {
+  position: absolute; top: calc(100% + 2px); left: 50%; z-index: 60;
+  width: 2rem; margin-left: -1rem; text-align: center;
+  font-size: 1.6rem; line-height: 1; pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+  animation: signup-hand-point 1.1s ease-in-out 1s infinite;
+}
+.signup-tip { position: absolute; top: calc(100% + 32px); left: 0; z-index: 60; direction: rtl; }
+.signup-tip-wrap:not(.show) .signup-tip { pointer-events: none; }
+.signup-bubble {
+  display: block; margin: 0; padding: 7px 26px 7px 12px; border: 0; border-radius: 14px;
+  white-space: nowrap; font-family: inherit; font-weight: 800; font-size: 0.85rem; line-height: 1.4;
+  color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.25); cursor: pointer;
+  background: linear-gradient(135deg, #059669, #0f766e);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+}
+.signup-bubble:hover { filter: brightness(1.08); }
+.signup-close {
+  position: absolute; top: 50%; right: 6px; width: 18px; height: 18px; margin-top: -9px;
+  padding: 0; border: 0; border-radius: 999px; font-size: 0.62rem; line-height: 18px; text-align: center;
+  color: #fff; background: rgba(255,255,255,0.22); cursor: pointer;
+}
+.signup-close:hover { background: rgba(255,255,255,0.38); }
+@keyframes signup-hand-point { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .signup-hand { animation: none; } }
+
 /* טולטיפ לכפתורי סרגל הפעולות (data-tip מוצב ב-JS) */
 .header-actions .icon-btn[data-tip]::after, .main-nav .icon-btn[data-tip]::after {
   content: attr(data-tip);

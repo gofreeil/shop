@@ -1278,6 +1278,42 @@ function injectAccountUI() {
   updateAccountBtn(btn);
   // תמיד בקצה השמאלי של סרגל הפעולות (גם בנייד - ההמבורגר נשאר מימינו)
   actions.appendChild(btn);
+  showSignupTip(btn);
+}
+
+// אורח: יד 👆 ובועה "לא רשום עדיין? - לחץ כאן להרשמה" מתחת לכפתור החשבון - כמו
+// SignupTip בשאר אתרי הרשת: מופיעה ונעלמת בדעיכה עדינה אחרי כמה שניות, ו-✕ סוגר
+// אותה עד סוף הביקור (אותו מפתח sessionStorage).
+const SIGNUP_TIP_KEY = 'signupTipClosed';
+let signupTipEl = null;
+function showSignupTip(btn) {
+  if (currentUser || signupTipEl) return;
+  try { if (sessionStorage.getItem(SIGNUP_TIP_KEY) === '1') return; } catch (e) { /* אחסון חסום */ }
+  const anchor = document.createElement('span');
+  anchor.className = 'signup-anchor';
+  btn.parentNode.insertBefore(anchor, btn);
+  anchor.appendChild(btn);
+  const tip = document.createElement('span');
+  tip.className = 'signup-tip-wrap';
+  tip.innerHTML = '<span class="signup-hand" aria-hidden="true">👆</span>'
+    + '<span class="signup-tip"><button type="button" class="signup-bubble">לא רשום עדיין? - לחץ כאן להרשמה</button>'
+    + '<button type="button" class="signup-close" aria-label="סגירת ההודעה">✕</button></span>';
+  tip.querySelector('.signup-bubble').onclick = () => openAuth('register');
+  tip.querySelector('.signup-close').onclick = () => {
+    try { sessionStorage.setItem(SIGNUP_TIP_KEY, '1'); } catch (e) { /* נסגר רק לעמוד הנוכחי */ }
+    hideSignupTip();
+  };
+  anchor.appendChild(tip);
+  signupTipEl = tip;
+  requestAnimationFrame(() => requestAnimationFrame(() => tip.classList.add('show')));
+  setTimeout(hideSignupTip, 6000);
+}
+function hideSignupTip() {
+  const tip = signupTipEl;
+  if (!tip || tip.classList.contains('leaving')) return;
+  tip.classList.add('leaving');
+  tip.classList.remove('show');
+  setTimeout(() => tip.remove(), 900);
 }
 // כפתור החיפוש: בדסקטופ בסוף הניווט הראשי (אחרי "הוסף חנות"); בנייד הניווט מוסתר, אז חוזר לסרגל הפעולות
 const navMobileQuery = window.matchMedia('(max-width: 720px)');
@@ -1344,6 +1380,7 @@ function updateAccountBtn(btn) {
   document.dispatchEvent(new CustomEvent('userChanged', { detail: { user: currentUser } }));
   paintAccountBtn(btn);
   refreshAdminPending();
+  if (currentUser) hideSignupTip();
 }
 
 // "הבקשה הראשונה" של מי שנשלח להירשם באמצע פעולה: אחרי ההרשמה/התחברות בחלון מוצג
@@ -1365,6 +1402,7 @@ function announceAuthRequest(isNew) {
 }
 
 function openAuth(tab = 'login', request = '') {
+  hideSignupTip();
   authRequest = request || PAGE_REQUESTS[location.pathname.split('/').pop()] || '';
   const modal = ensureAuthModal();
   modal.classList.add('active');
