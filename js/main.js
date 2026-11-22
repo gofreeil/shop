@@ -1306,7 +1306,7 @@ function showSignupTip(btn) {
   anchor.appendChild(tip);
   signupTipEl = tip;
   requestAnimationFrame(() => requestAnimationFrame(() => tip.classList.add('show')));
-  setTimeout(hideSignupTip, 6000);
+  setTimeout(hideSignupTip, 4000);
 }
 function hideSignupTip() {
   const tip = signupTipEl;
